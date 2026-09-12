@@ -31,7 +31,7 @@ Frozen holdout boundary: **`2025-02-08 15:30:00`** (M15 bar 199,968).
 | Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 |
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 |
-| **Holdout** | **0.6050** | **0.4017** |
+| **Holdout** | **0.6023** | **0.4065** |
 
 The gap between Random K-Fold (0.86) and the leak-aware splits (~0.59) is the
 leakage effect this project exists to demonstrate.
@@ -46,9 +46,11 @@ leakage effect this project exists to demonstrate.
 | Cách 2 — Walk-forward | 10,004 | +2,207.3 | 205.3 | 1.423 | 34.9 |
 | Cách 3 — WF + Purge/Embargo | 10,004 | +2,253.7 | 154.1 | 1.435 | 35.2 |
 | **Baseline holdout** | 5,028 | +245.93 | 305.32 | 1.0992 | 35.28 |
-| **Holdout, top 50%** | 2,514 | −23.83 | 272.38 | 0.9815 | 34.88 |
+| **Holdout, top 50%** | 2,514 | +30.79 | 265.54 | 1.0239 | 35.20 |
 
-On the sealed holdout, filtering with the model does **not** improve on the
+On the sealed holdout the model still does **not** beat the unfiltered baseline:
+keeping the top 50% leaves 2,514 trades with **+30.79 R** and profit factor
+1.024, versus **+245.93 R** and profit factor 1.099 for the full 5,028-trade
 baseline. The full 20–80% sweep is in
 [`outputs/holdout/stage4/`](outputs/holdout/stage4/), and the complete report is
 [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
@@ -291,8 +293,13 @@ These values are fixed by the handover spec and must not be changed
   reason.
 - **Do not edit committed datasets or `outputs/`** when experimenting. Write new
   results to a new folder so the frozen artifacts stay valid.
-- The seed is fixed and there is no randomness in scoring or backtesting, so
-  repeated runs must be byte-identical.
+- **Reproducibility:** the seed (`random_seed=42`) is fixed and there is no
+  randomness in scoring or backtesting, so `verify_pipeline.py` reruns are
+  byte-identical on the same machine. CatBoost still trains with the default
+  multi-threaded setting and **does not set `thread_count`**, so results can
+  differ by a small amount across CPUs/operating systems. The committed
+  artifacts are the reference for the Python 3.12.14 run recorded above; pin
+  `thread_count` if you need bit-for-bit equality across different machines.
 
 ## Documentation
 
@@ -303,6 +310,37 @@ These values are fixed by the handover spec and must not be changed
 | [`docs/BAN_GIAO_task_train_catboost.md`](docs/BAN_GIAO_task_train_catboost.md) | Original training task spec |
 | [`docs/quy_trinh_lam_viec.md`](docs/quy_trinh_lam_viec.md) | Project working process |
 | [`docs/handover_README.md`](docs/handover_README.md) | Original handover README |
+
+## Changelog
+
+### 2026-09-12 — uv environment + full pipeline re-run
+
+- **Environment:** installed and pinned the project with `uv sync`
+  (Python 3.12.14, catboost 1.2.10, scikit-learn 1.9.0, pandas 3.0.5,
+  numpy 2.5.2, plotly 7.0.0) and committed `uv.lock`.
+- **Full pipeline re-run:** `build_dataset → verify_dataset → train_models →
+  run_backtest → verify_pipeline` all pass, plus holdout stages 1–4.
+  `data/processed/` and `outputs/` now hold the artefacts of this run.
+  `verify_pipeline.py` passes (byte-identical reruns, same machine).
+- **Holdout re-run:** Table 1 holdout ROC-AUC/F1 = 0.6023 / 0.4065;
+  holdout top-50% = +30.79 R (profit factor 1.024) versus baseline
+  +245.93 R (profit factor 1.099). Numbers in
+  `docs/BAO_CAO_KET_QUA_HOLDOUT.md` and the tables below were refreshed.
+- **Fixes:**
+  - `scripts/holdout_stage4_report.py` now fills the Table 1 *Holdout* row from
+    `outputs/holdout/stage3/stage3_report.json` instead of a hard-coded value
+    that could silently go stale.
+  - `scripts/holdout_stage1_split.py` replaces the pandas-deprecated
+    `set_index(..., verify_integrity=True)` with an explicit duplicate-key check.
+  - Fixed dead chart links in `docs/BAO_CAO_KET_QUA_HOLDOUT.md`
+    (`../work/stage4_results/...` → `../outputs/holdout/stage4/...`).
+- **Removed:** `docs/legacy/` (the archived pre-refactor stage-3 variant).
+  The canonical implementation has lived in `scripts/holdout_stage3_backtest.py`
+  since the refactor and produced all committed stage-3 artefacts, so the
+  legacy copy was redundant.
+- **Known limitation:** CatBoost trains multi-threaded and `thread_count` is not
+  pinned, so a fresh run on a different CPU/OS can shift predictions slightly
+  from the committed artefacts (same-machine reruns stay byte-identical).
 
 ## License
 

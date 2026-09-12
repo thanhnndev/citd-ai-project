@@ -1,5 +1,10 @@
 # BÁO CÁO KẾT QUẢ HOLDOUT
 
+> **Ghi chú lần chạy lại:** Báo cáo này được sinh lại trên môi trường `uv`
+> (Python 3.12.14) ngày 2026-09-12. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2
+> là số bàn giao cố định; các dòng Holdout, sweep và hash model bên dưới phản
+> ánh lần chạy mới nhất. Chi tiết thay đổi xem mục CHANGELOG trong `README.md`.
+
 ## Phần 1 — Số liệu
 
 ### Bảng 1 — Chỉ số phân loại
@@ -10,7 +15,7 @@
 | Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 |
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 |
-| Holdout | 0.60502452277619 | 0.40170679670832066 |
+| Holdout | 0.6023152558719406 | 0.4064693317058285 |
 
 ### Bảng 2 — Chỉ số tài chính, giữ top 50%
 
@@ -22,24 +27,24 @@
 | Cách 2 | 10,004 | +2,207.3 | 205.3 | 1.423 | 34.9 |
 | Cách 3 | 10,004 | +2,253.7 | 154.1 | 1.435 | 35.2 |
 | Baseline holdout | 5,028 | +245.9296826590 | 305.3174286700 | 1.0991525948 | 35.2824184566 |
-| Holdout, top 50% | 2,514 | -23.8330501581 | 272.3778618300 | 0.9815377757 | 34.8846459825 |
+| Holdout, top 50% | 2,514 | +30.7859222571 | 265.5417179040 | 1.0238644238 | 35.2028639618 |
 
 ### Sweep holdout 20–80%
 
 | Lọc | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate % |
 |---|---|---|---|---|---|
-| Top 20% | 1,006 | -25.0411805556 | 122.8546452090 | 0.9489421264 | 36.4811133201 |
-| Top 30% | 1,509 | -39.3273303378 | 199.2135339300 | 0.9479776023 | 35.7190192180 |
-| Top 40% | 2,012 | -44.3951174808 | 236.6655064780 | 0.9566558600 | 35.3379721670 |
-| Top 50% | 2,514 | -23.8330501581 | 272.3778618300 | 0.9815377757 | 34.8846459825 |
-| Top 60% | 3,017 | +64.5133798210 | 248.5043667670 | 1.0414374072 | 34.9685117667 |
-| Top 70% | 3,520 | +164.7044537740 | 228.2195256620 | 1.0917709273 | 35.5397727273 |
-| Top 80% | 4,023 | +249.6313581480 | 226.755110388 | 1.1226749476 | 35.6201839423 |
+| Top 20% | 1,006 | -11.0624231964 | 114.3400755380 | 0.9772911901 | 36.0834990060 |
+| Top 30% | 1,509 | -1.7690864744 | 169.0056825710 | 0.9976356343 | 36.1829025845 |
+| Top 40% | 2,012 | +28.3871682167 | 210.6927181210 | 1.0279104530 | 35.8349900596 |
+| Top 50% | 2,514 | +30.7859222571 | 265.5417179040 | 1.0238644238 | 35.2028639618 |
+| Top 60% | 3,017 | +35.2065388225 | 279.9499440880 | 1.0224013273 | 34.6370566788 |
+| Top 70% | 3,520 | +122.0766849210 | 276.0070566960 | 1.0671919382 | 34.8579545455 |
+| Top 80% | 4,023 | +160.3814321470 | 262.5306925160 | 1.0780902018 | 34.8993288591 |
 
 ## Phần 2 — Biểu đồ
 
-- [Biểu đồ 1 — Baseline và 4 nhánh top 50%, khúc 2–5](../work/stage4_results/equity-curve-chunk2-5-top50.html)
-- [Biểu đồ 2 — Baseline holdout và Holdout top 50%](../work/stage4_results/equity-curve-holdout-top50.html)
+- [Biểu đồ 1 — Baseline và 4 nhánh top 50%, khúc 2–5](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.html)
+- [Biểu đồ 2 — Baseline holdout và Holdout top 50%](../outputs/holdout/stage4/equity-curve-holdout-top50.html)
 
 ## Phần 3 — Quyết định triển khai
 
@@ -59,7 +64,7 @@
 2. **23** cột `FEATURES` được so sánh trên **575,184** ô; số ô lệch: **0**.
 3. Purge cắt **0** dòng; embargo cắt **0** dòng; tổng dòng bị loại bởi một trong hai điều kiện: **0**; số dòng train sau lọc: **25,008**.
 4. Backtest holdout khớp `tradelist_pyramid_local.csv`: **5,028/5,028** lệnh; `passed: true`; các trường lệch: không có.
-5. Hai lần train: model SHA-256 khác nhau (`31c4a8d90b6d228d26c8125d492d9d7e1a90814fdf05d0aeeebae65b3ce76f26` và `4eab4dd8873e8025dc772a4b0746b074480b38720832d0ee742e82c63a09b9d9`) do metadata build-info nhúng trong file; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và cấu trúc `oblivious_trees` giống hệt.
+5. Hai lần train: model SHA-256 khác nhau (`995d66ef93e625b053e2dffaa16a3953edcc410abffbbaa2b8b077647f50bbf3` và `116a4aa6cae3a4f57bad6294c2071bd3e045206442c6ccc37fd97a37fe85fa06`) do metadata build-info nhúng trong file; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và cấu trúc `oblivious_trees` giống hệt.
 6. Phiên bản: Python **3.12.14**; CatBoost **1.2.10**; scikit-learn **1.9.0**; pandas **3.0.5**; NumPy **2.5.2**.
 
 ## Phần 5 — Bảng file sinh ra

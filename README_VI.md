@@ -30,7 +30,7 @@ Mốc holdout cố định: **`2025-02-08 15:30:00`** (bar M15 số 199,968).
 | Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 |
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 |
-| **Holdout** | **0.6050** | **0.4017** |
+| **Holdout** | **0.6023** | **0.4065** |
 
 Khoảng cách giữa Random K-Fold (0.86) và các cách chia có ý thức rò rỉ (~0.59)
 chính là hiệu ứng leakage mà đồ án muốn chứng minh.
@@ -45,10 +45,11 @@ chính là hiệu ứng leakage mà đồ án muốn chứng minh.
 | Cách 2 — Walk-forward | 10,004 | +2,207.3 | 205.3 | 1.423 | 34.9 |
 | Cách 3 — WF + Purge/Embargo | 10,004 | +2,253.7 | 154.1 | 1.435 | 35.2 |
 | **Baseline holdout** | 5,028 | +245.93 | 305.32 | 1.0992 | 35.28 |
-| **Holdout, top 50%** | 2,514 | −23.83 | 272.38 | 0.9815 | 34.88 |
+| **Holdout, top 50%** | 2,514 | +30.79 | 265.54 | 1.0239 | 35.20 |
 
-Trên holdout niêm phong, việc lọc bằng model **không** cải thiện so với
-baseline. Bảng sweep đầy đủ 20–80% nằm trong
+Trên holdout niêm phong, bộ lọc vẫn **không** thắng baseline không lọc: giữ top
+50% còn 2,514 lệnh với **+30.79 R** và profit factor 1.024, so với **+245.93 R**
+và profit factor 1.099 của baseline đủ 5,028 lệnh. Bảng sweep đầy đủ 20–80% nằm trong
 [`outputs/holdout/stage4/`](outputs/holdout/stage4/), báo cáo đầy đủ ở
 [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
@@ -285,8 +286,12 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   về sau; backtest giữ một chiến lược `shadow` chính vì lý do này.
 - **Không sửa dataset hay `outputs/` đã commit** khi thử nghiệm. Ghi kết quả
   mới ra thư mục riêng để giữ nguyên các artifact đã niêm phong.
-- Seed cố định và không có yếu tố ngẫu nhiên trong chấm điểm/backtest, nên các
-  lần chạy lặp phải giống hệt từng byte.
+- **Tái lập:** seed (`random_seed=42`) cố định và không có yếu tố ngẫu nhiên
+  trong chấm điểm/backtest, nên `verify_pipeline.py` chạy lại giống hệt từng byte
+  **trên cùng một máy**. CatBoost vẫn train đa luồng mặc định và **không ghim
+  `thread_count`**, nên kết quả có thể lệch nhẹ giữa các CPU/hệ điều hành khác
+  nhau. Các artifact đã commit là mốc tham chiếu của lần chạy Python 3.12.14 ở
+  trên; hãy ghim `thread_count` nếu cần giống hệt từng bit giữa các máy.
 
 ## Tài liệu
 
@@ -297,6 +302,36 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | [`docs/BAN_GIAO_task_train_catboost.md`](docs/BAN_GIAO_task_train_catboost.md) | Đề bài train gốc |
 | [`docs/quy_trinh_lam_viec.md`](docs/quy_trinh_lam_viec.md) | Quy trình làm việc |
 | [`docs/handover_README.md`](docs/handover_README.md) | README bàn giao gốc |
+
+## Changelog
+
+### 2026-09-12 — Môi trường uv + chạy lại toàn bộ pipeline
+
+- **Môi trường:** cài và ghim dự án bằng `uv sync` (Python 3.12.14,
+  catboost 1.2.10, scikit-learn 1.9.0, pandas 3.0.5, numpy 2.5.2,
+  plotly 7.0.0) và commit `uv.lock`.
+- **Chạy lại toàn bộ pipeline:** `build_dataset → verify_dataset →
+  train_models → run_backtest → verify_pipeline` đều pass, cộng thêm 4 giai
+  đoạn holdout. `data/processed/` và `outputs/` nay là artifact của lần chạy
+  này. `verify_pipeline.py` pass (chạy lặp giống hệt từng byte, cùng máy).
+- **Chạy lại holdout:** Bảng 1 dòng holdout ROC-AUC/F1 = 0.6023 / 0.4065;
+  holdout top-50% = +30.79 R (profit factor 1.024) so với baseline
+  +245.93 R (profit factor 1.099). Số trong
+  `docs/BAO_CAO_KET_QUA_HOLDOUT.md` và các bảng dưới đã được cập nhật.
+- **Sửa lỗi:**
+  - `scripts/holdout_stage4_report.py` nay điền dòng Holdout của Bảng 1 từ
+    `outputs/holdout/stage3/stage3_report.json` thay vì giá trị hard-code dễ
+    lệch.
+  - `scripts/holdout_stage1_split.py` bỏ `set_index(..., verify_integrity=True)`
+    đã bị pandas deprecate, thay bằng kiểm tra trùng khóa tường minh.
+  - Sửa link biểu đồ hỏng trong `docs/BAO_CAO_KET_QUA_HOLDOUT.md`
+    (`../work/stage4_results/...` → `../outputs/holdout/stage4/...`).
+- **Đã xóa:** `docs/legacy/` (bản stage-3 lưu trữ trước refactor). Bản chuẩn
+  nằm ở `scripts/holdout_stage3_backtest.py` từ sau refactor và đã sinh toàn bộ
+  artifact stage-3 đang commit, nên bản legacy là dư thừa.
+- **Hạn chế đã biết:** CatBoost train đa luồng và chưa ghim `thread_count`, nên
+  chạy mới trên CPU/hệ điều hành khác có thể lệch nhẹ so với artifact đã commit
+  (chạy lại trên cùng máy vẫn giống hệt từng byte).
 
 ## Giấy phép
 
