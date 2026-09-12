@@ -19,12 +19,13 @@ STAGE3 = paths.HOLDOUT_STAGE3_DIR
 OUT = paths.HOLDOUT_STAGE4_DIR
 
 
-TABLE1 = [
+# First four rows are the handed-over classification reference (chunk 1 removed).
+# The Holdout row is filled at runtime from stage3_report.json so it cannot drift.
+BRANCH_TABLE1 = [
     ["Cách 1 — Random K-Fold", "0.8595", "0.6525"],
     ["Cách 1b — Grouped K-Fold", "0.7475", "0.5105"],
     ["Cách 2 — Walk-forward", "0.5867", "0.3267"],
     ["Cách 3 — WF + Purge/Embargo", "0.5948", "0.3304"],
-    ["Holdout", "0.60502452277619", "0.40170679670832066"],
 ]
 
 
@@ -70,6 +71,11 @@ def main() -> None:
         raise ValueError("The handed-over pre-holdout 50% summary is incomplete")
     baseline_holdout = stage3_summary.loc[stage3_summary.keep_pct == 100].iloc[0]
     top50_holdout = stage3_summary.loc[stage3_summary.keep_pct == 50].iloc[0]
+    stage3_report = json.loads((STAGE3 / "stage3_report.json").read_text(encoding="utf-8"))
+    holdout_classification = stage3_report["classification"]
+    table1_rows = BRANCH_TABLE1 + [
+        ["Holdout", f"{holdout_classification['roc_auc']}", f"{holdout_classification['f1_at_0_5']}"],
+    ]
 
     # The first five rows are copied from the handed-over report table, not recalculated.
     table2_rows = [
@@ -84,13 +90,13 @@ def main() -> None:
     sweep = stage3_summary.loc[stage3_summary.keep_pct.isin([20, 30, 40, 50, 60, 70, 80])].copy()
     sweep_rows = [[f"Top {int(row.keep_pct)}%", f"{int(row.trades):,}", fmt_r(row.net_profit_R), fmt_num(row.max_dd_R), f"{row.profit_factor:.10f}", f"{row.win_rate_pct:.10f}"] for row in sweep.itertuples()]
 
-    classification = pd.DataFrame(TABLE1, columns=["method", "roc_auc", "f1_at_0_5"])
+    classification = pd.DataFrame(table1_rows, columns=["method", "roc_auc", "f1_at_0_5"])
     financial = pd.DataFrame(table2_rows, columns=["method", "trades", "net_profit_R", "max_dd_R", "profit_factor", "win_rate_pct"])
     holdout_sweep = pd.DataFrame(sweep_rows, columns=["filter", "trades", "net_profit_R", "max_dd_R", "profit_factor", "win_rate_pct"])
     classification.to_csv(OUT / "table1_classification_metrics.csv", index=False)
     financial.to_csv(OUT / "table2_financial_metrics_top50.csv", index=False)
     holdout_sweep.to_csv(OUT / "holdout_sweep_20_80.csv", index=False)
-    tables = "# Bảng 1 — Chỉ số phân loại\n\n" + markdown_table(["", "ROC-AUC", "F1 @0.5"], TABLE1)
+    tables = "# Bảng 1 — Chỉ số phân loại\n\n" + markdown_table(["", "ROC-AUC", "F1 @0.5"], table1_rows)
     tables += "\n# Bảng 2 — Chỉ số tài chính, giữ top 50%\n\n" + markdown_table(["", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], table2_rows)
     tables += "\n# Sweep holdout 20–80%\n\n" + markdown_table(["Lọc", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], sweep_rows)
     (OUT / "stage4_tables.md").write_text(tables, encoding="utf-8")

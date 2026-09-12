@@ -30,8 +30,12 @@ def main() -> int:
     before = regenerated.loc[regenerated["entry_time"] < HOLDOUT_START].copy()
     holdout = regenerated.loc[regenerated["entry_time"] >= HOLDOUT_START].copy()
 
-    old_keyed = old.set_index(KEYS, verify_integrity=True)
-    before_keyed = before.set_index(KEYS, verify_integrity=True)
+    if old.duplicated(subset=KEYS).any():
+        raise ValueError("Frozen dataset has duplicate (origin_bar, entry_bar, leg) keys")
+    if before.duplicated(subset=KEYS).any():
+        raise ValueError("Regenerated pre-holdout rows have duplicate keys")
+    old_keyed = old.set_index(KEYS)
+    before_keyed = before.set_index(KEYS)
     missing = old_keyed.index.difference(before_keyed.index)
     common = old_keyed.index.intersection(before_keyed.index)
 
