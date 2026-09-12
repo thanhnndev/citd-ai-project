@@ -19,6 +19,10 @@ MODEL_PARAMS = {
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
     "random_seed": 42,
+    # Pinned to 1 so training is bit-for-bit reproducible across machines.
+    # Unpinned, CatBoost defaults to the CPU core count and the floating-point
+    # reduction order changes, giving different models on different hardware.
+    "thread_count": 1,
 }
 
 METHOD_ORDER = [

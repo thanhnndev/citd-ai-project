@@ -33,6 +33,9 @@ PARAMS = {
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
     "random_seed": 42,
+    # Pinned to 1 for bit-for-bit reproducibility across machines (see
+    # src/citd_ml/training/train_catboost.py).
+    "thread_count": 1,
 }
 
 
