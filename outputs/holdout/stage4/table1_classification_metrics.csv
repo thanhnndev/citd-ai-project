@@ -1,0 +1,6 @@
+method,roc_auc,f1_at_0_5
+Cách 1 — Random K-Fold,0.8595,0.6525
+Cách 1b — Grouped K-Fold,0.7475,0.5105
+Cách 2 — Walk-forward,0.5867,0.3267
+Cách 3 — WF + Purge/Embargo,0.5948,0.3304
+Holdout,0.60502452277619,0.40170679670832066

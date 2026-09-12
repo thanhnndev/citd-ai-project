@@ -1,0 +1,10 @@
+{
+  "model_hashes_equal": false,
+  "model_run1_sha256": "31c4a8d90b6d228d26c8125d492d9d7e1a90814fdf05d0aeeebae65b3ce76f26",
+  "model_run2_sha256": "4eab4dd8873e8025dc772a4b0746b074480b38720832d0ee742e82c63a09b9d9",
+  "prediction_hashes_equal": true,
+  "predictions_exactly_equal": true,
+  "prediction_count": 25008,
+  "max_prediction_abs_difference": 0.0,
+  "holdout_file_unchanged": true
+}

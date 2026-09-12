@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------- Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --------------------------------------------------- virtual environments
+# uv creates .venv/ automatically; never commit it.
+.venv/
+venv/
+env/
+ENV/
+.python_packages/
+
+# --------------------------------------- CatBoost training logs (regenerable)
+catboost_info/
+
+# ------------------------------------------------------------------ tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------- OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ------------------------------------- large raw market data (not committed)
+# GitHub rejects files > 100 MB and this file is ~209 MB.
+# Download it separately and place it at data/raw/BTCUSD_m1_2018_to_now.csv
+# (see data/raw/README.md).
+data/raw/*.csv
+data/raw/*.zip
+!data/raw/.gitkeep

@@ -1,0 +1,67 @@
+{
+  "status": "passed",
+  "started_utc": "2026-09-07T02:57:48.285853+00:00",
+  "completed_utc": "2026-09-07T03:03:20.331499+00:00",
+  "command": ".\\.venv\\Scripts\\python.exe -u verify_pipeline.py",
+  "python": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "catboost": "1.2.10",
+    "scikit-learn": "1.9.0",
+    "pandas": "3.0.5",
+    "numpy": "2.5.2"
+  },
+  "model_params": {
+    "iterations": 1000,
+    "learning_rate": 0.05,
+    "depth": 6,
+    "l2_leaf_reg": 3.0,
+    "auto_class_weights": "Balanced",
+    "eval_metric": "AUC",
+    "random_seed": 42
+  },
+  "source_sha256": {
+    "BAN_GIAO_task_train_catboost.md": "284b1b9c1a2647c5da546d97bf46166a5d7f6c2b44275a8cc1f091864dee728f",
+    "BTCUSD_m1_2018_to_now.csv": "6931fc10712c8e333f9b88f438530385527886da43a2924f0d953543143aea35",
+    "dataset_catboost.csv": "d97d5acb6dd4233afa4860b61dee595fa2292e8499846a231e466768c57aef18",
+    "tradelist_pyramid_local.csv": "5b20337d3abf6a2fb5562dd7d5cdefbcb1407591dbb91c2f02691c61cd8d246c",
+    "build_features.py": "cb81ba4a0bb9817c80b0adfd512f41e497ec925a82d78786d8b7227b4c68e97d",
+    "pyramid_strategy.py": "83ac176d2067f21df08b405ff4bdd97ea69e787d0133d9d5ebe22fa477ff75be",
+    "pre_train.py": "5d9683473aff06d81b4252c7fabcf76347df57dab700c382c2847236b8de88cb",
+    "split_data.py": "3123e7dca29ab6e658a96c1cd32da6efb776172db9f3cde60a924c0484699214",
+    "train_catboost.py": "4760cdf0f55f3bc99bf7c2a515a404e4cbd29543c3169a17f2d82f210cd21cdc",
+    "backtest_pyramid_local.py": "fb4bef06ecaa92dd313c1f0df687f3fa23ba3a3cf2db3bcc4458002991e2eb42",
+    "verify_pipeline.py": "08fc73973475efc48c91a453e977a633370bda0aec56476b522cdf942aaee308"
+  },
+  "training": {
+    "runs": 2,
+    "unrounded_frames_identical": true,
+    "matches_saved_csv_bytes": true,
+    "output_sha256": {
+      "outputs\\catboost_training\\metrics_by_fold.csv": "8be617e4ea20e64a3477bd34363daa786ef741a3b3b91334fbbd869ff859b579",
+      "outputs\\catboost_training\\metrics_summary.csv": "7f5f8a7ce836410eef3b10ef2d548c07b03e168db4b942a1322f811c66281a3d",
+      "outputs\\catboost_training\\oof_random_kfold.csv": "7d8c4bc3ff9db744d62980f0847b1d2b8422354b65223a0ab4943f0525109bdd",
+      "outputs\\catboost_training\\oof_grouped_kfold.csv": "f1a78d42763d9c15dd0c7952c17b936cf74cf41acb1a9d699b8212ece5d0fe0a",
+      "outputs\\catboost_training\\oof_walk_forward.csv": "67ecac4c0da7d86e22f6202195d7cb02a3b62eec3efd7145a1d21c6d763768e8",
+      "outputs\\catboost_training\\oof_purged_walk_forward.csv": "fa33abe906d8ffab59a16e40cfdd8f99ee33044d3362470af75e655a74a5c196"
+    }
+  },
+  "backtest": {
+    "runs": 2,
+    "unrounded_frames_identical": true,
+    "matches_saved_csv_bytes": true,
+    "output_sha256": {
+      "outputs\\backtest\\baseline_tradelist.csv": "f943e09d88e21f00a07f71d789886205f4ebd0c480469593e15bc674c628b01b",
+      "outputs\\backtest\\backtest_scored_universe.csv": "b75cee88ffba4228f767a3a772530388a63099abc41033c10b7b821cf545e1e7",
+      "outputs\\backtest\\backtest_summary_top50.csv": "961be98d41030b470fef20e3af1d1c2a8967f612c637d7937d78deb7ab234830",
+      "outputs\\backtest\\backtest_retention_sweep.csv": "af99b68be72a36bc22ba592d7e13920584cf6fe69b57f0b4bc528296515d33a1",
+      "outputs\\backtest\\trades_top50_random_kfold.csv": "3fa91b50d44cd74e54279be9dd4c1c3a20026aef44fb1fbc9012783a1e52b928",
+      "outputs\\backtest\\trades_top50_grouped_kfold.csv": "46f35d8c7de7d66cfa4d82d9e7cdb6e2a39fc8ea4254a8f807a508b6cfafd5bb",
+      "outputs\\backtest\\trades_top50_walk_forward.csv": "478d8e822446b4ff0e509e31c790f8e3eae7fd0f6b01441c2040025d88964882",
+      "outputs\\backtest\\trades_top50_purged_walk_forward.csv": "dd20361b2f8b63ccc15e01f70622202bcd11443f9930d4874f2898302e43ab06"
+    }
+  },
+  "backtest_scope": "fixed baseline candidates; shadow signals and gated execution",
+  "scope_note": "Repeatability verifies implementation, not acceptance of the shadow design assumption.",
+  "original_and_saved_csv_unchanged": true
+}

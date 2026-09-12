@@ -1,0 +1,7 @@
+# Exact versions used for the verified holdout run (see docs/BAO_CAO_KET_QUA_HOLDOUT.md).
+# Python 3.12 is required (verified on 3.12.14).
+catboost==1.2.10
+scikit-learn==1.9.0
+pandas==3.0.5
+numpy==2.5.2
+plotly==7.0.0

@@ -1,0 +1,39 @@
+[project]
+name = "citd-ml"
+version = "1.0.0"
+description = "CatBoost signal filter for the BTCUSD pyramid strategy (leak-aware evaluation + sealed holdout)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "CITD ML project" }]
+keywords = ["machine-learning", "catboost", "backtesting", "triple-barrier", "btcusd"]
+dependencies = [
+    "catboost==1.2.10",
+    "scikit-learn==1.9.0",
+    "pandas==3.0.5",
+    "numpy==2.5.2",
+    "plotly==7.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+citd-build-dataset = "citd_ml.features.build_features:main"
+citd-verify-dataset = "citd_ml.features.verify_dataset:main"
+citd-train = "citd_ml.training.train_catboost:main"
+citd-backtest = "citd_ml.backtest.backtest_pyramid_local:main"
+citd-verify-pipeline = "citd_ml.verification.verify_pipeline:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

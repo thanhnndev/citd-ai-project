@@ -1,0 +1,33 @@
+BACKTEST REPRODUCIBILITY MANIFEST
+Generated: 2026-09-06
+
+Historical record for the 2026-09-06 backtest only.
+For the 2026-09-07 audited source and two-run verification of BOTH training
+and backtest, see ../verification/reproducibility.json. Its source hashes
+must match the current code before using that evidence for a later version.
+
+Command:
+  .\.venv\Scripts\python.exe backtest_pyramid_local.py
+
+The complete score-gated backtest was executed twice consecutively. The eight
+CSV output hashes were identical between run 1 and run 2.
+
+Environment:
+  Python packages: catboost 1.2.10, scikit-learn 1.9.0,
+                   pandas 3.0.5, numpy 2.5.2
+
+Input/source SHA-256:
+  BTCUSD_m1_2018_to_now.csv  6931FC10712C8E333F9B88F438530385527886DA43A2924F0D953543143AEA35
+  dataset_catboost.csv       D97D5ACB6DD4233AFA4860B61DEE595FA2292E8499846A231E466768C57AEF18
+  tradelist_pyramid_local.csv 5B20337D3ABF6A2FB5562DD7D5CDEFBCB1407591DBB91C2F02691C61CD8D246C
+  pyramid_strategy.py         83AC176D2067F21DF08B405FF4BDD97EA69E787D0133D9D5EBE22FA477FF75BE
+
+Output SHA-256 (same for both runs):
+  backtest_retention_sweep.csv         AF99B68BE72A36BC22BA592D7E13920584CF6FE69B57F0B4BC528296515D33A1
+  backtest_scored_universe.csv         B75CEE88FFBA4228F767A3A772530388A63099ABC41033C10B7B821CF545E1E7
+  backtest_summary_top50.csv           961BE98D41030B470FEF20E3AF1D1C2A8967F612C637D7937D78DEB7AB234830
+  baseline_tradelist.csv               F943E09D88E21F00A07F71D789886205F4EBD0C480469593E15BC674C628B01B
+  trades_top50_grouped_kfold.csv       46F35D8C7DE7D66CFA4D82D9E7CDB6E2A39FC8EA4254A8F807A508B6CFAFD5BB
+  trades_top50_purged_walk_forward.csv DD20361B2F8B63CCC15E01F70622202BCD11443F9930D4874F2898302E43AB06
+  trades_top50_random_kfold.csv        3FA91B50D44CD74E54279BE9DD4C1C3A20026AEF44FB1FBC9012783A1E52B928
+  trades_top50_walk_forward.csv        478D8E822446B4FF0E509E31C790F8E3EAE7FD0F6B01441C2040025D88964882

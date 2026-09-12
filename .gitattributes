@@ -1,0 +1,10 @@
+# Default: normalise line endings for source text. This generic rule must come
+# FIRST so the specific patterns below can override it.
+* text=auto eol=lf
+
+# Keep CSV/model/HTML bytes exactly as produced so reproducibility checks
+# compare identical files (do not let git rewrite line endings).
+*.csv -text
+*.cbm binary
+*.npy binary
+*.html -text
