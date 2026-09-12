@@ -1,9 +1,9 @@
 {
   "holdout_start": "2025-02-08 15:30:00",
   "paths": {
-    "frozen_dataset": "C:\\Users\\Admin\\Documents\\Codex\\2026-09-09\\1-c-file-b-n-giao\\work\\handover_holdout\\Ban giao - Holdout\\chay\\dataset_catboost.csv",
-    "regenerated_dataset": "C:\\Users\\Admin\\Documents\\Codex\\2026-09-09\\1-c-file-b-n-giao\\holdout_stage1\\dataset_catboost_full_regenerated.csv",
-    "holdout_dataset": "C:\\Users\\Admin\\Documents\\Codex\\2026-09-09\\1-c-file-b-n-giao\\holdout_stage1\\dataset_catboost_holdout.csv"
+    "frozen_dataset": "/home/thanhnndev/develop/citd-ml-project/data/processed/dataset_catboost.csv",
+    "regenerated_dataset": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage1/dataset_catboost_full_regenerated.csv",
+    "holdout_dataset": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage1/dataset_catboost_holdout.csv"
   },
   "counts": {
     "regenerated_total_rows": 30040,

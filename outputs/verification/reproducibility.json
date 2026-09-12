@@ -1,10 +1,10 @@
 {
   "status": "passed",
-  "started_utc": "2026-09-07T02:57:48.285853+00:00",
-  "completed_utc": "2026-09-07T03:03:20.331499+00:00",
-  "command": ".\\.venv\\Scripts\\python.exe -u verify_pipeline.py",
-  "python": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
-  "platform": "Windows-11-10.0.26200-SP0",
+  "started_utc": "2026-09-12T07:57:33.429450+00:00",
+  "completed_utc": "2026-09-12T08:00:46.904165+00:00",
+  "command": "uv run python scripts/verify_pipeline.py",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-7.2.4-1-cachyos-x86_64-with-glibc2.44",
   "packages": {
     "catboost": "1.2.10",
     "scikit-learn": "1.9.0",
@@ -21,29 +21,29 @@
     "random_seed": 42
   },
   "source_sha256": {
-    "BAN_GIAO_task_train_catboost.md": "284b1b9c1a2647c5da546d97bf46166a5d7f6c2b44275a8cc1f091864dee728f",
-    "BTCUSD_m1_2018_to_now.csv": "6931fc10712c8e333f9b88f438530385527886da43a2924f0d953543143aea35",
-    "dataset_catboost.csv": "d97d5acb6dd4233afa4860b61dee595fa2292e8499846a231e466768c57aef18",
-    "tradelist_pyramid_local.csv": "5b20337d3abf6a2fb5562dd7d5cdefbcb1407591dbb91c2f02691c61cd8d246c",
-    "build_features.py": "cb81ba4a0bb9817c80b0adfd512f41e497ec925a82d78786d8b7227b4c68e97d",
-    "pyramid_strategy.py": "83ac176d2067f21df08b405ff4bdd97ea69e787d0133d9d5ebe22fa477ff75be",
-    "pre_train.py": "5d9683473aff06d81b4252c7fabcf76347df57dab700c382c2847236b8de88cb",
-    "split_data.py": "3123e7dca29ab6e658a96c1cd32da6efb776172db9f3cde60a924c0484699214",
-    "train_catboost.py": "4760cdf0f55f3bc99bf7c2a515a404e4cbd29543c3169a17f2d82f210cd21cdc",
-    "backtest_pyramid_local.py": "fb4bef06ecaa92dd313c1f0df687f3fa23ba3a3cf2db3bcc4458002991e2eb42",
-    "verify_pipeline.py": "08fc73973475efc48c91a453e977a633370bda0aec56476b522cdf942aaee308"
+    "docs/BAN_GIAO_task_train_catboost.md": "284b1b9c1a2647c5da546d97bf46166a5d7f6c2b44275a8cc1f091864dee728f",
+    "data/raw/BTCUSD_m1_2018_to_now.csv": "6931fc10712c8e333f9b88f438530385527886da43a2924f0d953543143aea35",
+    "data/processed/dataset_catboost.csv": "08ad7a0093d163c819c9cca36211b0e322013e48c7608e6ad73e46898eb88fda",
+    "data/processed/tradelist_pyramid_local.csv": "5b20337d3abf6a2fb5562dd7d5cdefbcb1407591dbb91c2f02691c61cd8d246c",
+    "src/citd_ml/features/build_features.py": "1253b9b3c6540c871620d6634da905aade635ca28e5c8355825edc08e1fecc49",
+    "src/citd_ml/strategy/pyramid_strategy.py": "83ac176d2067f21df08b405ff4bdd97ea69e787d0133d9d5ebe22fa477ff75be",
+    "src/citd_ml/training/pre_train.py": "22f70482f774aea16618fe5618e9f519071e2cc9977d57e97a8e45c38a54ed7b",
+    "src/citd_ml/training/split_data.py": "dc7f10b62df15462748f067d29c2b9a07a687db30c0186061a8b90b04e9fdd6c",
+    "src/citd_ml/training/train_catboost.py": "857da3b3c4bf8db8aa080f6b52db520665143a23ddd50bce24cbe9920371d6ba",
+    "src/citd_ml/backtest/backtest_pyramid_local.py": "446d06a6509c0ebf5b11120ab7d6b5ebf8ae0676a6a5d3fcdc573292d4965c27",
+    "src/citd_ml/verification/verify_pipeline.py": "b7e9b78bf6b4bc0f19da4da88fa8407aece4915481095cafdae72654d1a435bb"
   },
   "training": {
     "runs": 2,
     "unrounded_frames_identical": true,
     "matches_saved_csv_bytes": true,
     "output_sha256": {
-      "outputs\\catboost_training\\metrics_by_fold.csv": "8be617e4ea20e64a3477bd34363daa786ef741a3b3b91334fbbd869ff859b579",
-      "outputs\\catboost_training\\metrics_summary.csv": "7f5f8a7ce836410eef3b10ef2d548c07b03e168db4b942a1322f811c66281a3d",
-      "outputs\\catboost_training\\oof_random_kfold.csv": "7d8c4bc3ff9db744d62980f0847b1d2b8422354b65223a0ab4943f0525109bdd",
-      "outputs\\catboost_training\\oof_grouped_kfold.csv": "f1a78d42763d9c15dd0c7952c17b936cf74cf41acb1a9d699b8212ece5d0fe0a",
-      "outputs\\catboost_training\\oof_walk_forward.csv": "67ecac4c0da7d86e22f6202195d7cb02a3b62eec3efd7145a1d21c6d763768e8",
-      "outputs\\catboost_training\\oof_purged_walk_forward.csv": "fa33abe906d8ffab59a16e40cfdd8f99ee33044d3362470af75e655a74a5c196"
+      "outputs/catboost_training/metrics_by_fold.csv": "813876eba2a470e24c9520d1ee201a4fa57ca4b15f5940885f0092240223d933",
+      "outputs/catboost_training/metrics_summary.csv": "6664d12cfb314ae24c310e1b9faf5d74dd664a55d1a27139b4dbaf52115c9f36",
+      "outputs/catboost_training/oof_random_kfold.csv": "9f0ffba32bfe5bcc7a45fc6f518824b8c54ba1f545290d08fa40e7e0a2091a11",
+      "outputs/catboost_training/oof_grouped_kfold.csv": "1f8284396b585699a98a8b8a17db59aeaed19410ef5a0adabc8fe582da4d84b1",
+      "outputs/catboost_training/oof_walk_forward.csv": "fc880b06f6b54efe2fdbc34a3290eadc6ae517c7eeab2aa35f7f5a8258f3c9eb",
+      "outputs/catboost_training/oof_purged_walk_forward.csv": "e85fe373b56ba05ba10171ddcf95280282c421a4937589d234431104887c20a8"
     }
   },
   "backtest": {
@@ -51,14 +51,14 @@
     "unrounded_frames_identical": true,
     "matches_saved_csv_bytes": true,
     "output_sha256": {
-      "outputs\\backtest\\baseline_tradelist.csv": "f943e09d88e21f00a07f71d789886205f4ebd0c480469593e15bc674c628b01b",
-      "outputs\\backtest\\backtest_scored_universe.csv": "b75cee88ffba4228f767a3a772530388a63099abc41033c10b7b821cf545e1e7",
-      "outputs\\backtest\\backtest_summary_top50.csv": "961be98d41030b470fef20e3af1d1c2a8967f612c637d7937d78deb7ab234830",
-      "outputs\\backtest\\backtest_retention_sweep.csv": "af99b68be72a36bc22ba592d7e13920584cf6fe69b57f0b4bc528296515d33a1",
-      "outputs\\backtest\\trades_top50_random_kfold.csv": "3fa91b50d44cd74e54279be9dd4c1c3a20026aef44fb1fbc9012783a1e52b928",
-      "outputs\\backtest\\trades_top50_grouped_kfold.csv": "46f35d8c7de7d66cfa4d82d9e7cdb6e2a39fc8ea4254a8f807a508b6cfafd5bb",
-      "outputs\\backtest\\trades_top50_walk_forward.csv": "478d8e822446b4ff0e509e31c790f8e3eae7fd0f6b01441c2040025d88964882",
-      "outputs\\backtest\\trades_top50_purged_walk_forward.csv": "dd20361b2f8b63ccc15e01f70622202bcd11443f9930d4874f2898302e43ab06"
+      "outputs/backtest/baseline_tradelist.csv": "1145efc8cf0e9894ea15c7a4b4312c31bb0b376128b6877b3b98f62a10f7b8bc",
+      "outputs/backtest/backtest_scored_universe.csv": "0a406e0427dccb75e284d664f9305b34914a0e127dc56c2355591349b9d3382e",
+      "outputs/backtest/backtest_summary_top50.csv": "ace89598495582e2797db195292da53bd1f09847b47e81d77c8f99acc82a170e",
+      "outputs/backtest/backtest_retention_sweep.csv": "70b7b6a7c0c9d13f55a44fb0c474f9d6880ee58d678bf166433a54757cf0a3d8",
+      "outputs/backtest/trades_top50_random_kfold.csv": "249aebedcddc38e80b924a5d51e382058208572261994450e0b318d8c688d3a4",
+      "outputs/backtest/trades_top50_grouped_kfold.csv": "97e75f8db82422a1b49e6282d03d785b63a316bf18f84075435b59d635d0461c",
+      "outputs/backtest/trades_top50_walk_forward.csv": "0c7b30ce2c3034ec1318dab7305c8e7afd53e5ccc6eff1151124aad95511c405",
+      "outputs/backtest/trades_top50_purged_walk_forward.csv": "77c24adf9b91cffa87c23538359fa9db3ea5d75dac246fe28fec98c668154be5"
     }
   },
   "backtest_scope": "fixed baseline candidates; shadow signals and gated execution",

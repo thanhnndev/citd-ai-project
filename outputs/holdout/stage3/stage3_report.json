@@ -27,8 +27,8 @@
   ],
   "holdout_file_unchanged": true,
   "classification": {
-    "roc_auc": 0.60502452277619,
-    "f1_at_0_5": 0.40170679670832066
+    "roc_auc": 0.6023152558719406,
+    "f1_at_0_5": 0.4064693317058285
   },
   "data_range": {
     "raw_m1_start": "2018-01-01 22:01:00",
@@ -59,64 +59,64 @@
       "keep_pct": 20,
       "filter": "Top 20%",
       "trades": 1006,
-      "net_profit_R": -25.041180555605266,
-      "max_dd_R": 122.85464520881463,
-      "profit_factor": 0.9489421264263305,
-      "win_rate_pct": 36.48111332007952
+      "net_profit_R": -11.062423196397368,
+      "max_dd_R": 114.34007553777745,
+      "profit_factor": 0.9772911900947754,
+      "win_rate_pct": 36.083499005964214
     },
     {
       "keep_pct": 30,
       "filter": "Top 30%",
       "trades": 1509,
-      "net_profit_R": -39.32733033776272,
-      "max_dd_R": 199.2135339301725,
-      "profit_factor": 0.9479776022587029,
-      "win_rate_pct": 35.71901921802518
+      "net_profit_R": -1.7690864743519228,
+      "max_dd_R": 169.00568257120472,
+      "profit_factor": 0.9976356342940845,
+      "win_rate_pct": 36.18290258449304
     },
     {
       "keep_pct": 40,
       "filter": "Top 40%",
       "trades": 2012,
-      "net_profit_R": -44.395117480791924,
-      "max_dd_R": 236.6655064782335,
-      "profit_factor": 0.9566558599780808,
-      "win_rate_pct": 35.337972166998014
+      "net_profit_R": 28.387168216748478,
+      "max_dd_R": 210.69271812098265,
+      "profit_factor": 1.0279104530436747,
+      "win_rate_pct": 35.834990059642145
     },
     {
       "keep_pct": 50,
       "filter": "Top 50%",
       "trades": 2514,
-      "net_profit_R": -23.833050158080326,
-      "max_dd_R": 272.37786182993227,
-      "profit_factor": 0.9815377756960416,
-      "win_rate_pct": 34.884645982498014
+      "net_profit_R": 30.78592225711712,
+      "max_dd_R": 265.5417179040621,
+      "profit_factor": 1.0238644238065564,
+      "win_rate_pct": 35.20286396181384
     },
     {
       "keep_pct": 60,
       "filter": "Top 60%",
       "trades": 3017,
-      "net_profit_R": 64.51337982096103,
-      "max_dd_R": 248.50436676659564,
-      "profit_factor": 1.0414374071486727,
-      "win_rate_pct": 34.96851176665562
+      "net_profit_R": 35.20653882252449,
+      "max_dd_R": 279.9499440884524,
+      "profit_factor": 1.0224013273381356,
+      "win_rate_pct": 34.637056678820024
     },
     {
       "keep_pct": 70,
       "filter": "Top 70%",
       "trades": 3520,
-      "net_profit_R": 164.7044537740509,
-      "max_dd_R": 228.21952566172442,
-      "profit_factor": 1.0917709272964138,
-      "win_rate_pct": 35.53977272727273
+      "net_profit_R": 122.07668492149972,
+      "max_dd_R": 276.00705669598125,
+      "profit_factor": 1.0671919382272117,
+      "win_rate_pct": 34.85795454545455
     },
     {
       "keep_pct": 80,
       "filter": "Top 80%",
       "trades": 4023,
-      "net_profit_R": 249.63135814789456,
-      "max_dd_R": 226.7551103884586,
-      "profit_factor": 1.1226749475800486,
-      "win_rate_pct": 35.62018394233159
+      "net_profit_R": 160.38143214674486,
+      "max_dd_R": 262.53069251634986,
+      "profit_factor": 1.0780902018032934,
+      "win_rate_pct": 34.899328859060404
     }
   ],
   "top_k_rule": "keep_count=ceil(5028*keep_pct/100); sort probability descending then row_id ascending",
