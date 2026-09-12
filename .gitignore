@@ -38,3 +38,4 @@ Thumbs.db
 data/raw/*.csv
 data/raw/*.zip
 !data/raw/.gitkeep
+temp/
