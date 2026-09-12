@@ -11,10 +11,10 @@
   ],
   "chart1_rows": {
     "Baseline": 8024,
-    "Cách 1 — Random K-Fold": 4277,
-    "Cách 1b — Grouped K-Fold": 4341,
-    "Cách 2 — Walk-forward": 4452,
-    "Cách 3 — WF + Purge/Embargo": 4420
+    "Cách 1 — Random K-Fold": 4298,
+    "Cách 1b — Grouped K-Fold": 4348,
+    "Cách 2 — Walk-forward": 4431,
+    "Cách 3 — WF + Purge/Embargo": 4437
   },
   "chart2_rows": {
     "Baseline holdout": 1975,

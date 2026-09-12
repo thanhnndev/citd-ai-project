@@ -39,9 +39,9 @@
   ],
   "run_id": 2,
   "model_path": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/catboost_final_holdout_run2.cbm",
-  "model_sha256": "116a4aa6cae3a4f57bad6294c2071bd3e045206442c6ccc37fd97a37fe85fa06",
+  "model_sha256": "b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633",
   "prediction_path": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/train_predictions_run2.npy",
-  "prediction_sha256": "6eb1764fbf495bc73ee4a1376dffe20575c44a07b58a44a36358d2ecc6eb27eb",
+  "prediction_sha256": "2b5d473c35036aa979a033ecdf4355b018c62362b70092d7055b1c6844785e8a",
   "holdout_sha256_after": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
   "holdout_file_unchanged": true,
   "versions": {
@@ -58,6 +58,7 @@
     "l2_leaf_reg": 3.0,
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
-    "random_seed": 42
+    "random_seed": 42,
+    "thread_count": 1
   }
 }
