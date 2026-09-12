@@ -1,9 +1,11 @@
 # BÁO CÁO KẾT QUẢ HOLDOUT
 
 > **Ghi chú lần chạy lại:** Báo cáo này được sinh lại trên môi trường `uv`
-> (Python 3.12.14) ngày 2026-09-12. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2
-> là số bàn giao cố định; các dòng Holdout, sweep và hash model bên dưới phản
-> ánh lần chạy mới nhất. Chi tiết thay đổi xem mục CHANGELOG trong `README.md`.
+> (Python 3.12.14, CatBoost `thread_count=1`) ngày 2026-09-12. Việc ghim
+> `thread_count` khắc phục nguyên nhân kết quả lệch giữa các máy (CatBoost mặc
+> định dùng số core CPU). Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 là số bàn
+> giao cố định; các dòng Holdout, sweep và hash model bên dưới phản ánh lần chạy
+> mới nhất. Chi tiết thay đổi xem mục CHANGELOG trong `README.md`.
 
 ## Phần 1 — Số liệu
 
@@ -15,7 +17,7 @@
 | Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 |
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 |
-| Holdout | 0.6023152558719406 | 0.4064693317058285 |
+| Holdout | 0.6045544538928682 | 0.40220723482526055 |
 
 ### Bảng 2 — Chỉ số tài chính, giữ top 50%
 
@@ -27,19 +29,19 @@
 | Cách 2 | 10,004 | +2,207.3 | 205.3 | 1.423 | 34.9 |
 | Cách 3 | 10,004 | +2,253.7 | 154.1 | 1.435 | 35.2 |
 | Baseline holdout | 5,028 | +245.9296826590 | 305.3174286700 | 1.0991525948 | 35.2824184566 |
-| Holdout, top 50% | 2,514 | +30.7859222571 | 265.5417179040 | 1.0238644238 | 35.2028639618 |
+| Holdout, top 50% | 2,514 | -36.5527549959 | 263.2460776970 | 0.9717948517 | 34.8050914877 |
 
 ### Sweep holdout 20–80%
 
 | Lọc | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate % |
 |---|---|---|---|---|---|
-| Top 20% | 1,006 | -11.0624231964 | 114.3400755380 | 0.9772911901 | 36.0834990060 |
-| Top 30% | 1,509 | -1.7690864744 | 169.0056825710 | 0.9976356343 | 36.1829025845 |
-| Top 40% | 2,012 | +28.3871682167 | 210.6927181210 | 1.0279104530 | 35.8349900596 |
-| Top 50% | 2,514 | +30.7859222571 | 265.5417179040 | 1.0238644238 | 35.2028639618 |
-| Top 60% | 3,017 | +35.2065388225 | 279.9499440880 | 1.0224013273 | 34.6370566788 |
-| Top 70% | 3,520 | +122.0766849210 | 276.0070566960 | 1.0671919382 | 34.8579545455 |
-| Top 80% | 4,023 | +160.3814321470 | 262.5306925160 | 1.0780902018 | 34.8993288591 |
+| Top 20% | 1,006 | -30.0133695910 | 125.3762980260 | 0.9384664107 | 36.1829025845 |
+| Top 30% | 1,509 | -50.0085631644 | 210.7653099030 | 0.9342935297 | 35.5202120610 |
+| Top 40% | 2,012 | -53.1654255481 | 251.5557370690 | 0.9485447133 | 35.0397614314 |
+| Top 50% | 2,514 | -36.5527549959 | 263.2460776970 | 0.9717948517 | 34.8050914877 |
+| Top 60% | 3,017 | +73.1608503384 | 233.9524360140 | 1.0473863528 | 35.5982764335 |
+| Top 70% | 3,520 | +186.9249271250 | 197.2372751720 | 1.1040002848 | 35.7670454545 |
+| Top 80% | 4,023 | +259.9112967570 | 219.0240294190 | 1.1277931120 | 35.5207556550 |
 
 ## Phần 2 — Biểu đồ
 
@@ -64,7 +66,7 @@
 2. **23** cột `FEATURES` được so sánh trên **575,184** ô; số ô lệch: **0**.
 3. Purge cắt **0** dòng; embargo cắt **0** dòng; tổng dòng bị loại bởi một trong hai điều kiện: **0**; số dòng train sau lọc: **25,008**.
 4. Backtest holdout khớp `tradelist_pyramid_local.csv`: **5,028/5,028** lệnh; `passed: true`; các trường lệch: không có.
-5. Hai lần train: model SHA-256 khác nhau (`995d66ef93e625b053e2dffaa16a3953edcc410abffbbaa2b8b077647f50bbf3` và `116a4aa6cae3a4f57bad6294c2071bd3e045206442c6ccc37fd97a37fe85fa06`) do metadata build-info nhúng trong file; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và cấu trúc `oblivious_trees` giống hệt.
+5. Hai lần train: model SHA-256 khác nhau (`0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986` và `b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633`) do metadata build-info nhúng trong file; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và cấu trúc `oblivious_trees` giống hệt.
 6. Phiên bản: Python **3.12.14**; CatBoost **1.2.10**; scikit-learn **1.9.0**; pandas **3.0.5**; NumPy **2.5.2**.
 
 ## Phần 5 — Bảng file sinh ra
