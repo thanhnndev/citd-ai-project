@@ -189,6 +189,14 @@ raw file is only needed to rebuild the dataset from scratch.
 All commands assume you are at the repository root and use `uv run` (swap in
 `python` if you activated a `.venv` manually).
 
+> **Frozen step-4 artifacts.** `outputs/catboost_training/`, `outputs/backtest/`
+> and `outputs/verification/` are the handed-over step-4 results, kept
+> byte-identical to the handover. Steps 3–5 below re-run the step-4 pipeline and
+> **overwrite** them; CatBoost training is hardware-sensitive, so a re-run on a
+> different host will not reproduce the frozen numbers. The sealed-holdout
+> workflow in the next section is the step-5 deliverable and never touches those
+> folders.
+
 ### 1. Build the processed dataset
 
 ```bash
@@ -281,6 +289,12 @@ These values are fixed by the handover spec and must not be changed
 | CatBoost params | iterations 1000, lr 0.05, depth 6, l2_leaf_reg 3.0, `auto_class_weights=Balanced`, `eval_metric=AUC`, seed 42, `thread_count=1` |
 | Verified environment | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 |
 
+> `thread_count=1` is an **added technical setting**, not one of the original
+> model hyperparameters: it removes CatBoost's dependence on the host CPU core
+> count so the holdout model reproduces across machines. The handed-over branch
+> artifacts in `outputs/catboost_training/` and `outputs/backtest/` were produced
+> without it and are preserved as-is (see Changelog).
+
 ---
 
 ## Notes and conventions
@@ -294,10 +308,12 @@ These values are fixed by the handover spec and must not be changed
 - **Do not edit committed datasets or `outputs/`** when experimenting. Write new
   results to a new folder so the frozen artifacts stay valid.
 - **Reproducibility:** `random_seed=42` and `thread_count=1` are both pinned, so
-  `verify_pipeline.py` reruns are byte-identical and CatBoost is no longer
-  sensitive to the machine's CPU core count. The committed artifacts are the
-  reference for the Python 3.12.14 run recorded above; cross-architecture
-  CPU/SIMD differences can still produce tiny deviations.
+  the holdout model (stage 2) yields identical predictions across runs and is no
+  longer sensitive to the machine's CPU core count. The handed-over step-4
+  artifacts (`outputs/catboost_training/`, `outputs/backtest/`) are kept
+  byte-identical and were produced on the original machine without
+  `thread_count`, so re-running steps 3–4 will not reproduce those files on a
+  different host.
 
 ## Documentation
 
@@ -310,6 +326,20 @@ These values are fixed by the handover spec and must not be changed
 | [`docs/handover_README.md`](docs/handover_README.md) | Original handover README |
 
 ## Changelog
+
+### 2026-09-12 — Restore handed-over branch artifacts, fix chart 1, document deviation
+
+- **Restored** `data/processed/dataset_catboost.csv`,
+  `outputs/catboost_training/`, `outputs/backtest/` and `outputs/verification/`
+  to the handover originals (they had been regenerated on Linux), so Table 1/2
+  and chart 1 use the frozen branch reference values.
+- **Fixed** chart 1 (`equity-curve-chunk2-5-top50.html`): it now builds from the
+  restored handed-over `backtest_scored_universe.csv`, so its 4 branch endpoints
+  match Table 2 exactly (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R).
+- **Corrected** the Stage-4 report's file table (real script names and sizes) and
+  synced `outputs/holdout/stage4/implementation_decisions.md` with the report.
+- **Documented** the `thread_count=1` deviation from the frozen hyperparameter
+  list as a technical (non-model) setting.
 
 ### 2026-09-12 — Pin `thread_count=1` (root-cause fix for run-to-run drift)
 
@@ -332,9 +362,9 @@ These values are fixed by the handover spec and must not be changed
   (Python 3.12.14, catboost 1.2.10, scikit-learn 1.9.0, pandas 3.0.5,
   numpy 2.5.2, plotly 7.0.0) and committed `uv.lock`.
 - **Full pipeline re-run:** `build_dataset → verify_dataset → train_models →
-  run_backtest → verify_pipeline` all pass, plus holdout stages 1–4.
-  `data/processed/` and `outputs/` now hold the artefacts of this run.
-  `verify_pipeline.py` passes (byte-identical reruns, same machine).
+  run_backtest → verify_pipeline` all pass, plus holdout stages 1–4. The
+  regenerated step-4 artifacts were later restored to the handover originals
+  (see the entry above); only `outputs/holdout/` keeps the new run.
 - **Holdout re-run:** the holdout stages were re-run; final numbers are in the
   entry above (the classification/financial values were refreshed again when
   `thread_count` was pinned).

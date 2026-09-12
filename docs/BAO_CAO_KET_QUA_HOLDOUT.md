@@ -1,11 +1,17 @@
 # BÁO CÁO KẾT QUẢ HOLDOUT
 
-> **Ghi chú lần chạy lại:** Báo cáo này được sinh lại trên môi trường `uv`
-> (Python 3.12.14, CatBoost `thread_count=1`) ngày 2026-09-12. Việc ghim
-> `thread_count` khắc phục nguyên nhân kết quả lệch giữa các máy (CatBoost mặc
-> định dùng số core CPU). Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 là số bàn
-> giao cố định; các dòng Holdout, sweep và hash model bên dưới phản ánh lần chạy
-> mới nhất. Chi tiết thay đổi xem mục CHANGELOG trong `README.md`.
+> **Ghi chú kỹ thuật (deviation so với bàn giao):**
+>
+> - Báo cáo sinh ngày 2026-09-12 trên môi trường `uv` (Python 3.12.14,
+>   CatBoost 1.2.10), chạy lại các giai đoạn holdout.
+> - CatBoost được ghim thêm `thread_count=1` — tham số kỹ thuật (không thuộc
+>   danh sách hyperparameter mô hình đã chốt) nhằm để hai lần train tái lập
+>   giống hệt. Không thêm/bớt feature; `META` không đưa vào `X`.
+> - Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 là số bàn giao cố định. Các
+>   artifact nhánh 80% đầu (`outputs/catboost_training/`, `outputs/backtest/`)
+>   được giữ nguyên bản bàn giao, không tính lại. Chỉ dòng Holdout, bảng sweep
+>   và hash model holdout bên dưới được tính mới.
+> - Chi tiết thay đổi xem mục CHANGELOG trong `README.md`.
 
 ## Phần 1 — Số liệu
 
@@ -59,6 +65,7 @@
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
+10. CatBoost được ghim thêm `thread_count=1` — tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) để hai lần train tái lập giống hệt. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
 
 ## Phần 4 — Kiểm chứng
 
@@ -66,43 +73,50 @@
 2. **23** cột `FEATURES` được so sánh trên **575,184** ô; số ô lệch: **0**.
 3. Purge cắt **0** dòng; embargo cắt **0** dòng; tổng dòng bị loại bởi một trong hai điều kiện: **0**; số dòng train sau lọc: **25,008**.
 4. Backtest holdout khớp `tradelist_pyramid_local.csv`: **5,028/5,028** lệnh; `passed: true`; các trường lệch: không có.
-5. Hai lần train: model SHA-256 khác nhau (`0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986` và `b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633`) do metadata build-info nhúng trong file; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và cấu trúc `oblivious_trees` giống hệt.
+5. Hai lần train: model SHA-256 khác nhau (`0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986` và `b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633`) do metadata sinh khi lưu file — 32 byte khác nhau gồm `model_guid` ngẫu nhiên và `train_finish_time`, không phải cây; **25,008** predictions giống hệt (`max abs difference = 0.0`), hash predictions giống nhau và leaf values/`oblivious_trees` giống hệt.
 6. Phiên bản: Python **3.12.14**; CatBoost **1.2.10**; scikit-learn **1.9.0**; pandas **3.0.5**; NumPy **2.5.2**.
 
 ## Phần 5 — Bảng file sinh ra
 
+File output (dưới `outputs/holdout/`):
+
 | File | Giai đoạn | Chứa gì | Dòng / kích thước |
 |---|---:|---|---|
-| `dataset_catboost_full_regenerated.csv` | 1 | Dataset tái sinh toàn bộ | 30,040 dòng; 9,830,921 B |
-| `dataset_catboost_holdout.csv` | 1 | Dataset holdout | 5,028 dòng; 1,653,291 B |
-| `stage1_validation_report.json` | 1 | Kết quả kiểm dataset | 1,011 B |
-| `verify_and_split_holdout.py` | 1 | Script kiểm và tách holdout | 3,781 B |
-| `catboost_final_holdout_run1.cbm` | 2 | Model chính thức | 1,129,264 B |
-| `catboost_final_holdout_run2.cbm` | 2 | Model train độc lập lần 2 | 1,129,264 B |
+| `dataset_catboost_full_regenerated.csv` | 1 | Dataset tái sinh toàn bộ | 30,040 dòng; 9,800,880 B |
+| `dataset_catboost_holdout.csv` | 1 | Dataset holdout | 5,028 dòng; 1,648,262 B |
+| `stage1_validation_report.json` | 1 | Kết quả kiểm dataset | 888 B |
+| `catboost_final_holdout_run1.cbm` | 2 | Model chính thức | 1,129,392 B |
+| `catboost_final_holdout_run2.cbm` | 2 | Model train độc lập lần 2 | 1,129,392 B |
 | `train_predictions_run1.npy` | 2 | Xác suất train lần 1 | 25,008 giá trị; 200,192 B |
 | `train_predictions_run2.npy` | 2 | Xác suất train lần 2 | 25,008 giá trị; 200,192 B |
-| `train_run1_report.json` | 2 | Log train lần 1 | 1,940 B |
-| `train_run2_report.json` | 2 | Log train lần 2 | 1,940 B |
-| `stage2_reproducibility_report.json` | 2 | Kết quả tái lập model | 399 B |
-| `train_final_model_holdout.py` | 2 | Script train và kiểm tái lập | 6,468 B |
-| `holdout_scored.csv` | 3 | Holdout kèm xác suất CatBoost | 5,028 dòng; 1,666,608 B |
-| `holdout_fixed_trade_universe_scored.csv` | 3 | Vũ trụ lệnh holdout cố định kèm điểm | 5,028 dòng; 2,268,533 B |
-| `holdout_trades_top20.csv` | 3 | Lệnh holdout Top 20% | 1,006 dòng; 455,214 B |
-| `holdout_trades_top30.csv` | 3 | Lệnh holdout Top 30% | 1,509 dòng; 682,034 B |
-| `holdout_trades_top40.csv` | 3 | Lệnh holdout Top 40% | 2,012 dòng; 908,772 B |
-| `holdout_trades_top50.csv` | 3 | Lệnh holdout Top 50% | 2,514 dòng; 1,134,776 B |
-| `holdout_trades_top60.csv` | 3 | Lệnh holdout Top 60% | 3,017 dòng; 1,361,199 B |
-| `holdout_trades_top70.csv` | 3 | Lệnh holdout Top 70% | 3,520 dòng; 1,587,848 B |
-| `holdout_trades_top80.csv` | 3 | Lệnh holdout Top 80% | 4,023 dòng; 1,814,961 B |
-| `stage3_backtest_summary.csv` | 3 | Bảng metrics baseline và sweep holdout | 8 dòng; 660 B |
-| `stage3_report.json` | 3 | Báo cáo chấm điểm, đối chiếu và backtest | 3,408 B |
-| `stage3_holdout_backtest.py` | 3 | Script chấm điểm và backtest holdout | 10,148 B |
-| `table1_classification_metrics.csv` | 4 | Bảng 1 | 5 dòng; 242 B |
-| `table2_financial_metrics_top50.csv` | 4 | Bảng 2 | 7 dòng; 477 B |
-| `holdout_sweep_20_80.csv` | 4 | Bảng sweep holdout | 7 dòng; 584 B |
-| `stage4_tables.md` | 4 | Ba bảng Stage 4 | 1,731 B |
-| `equity-curve-chunk2-5-top50.html` | 4 | Biểu đồ 1 HTML | 5,409,902 B |
-| `equity-curve-holdout-top50.html` | 4 | Biểu đồ 2 HTML | 4,438,066 B |
-| `implementation_decisions.md` | 4 | Quyết định triển khai | 1,249 B |
-| `stage4_manifest.json` | 4 | Manifest Stage 4 | 614 B |
-| `stage4_build_tables_and_charts.py` | 4 | Script dựng bảng và biểu đồ | 9,008 B |
+| `train_run1_report.json` | 2 | Log train lần 1 | 1,863 B |
+| `train_run2_report.json` | 2 | Log train lần 2 | 1,863 B |
+| `stage2_reproducibility_report.json` | 2 | Kết quả tái lập model | 390 B |
+| `holdout_scored.csv` | 3 | Holdout kèm xác suất CatBoost | 5,028 dòng; 1,661,606 B |
+| `holdout_fixed_trade_universe_scored.csv` | 3 | Vũ trụ lệnh holdout cố định kèm điểm | 5,028 dòng; 2,263,531 B |
+| `holdout_trades_top20.csv` | 3 | Lệnh holdout Top 20% | 1,006 dòng; 454,493 B |
+| `holdout_trades_top30.csv` | 3 | Lệnh holdout Top 30% | 1,509 dòng; 680,410 B |
+| `holdout_trades_top40.csv` | 3 | Lệnh holdout Top 40% | 2,012 dòng; 906,297 B |
+| `holdout_trades_top50.csv` | 3 | Lệnh holdout Top 50% | 2,514 dòng; 1,132,050 B |
+| `holdout_trades_top60.csv` | 3 | Lệnh holdout Top 60% | 3,017 dòng; 1,358,175 B |
+| `holdout_trades_top70.csv` | 3 | Lệnh holdout Top 70% | 3,520 dòng; 1,584,187 B |
+| `holdout_trades_top80.csv` | 3 | Lệnh holdout Top 80% | 4,023 dòng; 1,810,896 B |
+| `stage3_backtest_summary.csv` | 3 | Bảng metrics baseline và sweep holdout | 8 dòng; 654 B |
+| `stage3_report.json` | 3 | Báo cáo chấm điểm, đối chiếu và backtest | 3,288 B |
+| `table1_classification_metrics.csv` | 4 | Bảng 1 | 5 dòng; 238 B |
+| `table2_financial_metrics_top50.csv` | 4 | Bảng 2 | 7 dòng; 469 B |
+| `holdout_sweep_20_80.csv` | 4 | Bảng sweep holdout | 7 dòng; 576 B |
+| `stage4_tables.md` | 4 | Ba bảng Stage 4 | 1,700 B |
+| `equity-curve-chunk2-5-top50.html` | 4 | Biểu đồ 1 HTML | 5,406,291 B |
+| `equity-curve-holdout-top50.html` | 4 | Biểu đồ 2 HTML | 4,434,199 B |
+| `implementation_decisions.md` | 4 | Quyết định triển khai | 2,070 B |
+| `stage4_manifest.json` | 4 | Manifest Stage 4 | 592 B |
+
+Script thực thi (mã nguồn, không phải output):
+
+| Script | Giai đoạn | Dòng / kích thước |
+|---|---:|---|
+| `scripts/holdout_stage1_split.py` | 1 | 96 dòng; 3,584 B |
+| `scripts/holdout_stage2_train.py` | 2 | 151 dòng; 6,322 B |
+| `scripts/holdout_stage3_backtest.py` | 3 | 149 dòng; 9,557 B |
+| `scripts/holdout_stage4_report.py` | 4 | 143 dòng; 10,268 B |

@@ -186,6 +186,13 @@ khi muốn sinh lại dataset từ đầu.
 Các lệnh dưới đây chạy từ thư mục gốc repo, dùng `uv run` (thay bằng `python`
 nếu bạn tự kích hoạt `.venv`).
 
+> **Artifact bước 4 đã niêm phong.** `outputs/catboost_training/`,
+> `outputs/backtest/` và `outputs/verification/` là kết quả bước 4 bàn giao,
+> được giữ nguyên từng byte. Các bước 3–5 dưới đây chạy lại pipeline bước 4 và
+> **ghi đè** chúng; CatBoost phụ thuộc phần cứng nên chạy lại trên máy khác sẽ
+> không tái tạo đúng số đã niêm phong. Quy trình holdout niêm phong ở mục sau là
+> phần bàn giao bước 5 và không đụng tới các thư mục đó.
+
 ### 1. Sinh dataset
 
 ```bash
@@ -276,6 +283,12 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | Hyperparameter CatBoost | iterations 1000, lr 0.05, depth 6, l2_leaf_reg 3.0, `auto_class_weights=Balanced`, `eval_metric=AUC`, seed 42, `thread_count=1` |
 | Môi trường đã kiểm | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 |
 
+> `thread_count=1` là **tham số kỹ thuật thêm vào**, không thuộc danh sách
+> hyperparameter mô hình gốc: nó loại bỏ phụ thuộc vào số core CPU để model
+> holdout tái lập giữa các máy. Các artifact nhánh 80% đầu trong
+> `outputs/catboost_training/` và `outputs/backtest/` được sinh khi chưa có nó và
+> được giữ nguyên (xem Changelog).
+
 ---
 
 ## Lưu ý và quy ước
@@ -286,11 +299,12 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   về sau; backtest giữ một chiến lược `shadow` chính vì lý do này.
 - **Không sửa dataset hay `outputs/` đã commit** khi thử nghiệm. Ghi kết quả
   mới ra thư mục riêng để giữ nguyên các artifact đã niêm phong.
-- **Tái lập:** đã ghim cả `random_seed=42` lẫn `thread_count=1`, nên
-  `verify_pipeline.py` chạy lại giống hệt từng byte và CatBoost không còn phụ
-  thuộc số core CPU. Các artifact đã commit là mốc tham chiếu của lần chạy
-  Python 3.12.14 ở trên; khác biệt CPU/SIMD giữa các kiến trúc vẫn có thể gây
-  lệch rất nhỏ.
+- **Tái lập:** đã ghim cả `random_seed=42` lẫn `thread_count=1`, nên model
+  holdout (giai đoạn 2) cho dự đoán giống hệt giữa các lần chạy và không còn phụ
+  thuộc số core CPU. Các artifact bước 4 bàn giao
+  (`outputs/catboost_training/`, `outputs/backtest/`) được giữ nguyên từng byte
+  và sinh trên máy gốc khi chưa có `thread_count`, nên chạy lại bước 3–4 trên
+  máy khác sẽ không tái tạo đúng các file đó.
 
 ## Tài liệu
 
@@ -303,6 +317,20 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | [`docs/handover_README.md`](docs/handover_README.md) | README bàn giao gốc |
 
 ## Changelog
+
+### 2026-09-12 — Khôi phục artifact nhánh bàn giao, sửa biểu đồ 1, ghi deviation
+
+- **Khôi phục** `data/processed/dataset_catboost.csv`,
+  `outputs/catboost_training/`, `outputs/backtest/` và `outputs/verification/`
+  về đúng bản bàn giao (trước đó đã bị sinh lại trên Linux), để Bảng 1/2 và
+  biểu đồ 1 dùng đúng số nhánh đã niêm phong.
+- **Sửa** biểu đồ 1 (`equity-curve-chunk2-5-top50.html`): nay dựng từ file
+  `backtest_scored_universe.csv` bàn giao đã khôi phục, nên 4 điểm cuối của
+  nhánh khớp Bảng 2 (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R).
+- **Sửa** bảng file của báo cáo Stage 4 (đúng tên script và kích thước) và đồng
+  bộ `outputs/holdout/stage4/implementation_decisions.md` với báo cáo.
+- **Ghi rõ** deviation `thread_count=1` so với danh sách hyperparameter đã chốt
+  — đây là tham số kỹ thuật, không phải hyperparameter mô hình.
 
 ### 2026-09-12 — Ghim `thread_count=1` (fix root cause lệch giữa các lần chạy)
 
@@ -325,8 +353,8 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   plotly 7.0.0) và commit `uv.lock`.
 - **Chạy lại toàn bộ pipeline:** `build_dataset → verify_dataset →
   train_models → run_backtest → verify_pipeline` đều pass, cộng thêm 4 giai
-  đoạn holdout. `data/processed/` và `outputs/` nay là artifact của lần chạy
-  này. `verify_pipeline.py` pass (chạy lặp giống hệt từng byte, cùng máy).
+  đoạn holdout. Các artifact bước 4 sinh lại sau đó đã được khôi phục về bản
+  bàn giao (xem mục trên); chỉ `outputs/holdout/` giữ kết quả chạy mới.
 - **Chạy lại holdout:** các giai đoạn holdout đã chạy lại; số cuối cùng nằm ở
   mục phía trên (số phân loại/tài chính được cập nhật lần nữa khi ghim
   `thread_count`).
