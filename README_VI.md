@@ -124,15 +124,16 @@ một trong hai cách: `uv` (khuyến nghị) hoặc `.venv` thuần.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. tạo .venv + cài thư viện và package ở chế độ editable
-uv sync
+uv sync --extra dev
 
 # 3. chạy mọi thứ trong môi trường của dự án
 uv run python scripts/train_models.py
 uv run pytest
 ```
 
-`uv sync` đọc `pyproject.toml`, tạo `.venv/` và sinh file lock `uv.lock`. Nên
-commit `uv.lock` để mọi bản clone có đúng phiên bản.
+`uv sync --extra dev` đọc `pyproject.toml`, tạo `.venv/`, cài thêm `pytest` từ
+nhóm `dev` và dùng file lock `uv.lock` đã commit để mọi bản clone có đúng phiên
+bản.
 
 Thêm thư viện mới:
 

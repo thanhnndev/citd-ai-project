@@ -126,15 +126,16 @@ versions from `pyproject.toml`.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. create .venv + install dependencies and the package in editable mode
-uv sync
+uv sync --extra dev
 
 # 3. run anything inside the project environment
 uv run python scripts/train_models.py
 uv run pytest
 ```
 
-`uv sync` reads `pyproject.toml`, creates `.venv/`, and writes a lock file
-(`uv.lock`). Keep `uv.lock` committed so every clone gets identical versions.
+`uv sync --extra dev` reads `pyproject.toml`, creates `.venv/`, installs
+`pytest` from the `dev` extra, and uses the committed `uv.lock` so every clone
+gets identical versions.
 
 To add a new dependency:
 
