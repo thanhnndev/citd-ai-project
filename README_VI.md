@@ -325,6 +325,29 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 
 ## Changelog
 
+### 2026-09-13 — Hoàn thiện bàn giao holdout và phạm vi bằng chứng
+
+- **Hoàn thiện báo cáo để gửi nhóm trưởng:**
+  `docs/BAO_CAO_KET_QUA_HOLDOUT.md` nay được sinh từ các artifact JSON/CSV đã
+  commit của Stage 1–3. Báo cáo gồm cấu hình train cuối, bảng phân loại và tài
+  chính, sweep holdout 20–80%, link biểu đồ, trạng thái kiểm chứng và danh mục
+  output tự cập nhật.
+- **Giới hạn phát biểu tái lập đúng bằng chứng:** hai lượt độc lập trên máy sinh
+  artifact có 25,008 prediction giống hệt từng byte (`max abs difference =
+  0.0`), trong khi hash hai file `.cbm` khác nhau. Kết quả teammate trên Windows
+  (prediction trong sai số `1e-15`) được ghi là bằng chứng hỗ trợ, không dùng để
+  kết luận `thread_count` là nguyên nhân duy nhất của mọi sai lệch liên máy.
+- **Làm hai biểu đồ Plotly tái sinh ổn định:** cố định `div_id` trong HTML để
+  chạy lại Stage 4 không tạo diff giả chỉ vì UUID ngẫu nhiên.
+- **Bổ sung test nhất quán** cho bằng chứng reproducibility, bảng holdout đã làm
+  tròn và ID biểu đồ deterministic. Bộ test cuối pass 5/5.
+- **Sửa hướng dẫn cài mới** thành `uv sync --extra dev`, bảo đảm có `pytest`
+  trước khi chạy lệnh test trong README.
+- **Valid lại toàn bộ quy trình holdout:** 25,008/25,008 khóa cũ và
+  575,184/575,184 ô feature khớp; purge và embargo cắt 0 dòng; hai lượt train có
+  prediction giống hệt; replay baseline khớp 5,028/5,028 lệnh holdout; metrics
+  Stage 3 và báo cáo Stage 4 sinh lại không đổi.
+
 ### 2026-09-12 — Khôi phục artifact nhánh bàn giao, sửa biểu đồ 1, ghi deviation
 
 - **Khôi phục** `data/processed/dataset_catboost.csv`,

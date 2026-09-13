@@ -334,6 +334,30 @@ These values are fixed by the handover spec and must not be changed
 
 ## Changelog
 
+### 2026-09-13 — Finalize holdout handoff and evidence scope
+
+- **Finalized the submission report:**
+  `docs/BAO_CAO_KET_QUA_HOLDOUT.md` is now generated from the committed Stage
+  1–3 JSON/CSV artifacts. It includes the final training configuration,
+  classification and financial tables, the 20–80% holdout sweep, chart links,
+  verification status, and an automatically refreshed output inventory.
+- **Scoped reproducibility claims to the available evidence:** two independent
+  runs on the artifact-producing machine have 25,008 byte-identical
+  predictions (`max abs difference = 0.0`), while the serialized `.cbm` hashes
+  differ. The Windows teammate result (predictions within `1e-15`) is recorded
+  as supporting evidence, not proof that thread count is the sole cause of all
+  cross-machine variation.
+- **Made both Plotly reports deterministic:** fixed HTML `div_id` values prevent
+  random UUID-only diffs when Stage 4 is run again.
+- **Added consistency tests** for the reproducibility evidence, rounded holdout
+  summary, and deterministic chart IDs. The final suite passes 5/5 tests.
+- **Corrected fresh-clone setup** to use `uv sync --extra dev`, ensuring
+  `pytest` is installed before the documented test command is run.
+- **Revalidated the complete holdout workflow:** 25,008/25,008 frozen keys and
+  575,184/575,184 feature cells match; purge and embargo remove 0 rows; both
+  training runs have identical predictions; baseline replay matches 5,028/5,028
+  holdout trades; Stage 3 metrics and Stage 4 reports regenerate unchanged.
+
 ### 2026-09-12 — Restore handed-over branch artifacts, fix chart 1, document deviation
 
 - **Restored** `data/processed/dataset_catboost.csv`,
