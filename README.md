@@ -336,6 +336,17 @@ These values are fixed by the handover spec and must not be changed
 
 ### 2026-09-13 — Finalize holdout handoff and evidence scope
 
+- **Incorporated final report review:** documented the holdout re-run history
+  and technical reason, clarified that Table 1 reports fold means after chunk 1
+  is removed, explicitly marked full-pipeline byte reproducibility as unproven,
+  and added a purpose description for every generated artifact.
+- **Made report publication fail closed:** Stage 4 now validates the underlying
+  Stage 1–3 evidence flags and expected counts before writing any report output.
+  Negative tests confirm that failed feature matching, prediction equality, or
+  baseline replay prevents a PASS report from being generated.
+- **Changed equity curves to step lines:** all seven Plotly traces now remain
+  flat between close times and jump only when closed-trade R is recorded; trace
+  counts, data scope, CSV endpoints, and reported results remain unchanged.
 - **Finalized the submission report:**
   `docs/BAO_CAO_KET_QUA_HOLDOUT.md` is now generated from the committed Stage
   1–3 JSON/CSV artifacts. It includes the final training configuration,

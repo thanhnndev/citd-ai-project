@@ -327,6 +327,17 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 
 ### 2026-09-13 — Hoàn thiện bàn giao holdout và phạm vi bằng chứng
 
+- **Áp dụng feedback cuối cho báo cáo:** bổ sung lịch sử và lý do kỹ thuật phải
+  chạy lại holdout; chú thích Bảng 1 là trung bình theo fold sau khi bỏ khúc 1;
+  ghi rõ chưa chứng minh toàn pipeline tái lập từng byte; mô tả mục đích cụ thể
+  của từng artifact.
+- **Chặn sinh báo cáo theo cơ chế fail-closed:** Stage 4 kiểm trực tiếp các cờ
+  evidence và số đếm kỳ vọng từ Stage 1–3 trước khi ghi output. Test âm xác nhận
+  feature, prediction hoặc replay baseline sai sẽ khiến script dừng, không thể
+  xuất báo cáo PASS.
+- **Đổi equity curve sang đường bậc thang:** cả 7 trace Plotly giữ nguyên giữa
+  các `close_time` và chỉ nhảy khi ghi nhận R của lệnh đóng; số đường, phạm vi dữ
+  liệu, endpoint CSV và kết quả báo cáo không đổi.
 - **Hoàn thiện báo cáo để gửi nhóm trưởng:**
   `docs/BAO_CAO_KET_QUA_HOLDOUT.md` nay được sinh từ các artifact JSON/CSV đã
   commit của Stage 1–3. Báo cáo gồm cấu hình train cuối, bảng phân loại và tài
