@@ -3,4 +3,4 @@ Cách 1 — Random K-Fold,0.8595,0.6525
 Cách 1b — Grouped K-Fold,0.7475,0.5105
 Cách 2 — Walk-forward,0.5867,0.3267
 Cách 3 — WF + Purge/Embargo,0.5948,0.3304
-Holdout,0.6045544538928682,0.40220723482526055
+Holdout,0.6046,0.4022

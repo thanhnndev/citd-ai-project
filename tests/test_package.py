@@ -6,6 +6,9 @@ layout and the frozen research constants.
 
 from __future__ import annotations
 
+import csv
+import json
+
 from citd_ml import __version__, paths
 
 
@@ -38,3 +41,32 @@ def test_expected_paths_are_inside_project() -> None:
         paths.HOLDOUT_STAGE4_DIR,
     ):
         assert paths.PROJECT_ROOT in (path, *path.parents)
+
+
+def test_holdout_evidence_and_summary_are_consistent() -> None:
+    repeat = json.loads(
+        (paths.HOLDOUT_STAGE2_DIR / "stage2_reproducibility_report.json").read_text()
+    )
+    assert repeat["verification_scope"] == (
+        "two independent training runs on the current machine"
+    )
+    assert repeat["predictions_exactly_equal"] is True
+    assert repeat["max_prediction_abs_difference"] == 0.0
+    assert repeat["cross_machine_claim"] == "not established by this command"
+
+    with (paths.HOLDOUT_STAGE4_DIR / "table1_classification_metrics.csv").open(
+        newline="", encoding="utf-8"
+    ) as stream:
+        classification = list(csv.DictReader(stream))
+    assert classification[-1] == {
+        "method": "Holdout",
+        "roc_auc": "0.6046",
+        "f1_at_0_5": "0.4022",
+    }
+
+    for filename in (
+        "equity-curve-chunk2-5-top50.html",
+        "equity-curve-holdout-top50.html",
+    ):
+        html = (paths.HOLDOUT_STAGE4_DIR / filename).read_text(encoding="utf-8")
+        assert f'id="{filename.removesuffix(".html")}"' in html

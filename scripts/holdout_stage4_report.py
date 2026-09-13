@@ -18,6 +18,7 @@ from citd_ml import paths
 SOURCE = paths.BACKTEST_DIR
 STAGE3 = paths.HOLDOUT_STAGE3_DIR
 OUT = paths.HOLDOUT_STAGE4_DIR
+REPORT = paths.DOCS_DIR / "BAO_CAO_KET_QUA_HOLDOUT.md"
 
 
 # First four rows are the handed-over classification reference (chunk 1 removed).
@@ -31,11 +32,15 @@ BRANCH_TABLE1 = [
 
 
 def fmt_r(value: float) -> str:
-    return f"{value:+,.10f}"
+    return f"{value:+,.2f}"
 
 
 def fmt_num(value: float) -> str:
-    return f"{value:,.10f}"
+    return f"{value:,.2f}"
+
+
+def fmt_ratio(value: float) -> str:
+    return f"{value:.4f}"
 
 
 def equity_by_close_time(trades: pd.DataFrame) -> pd.DataFrame:
@@ -70,6 +75,127 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     return "| " + " | ".join(headers) + " |\n|" + "|".join(["---"] * len(headers)) + "|\n" + "\n".join("| " + " | ".join(r) + " |" for r in rows) + "\n"
 
 
+def output_inventory() -> list[list[str]]:
+    rows = []
+    for path in sorted(paths.HOLDOUT_DIR.glob("stage*/*")):
+        stage = path.parent.name.removeprefix("stage")
+        if path.suffix == ".csv":
+            detail = f"{sum(1 for _ in path.open(encoding='utf-8')) - 1:,} dòng"
+        elif path.suffix == ".npy":
+            detail = f"{len(np.load(path, allow_pickle=False)):,} giá trị"
+        else:
+            detail = "artifact"
+        relative = path.relative_to(paths.PROJECT_ROOT)
+        rows.append([f"[`{path.name}`](../{relative})", stage, detail, f"{path.stat().st_size:,} B"])
+    return rows
+
+
+def write_submission_report(
+    table1_rows: list[list[str]],
+    table2_rows: list[list[str]],
+    sweep_rows: list[list[str]],
+) -> None:
+    stage1 = json.loads((paths.HOLDOUT_STAGE1_DIR / "stage1_validation_report.json").read_text(encoding="utf-8"))
+    train = json.loads((paths.HOLDOUT_STAGE2_DIR / "train_run1_report.json").read_text(encoding="utf-8"))
+    repeat = json.loads((paths.HOLDOUT_STAGE2_DIR / "stage2_reproducibility_report.json").read_text(encoding="utf-8"))
+    stage3 = json.loads((paths.HOLDOUT_STAGE3_DIR / "stage3_report.json").read_text(encoding="utf-8"))
+    versions = train["versions"]
+    params = train["params"]
+    counts = stage1["counts"]
+    comparison = stage3["baseline_comparison"]
+    param_text = " · ".join(f"`{key}={value}`" for key, value in params.items())
+    mismatch_fields = ", ".join(comparison["mismatched_fields"]) or "không có"
+
+    report = """# BÁO CÁO KẾT QUẢ TRAIN VÀ HOLDOUT
+
+> Phạm vi: tổng hợp artifact đã chốt của 4 cách chia trên tập 80% đầu và kết
+> quả holdout niêm phong. Báo cáo chỉ ghi số liệu, quyết định triển khai và bằng
+> chứng kiểm chứng; không biện luận hay kết luận thay báo cáo chính.
+
+## Phần 1 — Số liệu
+
+### 1.1. Cấu hình train cuối
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Tập train trước/sau purge + embargo | {train_before:,} / {train_after:,} dòng |
+| Tập holdout | {holdout_rows:,} dòng; không bỏ dòng |
+| Feature đầu vào | {feature_count} `FEATURES`; không đưa `META` vào `X` |
+| Hyperparameter và thiết lập kỹ thuật | {param_text} |
+
+### 1.2. Chỉ số phân loại
+
+{table1}
+### 1.3. Chỉ số tài chính, giữ top 50%
+
+{table2}
+### 1.4. Sweep holdout 20–80%
+
+{sweep}
+## Phần 2 — Biểu đồ
+
+- [Biểu đồ 1 — Baseline và 4 nhánh top 50%, khúc 2–5](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.html)
+- [Biểu đồ 2 — Baseline holdout và Holdout top 50%](../outputs/holdout/stage4/equity-curve-holdout-top50.html)
+
+Hai biểu đồ được dựng bằng Python/Plotly, trục ngang là `close_time`, trục dọc
+là R cộng dồn từ 0. File HTML chứa Plotly nội tuyến nên mở độc lập được.
+
+## Phần 3 — Quyết định triển khai
+
+1. Dùng `ceil(n × keep_pct / 100)` cho số lệnh giữ lại: top 50% của 20,007 lệnh là 10,004; top 50% của 5,028 lệnh là 2,514.
+2. Xếp `probability` giảm dần, dùng `row_id` tăng dần để phá hòa; vũ trụ lệnh baseline giữ cố định nên lệnh bị loại không làm đổi tín hiệu sau đó.
+3. Equity ghi nhận tại `close_time`; các lệnh đóng cùng lúc được cộng thành một điểm rồi mới cập nhật đường vốn.
+4. Bốn dòng train ở Bảng 1 và năm dòng đầu Bảng 2 lấy nguyên từ artifact bàn giao đã niêm phong; dòng holdout và sweep lấy từ Stage 3.
+5. Thêm `thread_count=1` như thiết lập kỹ thuật để loại số luồng CPU như một nguồn sai lệch đã biết; không xem đây là hyperparameter mô hình và không dùng riêng phép thử này để kết luận nguyên nhân sai lệch liên máy.
+
+## Phần 4 — Kiểm chứng
+
+| Phép kiểm | Kết quả |
+|---|---|
+| Dataset tái sinh trước holdout | **PASS** — {matching_keys:,}/{frozen_rows:,} khóa cũ; thiếu 0 |
+| Giá trị feature | **PASS** — {feature_cells:,} ô đã so; lệch 0 |
+| Purge / embargo tại biên holdout | **PASS** — cắt {purge_rows} / {embargo_rows} dòng; train còn {train_after:,} |
+| Holdout không bị sửa khi train/chấm điểm | **PASS** — SHA-256 trước/sau giữ nguyên |
+| Replay baseline so với tradelist bàn giao | **PASS** — {actual_trades:,}/{reference_trades:,} lệnh; trường lệch: {mismatch_fields} |
+| Lặp train trên cùng máy | **PASS** — {prediction_count:,} predictions giống hệt; max abs diff = {max_diff} |
+| File model `.cbm` | **GHI NHẬN** — SHA-256 hai file khác nhau; binary model không phải tiêu chí PASS |
+| Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo sai số prediction trong `1e-15`; chưa có artifact đối chứng được commit và chưa có thí nghiệm chỉ thay `thread_count` |
+
+Môi trường sinh artifact: Python {python}; CatBoost {catboost}; scikit-learn
+{sklearn}; pandas {pandas}; NumPy {numpy}.
+
+## Phần 5 — Bảng file sinh ra
+
+{inventory}
+""".format(
+        train_before=train["train_rows_before_filtering"],
+        train_after=train["train_rows_after_filtering"],
+        holdout_rows=counts["holdout_rows"],
+        feature_count=len(train["features"]),
+        param_text=param_text,
+        table1=markdown_table(["Cách chia", "ROC-AUC", "F1 @0.5"], table1_rows),
+        table2=markdown_table(["", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], table2_rows),
+        sweep=markdown_table(["Lọc", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], sweep_rows),
+        matching_keys=counts["matching_keys"],
+        frozen_rows=counts["frozen_rows"],
+        feature_cells=counts["feature_cells_compared"],
+        purge_rows=train["purge_rows"],
+        embargo_rows=train["embargo_rows"],
+        actual_trades=comparison["actual_holdout_trades"],
+        reference_trades=comparison["reference_holdout_trades"],
+        mismatch_fields=mismatch_fields,
+        prediction_count=repeat["prediction_count"],
+        max_diff=repeat["max_prediction_abs_difference"],
+        python=versions["python"],
+        catboost=versions["catboost"],
+        sklearn=versions["scikit_learn"],
+        pandas=versions["pandas"],
+        numpy=versions["numpy"],
+        inventory=markdown_table(["File", "Giai đoạn", "Quy mô", "Kích thước"], output_inventory()),
+    )
+    REPORT.write_text(report.rstrip() + "\n", encoding="utf-8")
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     prior_sweep = pd.read_csv(SOURCE / "backtest_retention_sweep.csv")
@@ -82,7 +208,7 @@ def main() -> None:
     stage3_report = json.loads((STAGE3 / "stage3_report.json").read_text(encoding="utf-8"))
     holdout_classification = stage3_report["classification"]
     table1_rows = BRANCH_TABLE1 + [
-        ["Holdout", f"{holdout_classification['roc_auc']}", f"{holdout_classification['f1_at_0_5']}"],
+        ["Holdout", f"{holdout_classification['roc_auc']:.4f}", f"{holdout_classification['f1_at_0_5']:.4f}"],
     ]
 
     # The first five rows are copied from the handed-over report table, not recalculated.
@@ -92,11 +218,11 @@ def main() -> None:
         ["Cách 1b", "10,004", "+4,724.3", "99.5", "1.942", "39.2"],
         ["Cách 2", "10,004", "+2,207.3", "205.3", "1.423", "34.9"],
         ["Cách 3", "10,004", "+2,253.7", "154.1", "1.435", "35.2"],
-        ["Baseline holdout", f"{int(baseline_holdout.trades):,}", fmt_r(baseline_holdout.net_profit_R), fmt_num(baseline_holdout.max_dd_R), f"{baseline_holdout.profit_factor:.10f}", f"{baseline_holdout.win_rate_pct:.10f}"],
-        ["Holdout, top 50%", f"{int(top50_holdout.trades):,}", fmt_r(top50_holdout.net_profit_R), fmt_num(top50_holdout.max_dd_R), f"{top50_holdout.profit_factor:.10f}", f"{top50_holdout.win_rate_pct:.10f}"],
+        ["Baseline holdout", f"{int(baseline_holdout.trades):,}", fmt_r(baseline_holdout.net_profit_R), fmt_num(baseline_holdout.max_dd_R), fmt_ratio(baseline_holdout.profit_factor), f"{baseline_holdout.win_rate_pct:.2f}"],
+        ["Holdout, top 50%", f"{int(top50_holdout.trades):,}", fmt_r(top50_holdout.net_profit_R), fmt_num(top50_holdout.max_dd_R), fmt_ratio(top50_holdout.profit_factor), f"{top50_holdout.win_rate_pct:.2f}"],
     ]
     sweep = stage3_summary.loc[stage3_summary.keep_pct.isin([20, 30, 40, 50, 60, 70, 80])].copy()
-    sweep_rows = [[f"Top {int(row.keep_pct)}%", f"{int(row.trades):,}", fmt_r(row.net_profit_R), fmt_num(row.max_dd_R), f"{row.profit_factor:.10f}", f"{row.win_rate_pct:.10f}"] for row in sweep.itertuples()]
+    sweep_rows = [[f"Top {int(row.keep_pct)}%", f"{int(row.trades):,}", fmt_r(row.net_profit_R), fmt_num(row.max_dd_R), fmt_ratio(row.profit_factor), f"{row.win_rate_pct:.2f}"] for row in sweep.itertuples()]
 
     classification = pd.DataFrame(table1_rows, columns=["method", "roc_auc", "f1_at_0_5"])
     financial = pd.DataFrame(table2_rows, columns=["method", "trades", "net_profit_R", "max_dd_R", "profit_factor", "win_rate_pct"])
@@ -144,6 +270,7 @@ def main() -> None:
     (OUT / "implementation_decisions.md").write_text(decisions, encoding="utf-8")
     manifest = {"new_files": sorted(p.name for p in OUT.iterdir()), "chart1_rows": {name: len(curve) for name, curve in curves1}, "chart2_rows": {"Baseline holdout": len(equity_by_close_time(baseline)), "Holdout top 50%": len(equity_by_close_time(top50))}}
     (OUT / "stage4_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_submission_report(table1_rows, table2_rows, sweep_rows)
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
 
 
