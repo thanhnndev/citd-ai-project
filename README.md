@@ -290,8 +290,10 @@ These values are fixed by the handover spec and must not be changed
 | Verified environment | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 |
 
 > `thread_count=1` is an **added technical setting**, not one of the original
-> model hyperparameters: it removes CatBoost's dependence on the host CPU core
-> count so the holdout model reproduces across machines. The handed-over branch
+> model hyperparameters: it removes CPU thread count as one known source of
+> numerical variation. The automated check proves exact repeatability for two
+> runs on the same machine; it does not prove byte-identical models on every
+> machine. The handed-over branch
 > artifacts in `outputs/catboost_training/` and `outputs/backtest/` were produced
 > without it and are preserved as-is (see Changelog).
 
@@ -307,9 +309,13 @@ These values are fixed by the handover spec and must not be changed
   reason.
 - **Do not edit committed datasets or `outputs/`** when experimenting. Write new
   results to a new folder so the frozen artifacts stay valid.
-- **Reproducibility:** `random_seed=42` and `thread_count=1` are both pinned, so
-  the holdout model (stage 2) yields identical predictions across runs and is no
-  longer sensitive to the machine's CPU core count. The handed-over step-4
+- **Reproducibility:** `random_seed=42` and `thread_count=1` are both pinned.
+  On the artifact-producing machine, two independent training runs yield
+  identical prediction arrays; the two `.cbm` files have different SHA-256
+  hashes because serialized metadata differs. A Windows teammate reported
+  predictions within `1e-15`, but no cross-machine artifact or controlled
+  thread-count experiment is committed, so this report does not attribute all
+  host variation to multithreading. The handed-over step-4
   artifacts (`outputs/catboost_training/`, `outputs/backtest/`) are kept
   byte-identical and were produced on the original machine without
   `thread_count`, so re-running steps 3–4 will not reproduce those files on a
@@ -341,14 +347,13 @@ These values are fixed by the handover spec and must not be changed
 - **Documented** the `thread_count=1` deviation from the frozen hyperparameter
   list as a technical (non-model) setting.
 
-### 2026-09-12 — Pin `thread_count=1` (root-cause fix for run-to-run drift)
+### 2026-09-12 — Pin `thread_count=1` (reduce one source of numerical drift)
 
-- **Root cause:** CatBoost was configured with `random_seed=42` but no
-  `thread_count`, so it defaulted to the CPU core count. Different core counts
-  change the floating-point reduction order during histogram building and split
-  selection, producing different trees. Verified on identical data and seed:
-  changing `thread_count` alone moved fold-1 probabilities by up to **0.37**
-  and fold-1 ROC-AUC between 0.848 and 0.857.
+- **Initial observation:** CatBoost was configured with `random_seed=42` but no
+  `thread_count`, so execution thread count depended on the host. This is a
+  plausible source of floating-point ordering variation. Earlier runs did
+  differ, but the repository contains no controlled experiment changing only
+  `thread_count`, so it is not claimed as the sole root cause.
 - **Fix:** pinned `thread_count=1` in
   `src/citd_ml/training/train_catboost.py` and
   `scripts/holdout_stage2_train.py`.

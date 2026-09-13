@@ -5,8 +5,8 @@
 > - Báo cáo sinh ngày 2026-09-12 trên môi trường `uv` (Python 3.12.14,
 >   CatBoost 1.2.10), chạy lại các giai đoạn holdout.
 > - CatBoost được ghim thêm `thread_count=1` — tham số kỹ thuật (không thuộc
->   danh sách hyperparameter mô hình đã chốt) nhằm để hai lần train tái lập
->   giống hệt. Không thêm/bớt feature; `META` không đưa vào `X`.
+>   danh sách hyperparameter mô hình đã chốt) để loại số luồng CPU như một nguồn
+>   sai lệch đã biết. Không thêm/bớt feature; `META` không đưa vào `X`.
 > - Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 là số bàn giao cố định. Các
 >   artifact nhánh 80% đầu (`outputs/catboost_training/`, `outputs/backtest/`)
 >   được giữ nguyên bản bàn giao, không tính lại. Chỉ dòng Holdout, bảng sweep
@@ -65,7 +65,7 @@
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
-10. CatBoost được ghim thêm `thread_count=1` — tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) để hai lần train tái lập giống hệt. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
+10. CatBoost được ghim thêm `thread_count=1` — tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) để loại số luồng CPU như một nguồn sai lệch đã biết. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
 
 ## Phần 4 — Kiểm chứng
 

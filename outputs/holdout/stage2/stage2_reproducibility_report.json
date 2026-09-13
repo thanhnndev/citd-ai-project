@@ -1,4 +1,5 @@
 {
+  "verification_scope": "two independent training runs on the current machine",
   "model_hashes_equal": false,
   "model_run1_sha256": "0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986",
   "model_run2_sha256": "b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633",
@@ -6,5 +7,7 @@
   "predictions_exactly_equal": true,
   "prediction_count": 25008,
   "max_prediction_abs_difference": 0.0,
-  "holdout_file_unchanged": true
+  "holdout_file_unchanged": true,
+  "acceptance_rule": "prediction arrays must be byte-identical and holdout input must remain unchanged; CBM hashes are recorded but not required because serialized model metadata can differ",
+  "cross_machine_claim": "not established by this command"
 }

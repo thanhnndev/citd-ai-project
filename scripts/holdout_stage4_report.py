@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -55,7 +56,14 @@ def write_chart(path: Path, title: str, curves: list[tuple[str, pd.DataFrame]]) 
     for name, curve in curves:
         add_trace(fig, curve, name)
     fig.update_layout(title=title, xaxis_title="close_time", yaxis_title="R cộng dồn", hovermode="x unified", template="plotly_white", legend_title_text="Chuỗi", margin={"l": 72, "r": 28, "t": 72, "b": 72})
-    fig.write_html(path, include_plotlyjs="inline", full_html=True, config={"responsive": True, "displaylogo": False})
+    html = pio.to_html(
+        fig,
+        include_plotlyjs="inline",
+        full_html=True,
+        config={"responsive": True, "displaylogo": False},
+        div_id=path.stem,
+    )
+    path.write_text(html, encoding="utf-8")
 
 
 def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
@@ -131,7 +139,7 @@ def main() -> None:
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
-10. CatBoost được ghim thêm `thread_count=1` — đây là tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) nhằm để hai lần train tái lập giống hệt. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 vẫn lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
+10. CatBoost được ghim thêm `thread_count=1` — đây là tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) để loại số luồng CPU như một nguồn sai lệch đã biết. Phép kiểm Stage 2 chỉ kết luận hai lượt trên cùng máy có prediction giống hệt; không dùng nó để khẳng định giống từng byte giữa mọi máy. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 vẫn lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
 """
     (OUT / "implementation_decisions.md").write_text(decisions, encoding="utf-8")
     manifest = {"new_files": sorted(p.name for p in OUT.iterdir()), "chart1_rows": {name: len(curve) for name, curve in curves1}, "chart2_rows": {"Baseline holdout": len(equity_by_close_time(baseline)), "Holdout top 50%": len(equity_by_close_time(top50))}}

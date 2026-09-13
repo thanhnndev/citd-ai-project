@@ -284,8 +284,10 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | Môi trường đã kiểm | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 |
 
 > `thread_count=1` là **tham số kỹ thuật thêm vào**, không thuộc danh sách
-> hyperparameter mô hình gốc: nó loại bỏ phụ thuộc vào số core CPU để model
-> holdout tái lập giữa các máy. Các artifact nhánh 80% đầu trong
+> hyperparameter mô hình gốc: nó loại bỏ số luồng CPU như một nguồn sai lệch đã
+> biết. Phép kiểm tự động hiện chứng minh tái lập chính xác giữa hai lượt trên
+> cùng máy; chưa đủ để khẳng định model giống từng byte trên mọi máy. Các
+> artifact nhánh 80% đầu trong
 > `outputs/catboost_training/` và `outputs/backtest/` được sinh khi chưa có nó và
 > được giữ nguyên (xem Changelog).
 
@@ -299,9 +301,13 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   về sau; backtest giữ một chiến lược `shadow` chính vì lý do này.
 - **Không sửa dataset hay `outputs/` đã commit** khi thử nghiệm. Ghi kết quả
   mới ra thư mục riêng để giữ nguyên các artifact đã niêm phong.
-- **Tái lập:** đã ghim cả `random_seed=42` lẫn `thread_count=1`, nên model
-  holdout (giai đoạn 2) cho dự đoán giống hệt giữa các lần chạy và không còn phụ
-  thuộc số core CPU. Các artifact bước 4 bàn giao
+- **Tái lập:** đã ghim cả `random_seed=42` lẫn `thread_count=1`. Trên máy tạo
+  artifact, hai lượt train độc lập cho mảng prediction giống hệt; hai file
+  `.cbm` khác SHA-256 do phần metadata tuần tự hóa. Teammate chạy trên Windows
+  báo prediction tương đương trong sai số `1e-15`, nhưng chưa có artifact đối
+  chứng được commit để kiểm độc lập và chưa có thí nghiệm thay đổi riêng
+  `thread_count`; vì vậy báo cáo không quy toàn bộ sai lệch liên máy cho đa
+  luồng. Các artifact bước 4 bàn giao
   (`outputs/catboost_training/`, `outputs/backtest/`) được giữ nguyên từng byte
   và sinh trên máy gốc khi chưa có `thread_count`, nên chạy lại bước 3–4 trên
   máy khác sẽ không tái tạo đúng các file đó.
@@ -332,13 +338,13 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 - **Ghi rõ** deviation `thread_count=1` so với danh sách hyperparameter đã chốt
   — đây là tham số kỹ thuật, không phải hyperparameter mô hình.
 
-### 2026-09-12 — Ghim `thread_count=1` (fix root cause lệch giữa các lần chạy)
+### 2026-09-12 — Ghim `thread_count=1` (giảm một nguồn sai lệch số học)
 
-- **Root cause:** CatBoost đặt `random_seed=42` nhưng không đặt `thread_count`,
-  nên mặc định dùng số core CPU. Số core khác nhau làm đổi thứ tự cộng dồn số
-  thực khi xây histogram/chọn split, sinh ra cây khác nhau. Kiểm chứng trên cùng
-  dữ liệu và seed: chỉ đổi `thread_count` đã làm xác suất fold 1 lệch tới
-  **0.37** và ROC-AUC fold 1 dao động 0.848–0.857.
+- **Quan sát ban đầu:** CatBoost đặt `random_seed=42` nhưng không đặt
+  `thread_count`, nên số luồng thực thi phụ thuộc cấu hình máy. Đây là một cơ
+  chế có thể làm thay đổi thứ tự phép toán dấu phẩy động. Dữ liệu hiện lưu cho
+  thấy các lượt chạy trước từng lệch, nhưng không có thí nghiệm đối chứng chỉ
+  thay `thread_count`; do đó không tuyên bố đây là nguyên nhân duy nhất.
 - **Fix:** ghim `thread_count=1` trong
   `src/citd_ml/training/train_catboost.py` và
   `scripts/holdout_stage2_train.py`.

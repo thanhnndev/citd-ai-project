@@ -33,8 +33,9 @@ PARAMS = {
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
     "random_seed": 42,
-    # Pinned to 1 for bit-for-bit reproducibility across machines (see
-    # src/citd_ml/training/train_catboost.py).
+    # Pinned to 1 to remove CPU thread-count as a known source of numerical
+    # variation. Exact equality is verified per environment; cross-machine
+    # equivalence needs its own comparison artifact.
     "thread_count": 1,
 }
 
@@ -123,6 +124,7 @@ def verify() -> int:
     first = np.load(pred1, allow_pickle=False)
     second = np.load(pred2, allow_pickle=False)
     report = {
+        "verification_scope": "two independent training runs on the current machine",
         "model_hashes_equal": sha256(model1) == sha256(model2),
         "model_run1_sha256": sha256(model1),
         "model_run2_sha256": sha256(model2),
@@ -131,6 +133,8 @@ def verify() -> int:
         "prediction_count": len(first),
         "max_prediction_abs_difference": float(np.max(np.abs(first - second))),
         "holdout_file_unchanged": sha256(HOLDOUT_DATASET) == json.loads((HERE / "train_run1_report.json").read_text(encoding="utf-8"))["holdout_sha256_before"],
+        "acceptance_rule": "prediction arrays must be byte-identical and holdout input must remain unchanged; CBM hashes are recorded but not required because serialized model metadata can differ",
+        "cross_machine_claim": "not established by this command",
     }
     (HERE / "stage2_reproducibility_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
