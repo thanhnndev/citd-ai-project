@@ -13,12 +13,38 @@ import plotly.io as pio
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from citd_ml import paths
+from citd_ml.verification.holdout_evidence import load_evidence, validate_evidence
 
 
 SOURCE = paths.BACKTEST_DIR
 STAGE3 = paths.HOLDOUT_STAGE3_DIR
 OUT = paths.HOLDOUT_STAGE4_DIR
 REPORT = paths.DOCS_DIR / "BAO_CAO_KET_QUA_HOLDOUT.md"
+
+ARTIFACT_DESCRIPTIONS = {
+    "dataset_catboost_full_regenerated.csv": "Dataset tái sinh trên toàn bộ lịch sử để kiểm tra và tách holdout",
+    "dataset_catboost_holdout.csv": "Dataset holdout từ mốc 2025-02-08 15:30:00",
+    "stage1_validation_report.json": "Số liệu kiểm khóa cũ và đối chiếu 23 feature",
+    "catboost_final_holdout_run1.cbm": "Model CatBoost cuối dùng để chấm holdout",
+    "catboost_final_holdout_run2.cbm": "Model train độc lập lần hai để kiểm lặp",
+    "train_predictions_run1.npy": "Prediction trên tập train của lượt 1",
+    "train_predictions_run2.npy": "Prediction trên tập train của lượt 2",
+    "train_run1_report.json": "Cấu hình, phiên bản, hash và kiểm biên của lượt train 1",
+    "train_run2_report.json": "Cấu hình, phiên bản, hash và kiểm biên của lượt train 2",
+    "stage2_reproducibility_report.json": "So sánh hai lượt train trên cùng máy",
+    "holdout_scored.csv": "5,028 dòng holdout kèm xác suất CatBoost",
+    "holdout_fixed_trade_universe_scored.csv": "Vũ trụ lệnh baseline holdout cố định kèm điểm",
+    "stage3_backtest_summary.csv": "Metrics baseline và sweep top 20–80%",
+    "stage3_report.json": "Kết quả phân loại, replay baseline và backtest holdout",
+    "table1_classification_metrics.csv": "Bảng chỉ số phân loại train và holdout",
+    "table2_financial_metrics_top50.csv": "Bảng tài chính tại mức giữ top 50%",
+    "holdout_sweep_20_80.csv": "Bảng tài chính holdout theo bảy mức giữ lệnh",
+    "stage4_tables.md": "Ba bảng kết quả ở định dạng Markdown",
+    "equity-curve-chunk2-5-top50.html": "Biểu đồ bậc thang baseline và 4 nhánh trên khúc 2–5",
+    "equity-curve-holdout-top50.html": "Biểu đồ bậc thang baseline và top 50% trên holdout",
+    "implementation_decisions.md": "Các quyết định triển khai Stage 4",
+    "stage4_manifest.json": "Danh sách output và số điểm trên từng đường vốn",
+}
 
 
 # First four rows are the handed-over classification reference (chunk 1 removed).
@@ -53,7 +79,7 @@ def equity_by_close_time(trades: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_trace(fig: go.Figure, curve: pd.DataFrame, name: str) -> None:
-    fig.add_trace(go.Scatter(x=curve["close_time"], y=curve["equity_R"], name=name, mode="lines", line={"width": 1.6}, hovertemplate="%{x|%Y-%m-%d %H:%M}<br>Equity: %{y:.3f} R<extra>" + name + "</extra>"))
+    fig.add_trace(go.Scatter(x=curve["close_time"], y=curve["equity_R"], name=name, mode="lines", line={"width": 1.6, "shape": "hv"}, hovertemplate="%{x|%Y-%m-%d %H:%M}<br>Equity: %{y:.3f} R<extra>" + name + "</extra>"))
 
 
 def write_chart(path: Path, title: str, curves: list[tuple[str, pd.DataFrame]]) -> None:
@@ -86,7 +112,13 @@ def output_inventory() -> list[list[str]]:
         else:
             detail = "artifact"
         relative = path.relative_to(paths.PROJECT_ROOT)
-        rows.append([f"[`{path.name}`](../{relative})", stage, detail, f"{path.stat().st_size:,} B"])
+        description = ARTIFACT_DESCRIPTIONS.get(path.name)
+        if description is None and path.name.startswith("holdout_trades_top"):
+            keep_pct = path.stem.removeprefix("holdout_trades_top")
+            description = f"Danh sách lệnh holdout được giữ ở mức top {keep_pct}%"
+        if description is None:
+            raise ValueError(f"Missing artifact description: {path.name}")
+        rows.append([f"[`{path.name}`](../{relative})", stage, description, detail, f"{path.stat().st_size:,} B"])
     return rows
 
 
@@ -94,11 +126,12 @@ def write_submission_report(
     table1_rows: list[list[str]],
     table2_rows: list[list[str]],
     sweep_rows: list[list[str]],
+    evidence: dict[str, dict],
 ) -> None:
-    stage1 = json.loads((paths.HOLDOUT_STAGE1_DIR / "stage1_validation_report.json").read_text(encoding="utf-8"))
-    train = json.loads((paths.HOLDOUT_STAGE2_DIR / "train_run1_report.json").read_text(encoding="utf-8"))
-    repeat = json.loads((paths.HOLDOUT_STAGE2_DIR / "stage2_reproducibility_report.json").read_text(encoding="utf-8"))
-    stage3 = json.loads((paths.HOLDOUT_STAGE3_DIR / "stage3_report.json").read_text(encoding="utf-8"))
+    stage1 = evidence["stage1"]
+    train = evidence["train"]
+    repeat = evidence["repeat"]
+    stage3 = evidence["stage3"]
     versions = train["versions"]
     params = train["params"]
     counts = stage1["counts"]
@@ -111,6 +144,20 @@ def write_submission_report(
 > Phạm vi: tổng hợp artifact đã chốt của 4 cách chia trên tập 80% đầu và kết
 > quả holdout niêm phong. Báo cáo chỉ ghi số liệu, quyết định triển khai và bằng
 > chứng kiểm chứng; không biện luận hay kết luận thay báo cáo chính.
+
+## Lịch sử và lý do chạy lại holdout
+
+1. Holdout ban đầu được mở và chạy theo bốn Stage sau khi feature,
+   hyperparameter và tỷ lệ giữ lệnh đã chốt từ bước train.
+2. Holdout phải chạy lại vì phát hiện cấu hình CatBoost chưa ghim
+   `thread_count`; số luồng mặc định phụ thuộc cấu hình CPU và có thể tạo sai
+   lệch số học giữa môi trường. Lần chạy lại chỉ thêm `thread_count=1` như thiết
+   lập kỹ thuật; không đổi feature, hyperparameter mô hình, tập train, tập
+   holdout hay luật chọn top-k.
+3. Artifact của bốn nhánh trên 80% đầu được khôi phục và giữ nguyên theo bản bàn
+   giao. Các số holdout trong báo cáo này lấy từ lần chạy lại đã kiểm chứng; lý
+   do chạy lại và giới hạn bằng chứng được ghi công khai để không xem đây là một
+   lần thử mô hình mới nhằm chọn kết quả đẹp hơn.
 
 ## Phần 1 — Số liệu
 
@@ -126,6 +173,10 @@ def write_submission_report(
 ### 1.2. Chỉ số phân loại
 
 {table1}
+Ghi chú: bốn dòng Cách 1–3 là trung bình chỉ số theo fold sau khi bỏ khúc 1 để
+các nhánh được đo trên cùng phạm vi khúc 2–5. Dòng Holdout được tính một lần
+trên toàn bộ 5,028 mẫu holdout, không phải trung bình theo fold.
+
 ### 1.3. Chỉ số tài chính, giữ top 50%
 
 {table2}
@@ -137,8 +188,9 @@ def write_submission_report(
 - [Biểu đồ 1 — Baseline và 4 nhánh top 50%, khúc 2–5](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.html)
 - [Biểu đồ 2 — Baseline holdout và Holdout top 50%](../outputs/holdout/stage4/equity-curve-holdout-top50.html)
 
-Hai biểu đồ được dựng bằng Python/Plotly, trục ngang là `close_time`, trục dọc
-là R cộng dồn từ 0. File HTML chứa Plotly nội tuyến nên mở độc lập được.
+Hai biểu đồ được dựng bằng Python/Plotly ở dạng bậc thang: equity chỉ thay đổi
+tại `close_time`, không nội suy tuyến tính giữa hai lần đóng lệnh. Trục dọc là R
+cộng dồn từ 0. File HTML chứa Plotly nội tuyến nên mở độc lập được.
 
 ## Phần 3 — Quyết định triển khai
 
@@ -147,6 +199,7 @@ là R cộng dồn từ 0. File HTML chứa Plotly nội tuyến nên mở độ
 3. Equity ghi nhận tại `close_time`; các lệnh đóng cùng lúc được cộng thành một điểm rồi mới cập nhật đường vốn.
 4. Bốn dòng train ở Bảng 1 và năm dòng đầu Bảng 2 lấy nguyên từ artifact bàn giao đã niêm phong; dòng holdout và sweep lấy từ Stage 3.
 5. Thêm `thread_count=1` như thiết lập kỹ thuật để loại số luồng CPU như một nguồn sai lệch đã biết; không xem đây là hyperparameter mô hình và không dùng riêng phép thử này để kết luận nguyên nhân sai lệch liên máy.
+6. Dùng đường bậc thang ngang-rồi-dọc (`hv`) để equity giữ nguyên giữa hai mốc đóng lệnh và chỉ nhảy tại thời điểm R được ghi nhận.
 
 ## Phần 4 — Kiểm chứng
 
@@ -160,6 +213,7 @@ là R cộng dồn từ 0. File HTML chứa Plotly nội tuyến nên mở độ
 | Lặp train trên cùng máy | **PASS** — {prediction_count:,} predictions giống hệt; max abs diff = {max_diff} |
 | File model `.cbm` | **GHI NHẬN** — SHA-256 hai file khác nhau; binary model không phải tiêu chí PASS |
 | Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo sai số prediction trong `1e-15`; chưa có artifact đối chứng được commit và chưa có thí nghiệm chỉ thay `thread_count` |
+| Tái lập từng byte toàn pipeline holdout | **CHƯA XÁC NHẬN** — bằng chứng hiện chỉ xác nhận prediction của hai lượt train trên cùng máy; không tuyên bố toàn bộ Stage 1–4 giống từng byte |
 
 Môi trường sinh artifact: Python {python}; CatBoost {catboost}; scikit-learn
 {sklearn}; pandas {pandas}; NumPy {numpy}.
@@ -191,13 +245,15 @@ Môi trường sinh artifact: Python {python}; CatBoost {catboost}; scikit-learn
         sklearn=versions["scikit_learn"],
         pandas=versions["pandas"],
         numpy=versions["numpy"],
-        inventory=markdown_table(["File", "Giai đoạn", "Quy mô", "Kích thước"], output_inventory()),
+        inventory=markdown_table(["File", "Giai đoạn", "Chứa gì", "Quy mô", "Kích thước"], output_inventory()),
     )
     REPORT.write_text(report.rstrip() + "\n", encoding="utf-8")
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    evidence = load_evidence()
+    validate_evidence(evidence)
     prior_sweep = pd.read_csv(SOURCE / "backtest_retention_sweep.csv")
     stage3_summary = pd.read_csv(STAGE3 / "stage3_backtest_summary.csv")
     prior50 = prior_sweep.loc[prior_sweep["comparison_keep_pct"] == 50].copy()
@@ -205,7 +261,7 @@ def main() -> None:
         raise ValueError("The handed-over pre-holdout 50% summary is incomplete")
     baseline_holdout = stage3_summary.loc[stage3_summary.keep_pct == 100].iloc[0]
     top50_holdout = stage3_summary.loc[stage3_summary.keep_pct == 50].iloc[0]
-    stage3_report = json.loads((STAGE3 / "stage3_report.json").read_text(encoding="utf-8"))
+    stage3_report = evidence["stage3"]
     holdout_classification = stage3_report["classification"]
     table1_rows = BRANCH_TABLE1 + [
         ["Holdout", f"{holdout_classification['roc_auc']:.4f}", f"{holdout_classification['f1_at_0_5']:.4f}"],
@@ -261,7 +317,7 @@ def main() -> None:
 3. Mỗi đường được thêm điểm R = 0 ngay trước `close_time` đầu tiên, để đường vốn bắt đầu từ 0 mà không thay đổi mốc dữ liệu giao dịch.
 4. Biểu đồ 1 chỉ nhận các dòng `chunk` 2–5. Top 50% của từng nhánh dùng `ceil(20007 × 50%) = 10004`, xếp xác suất giảm dần rồi `row_id` tăng dần khi hòa điểm — đúng luật đã chốt ở bước trước.
 5. Biểu đồ 2 bắt đầu lại từ R = 0 tại holdout, dùng trực tiếp vũ trụ baseline và danh sách Top 50% đã lưu từ Giai đoạn 3; không nối với equity của khúc 2–5.
-6. Các khoảng thời gian không có lệnh được nối bằng đường liên tục giữa các điểm đóng lệnh; không chèn giao dịch hoặc điểm equity giả vào các khoảng trống.
+6. Đường vốn dùng dạng bậc thang ngang-rồi-dọc (`hv`): giữ nguyên giữa hai `close_time` và chỉ nhảy tại lúc lệnh đóng; không chèn giao dịch hoặc điểm equity giả vào khoảng trống.
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
@@ -270,7 +326,7 @@ def main() -> None:
     (OUT / "implementation_decisions.md").write_text(decisions, encoding="utf-8")
     manifest = {"new_files": sorted(p.name for p in OUT.iterdir()), "chart1_rows": {name: len(curve) for name, curve in curves1}, "chart2_rows": {"Baseline holdout": len(equity_by_close_time(baseline)), "Holdout top 50%": len(equity_by_close_time(top50))}}
     (OUT / "stage4_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    write_submission_report(table1_rows, table2_rows, sweep_rows)
+    write_submission_report(table1_rows, table2_rows, sweep_rows, evidence)
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
 
 

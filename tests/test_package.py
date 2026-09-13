@@ -7,9 +7,13 @@ layout and the frozen research constants.
 from __future__ import annotations
 
 import csv
+from copy import deepcopy
 import json
 
+import pytest
+
 from citd_ml import __version__, paths
+from citd_ml.verification.holdout_evidence import load_evidence, validate_evidence
 
 
 def test_version_is_exposed() -> None:
@@ -70,3 +74,23 @@ def test_holdout_evidence_and_summary_are_consistent() -> None:
     ):
         html = (paths.HOLDOUT_STAGE4_DIR / filename).read_text(encoding="utf-8")
         assert f'id="{filename.removesuffix(".html")}"' in html
+
+
+def test_report_generation_fails_closed_on_invalid_evidence() -> None:
+    evidence = load_evidence()
+    validate_evidence(evidence)
+
+    invalid = deepcopy(evidence)
+    invalid["stage1"]["checks"]["feature_values_match_exactly"] = False
+    with pytest.raises(ValueError, match="stage1.feature_values_match_exactly"):
+        validate_evidence(invalid)
+
+    invalid = deepcopy(evidence)
+    invalid["repeat"]["predictions_exactly_equal"] = False
+    with pytest.raises(ValueError, match="repeat.predictions_exactly_equal"):
+        validate_evidence(invalid)
+
+    invalid = deepcopy(evidence)
+    invalid["stage3"]["baseline_comparison"]["actual_holdout_trades"] = 5027
+    with pytest.raises(ValueError, match="actual_holdout_trades"):
+        validate_evidence(invalid)
