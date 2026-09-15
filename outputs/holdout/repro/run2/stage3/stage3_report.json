@@ -1,0 +1,124 @@
+{
+  "holdout_rows_scored": 5028,
+  "features_from_build_features": [
+    "breakeven_R",
+    "atr14_pct",
+    "atr_ratio_14_90",
+    "vol20",
+    "vol200",
+    "vol_ratio_20_200",
+    "range_pct",
+    "dist_ema20_atr",
+    "dist_ema50_atr",
+    "dist_ema200_atr",
+    "ret20_atr",
+    "ret50_atr",
+    "pos_in_range50",
+    "dist_hh20_atr",
+    "mom14",
+    "mom_diff",
+    "vwap_dist_atr",
+    "vwap_slope_atr",
+    "rsi14",
+    "vol_ratio_volume",
+    "gap_open_atr",
+    "hour",
+    "dow"
+  ],
+  "holdout_file_unchanged": true,
+  "classification": {
+    "roc_auc": 0.6045544538928682,
+    "f1_at_0_5": 0.40220723482526055
+  },
+  "data_range": {
+    "raw_m1_start": "2018-01-01 22:01:00",
+    "raw_m1_end": "2026-08-21 09:33:00",
+    "m15_resample_start": "2018-01-01 22:00:00",
+    "m15_resample_end": "2026-08-21 09:30:00",
+    "metric_holdout_start": "2025-02-08 15:30:00",
+    "metric_holdout_end": "2026-08-21 04:30:00"
+  },
+  "baseline_comparison": {
+    "passed": true,
+    "actual_holdout_trades": 5028,
+    "reference_holdout_trades": 5028,
+    "mismatched_fields": []
+  },
+  "baseline_full_history_trades": 30040,
+  "results": [
+    {
+      "keep_pct": 100,
+      "filter": "Baseline",
+      "trades": 5028,
+      "net_profit_R": 245.9296826592543,
+      "max_dd_R": 305.3174286696801,
+      "profit_factor": 1.0991525948306131,
+      "win_rate_pct": 35.2824184566428
+    },
+    {
+      "keep_pct": 20,
+      "filter": "Top 20%",
+      "trades": 1006,
+      "net_profit_R": -30.01336959098738,
+      "max_dd_R": 125.37629802645517,
+      "profit_factor": 0.9384664106536245,
+      "win_rate_pct": 36.18290258449304
+    },
+    {
+      "keep_pct": 30,
+      "filter": "Top 30%",
+      "trades": 1509,
+      "net_profit_R": -50.008563164391504,
+      "max_dd_R": 210.76530990303525,
+      "profit_factor": 0.9342935296755517,
+      "win_rate_pct": 35.52021206096752
+    },
+    {
+      "keep_pct": 40,
+      "filter": "Top 40%",
+      "trades": 2012,
+      "net_profit_R": -53.165425548097744,
+      "max_dd_R": 251.55573706850143,
+      "profit_factor": 0.9485447132985777,
+      "win_rate_pct": 35.039761431411534
+    },
+    {
+      "keep_pct": 50,
+      "filter": "Top 50%",
+      "trades": 2514,
+      "net_profit_R": -36.552754995889984,
+      "max_dd_R": 263.2460776974948,
+      "profit_factor": 0.9717948517262948,
+      "win_rate_pct": 34.80509148766905
+    },
+    {
+      "keep_pct": 60,
+      "filter": "Top 60%",
+      "trades": 3017,
+      "net_profit_R": 73.16085033844045,
+      "max_dd_R": 233.95243601424573,
+      "profit_factor": 1.047386352841449,
+      "win_rate_pct": 35.598276433543255
+    },
+    {
+      "keep_pct": 70,
+      "filter": "Top 70%",
+      "trades": 3520,
+      "net_profit_R": 186.92492712457408,
+      "max_dd_R": 197.23727517166873,
+      "profit_factor": 1.104000284760099,
+      "win_rate_pct": 35.76704545454545
+    },
+    {
+      "keep_pct": 80,
+      "filter": "Top 80%",
+      "trades": 4023,
+      "net_profit_R": 259.91129675688364,
+      "max_dd_R": 219.0240294185487,
+      "profit_factor": 1.1277931119610443,
+      "win_rate_pct": 35.520755654983844
+    }
+  ],
+  "top_k_rule": "keep_count=ceil(5028*keep_pct/100); sort probability descending then row_id ascending",
+  "randomness": "No random component in scoring or backtest."
+}

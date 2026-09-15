@@ -1,8 +1,8 @@
 {
   "verification_scope": "two independent training runs on the current machine",
   "model_hashes_equal": false,
-  "model_run1_sha256": "0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986",
-  "model_run2_sha256": "b5f72b36a4328e836c365425deb0927a6fd0db40f5fc36bc40095b0aab639633",
+  "model_run1_sha256": "09ac7b617fb4d5bd9686cba6083ed547e03c6d7e3ffa044d353d042909156246",
+  "model_run2_sha256": "3b6db9834ad7c046228659b4e92bc05dcb538bde5b71083250818137fabb1382",
   "prediction_hashes_equal": true,
   "predictions_exactly_equal": true,
   "prediction_count": 25008,

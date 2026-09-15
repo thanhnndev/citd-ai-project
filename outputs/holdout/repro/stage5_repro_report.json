@@ -1,0 +1,706 @@
+{
+  "status": "PASS",
+  "scope_note": "two independent training runs, same machine, same code; does not establish cross-machine byte identity",
+  "scope_note_vi": "Hai lần train độc lập trên cùng một máy, cùng mã nguồn; không chứng minh giống từng byte giữa các máy khác nhau.",
+  "generated_at_utc": "2026-09-15T09:55:34+00:00",
+  "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/holdout_stage5_repro_check.py",
+  "environment": {
+    "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
+    "python": "3.12.14",
+    "catboost": "1.2.10",
+    "scikit_learn": "1.9.0",
+    "pandas": "3.0.5",
+    "numpy": "2.5.2",
+    "plotly": "7.0.0"
+  },
+  "run1": {
+    "stage3": "outputs/holdout/stage3",
+    "stage4": "outputs/holdout/stage4"
+  },
+  "run2": {
+    "stage3": "outputs/holdout/repro/run2/stage3",
+    "stage4": "outputs/holdout/repro/run2/stage4"
+  },
+  "items": {
+    "holdout_scored_probabilities": {
+      "pass": true,
+      "rows_run1": 5028,
+      "rows_run2": 5028,
+      "merged_rows": 5028,
+      "predictions_exactly_equal": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "count_diff_gt_0": 0,
+      "count_diff_gt_1e-12": 0,
+      "merge_keys": [
+        "origin_bar",
+        "entry_bar",
+        "leg"
+      ]
+    },
+    "stage3_backtest_summary": {
+      "pass": true,
+      "rows": 8,
+      "numeric_columns": {
+        "trades": {
+          "max_abs_diff": 0.0,
+          "exactly_equal": true
+        },
+        "net_profit_R": {
+          "max_abs_diff": 0.0,
+          "exactly_equal": true
+        },
+        "max_dd_R": {
+          "max_abs_diff": 0.0,
+          "exactly_equal": true
+        },
+        "profit_factor": {
+          "max_abs_diff": 0.0,
+          "exactly_equal": true
+        },
+        "win_rate_pct": {
+          "max_abs_diff": 0.0,
+          "exactly_equal": true
+        }
+      },
+      "filters_exactly_equal": true
+    },
+    "stage3_report_classification_and_sweep": {
+      "pass": true,
+      "reports_exactly_equal": true,
+      "classification": {
+        "roc_auc": {
+          "run1": 0.6045544538928682,
+          "run2": 0.6045544538928682,
+          "abs_diff": 0.0
+        },
+        "f1_at_0_5": {
+          "run1": 0.40220723482526055,
+          "run2": 0.40220723482526055,
+          "abs_diff": 0.0
+        }
+      },
+      "sweep_rows": {
+        "20": {
+          "trades": {
+            "run1": 1006,
+            "run2": 1006,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": -30.01336959098738,
+            "run2": -30.01336959098738,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 125.37629802645517,
+            "run2": 125.37629802645517,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 0.9384664106536245,
+            "run2": 0.9384664106536245,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 36.18290258449304,
+            "run2": 36.18290258449304,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "30": {
+          "trades": {
+            "run1": 1509,
+            "run2": 1509,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": -50.008563164391504,
+            "run2": -50.008563164391504,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 210.76530990303525,
+            "run2": 210.76530990303525,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 0.9342935296755517,
+            "run2": 0.9342935296755517,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.52021206096752,
+            "run2": 35.52021206096752,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "40": {
+          "trades": {
+            "run1": 2012,
+            "run2": 2012,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": -53.165425548097744,
+            "run2": -53.165425548097744,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 251.55573706850143,
+            "run2": 251.55573706850143,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 0.9485447132985777,
+            "run2": 0.9485447132985777,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.039761431411534,
+            "run2": 35.039761431411534,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "50": {
+          "trades": {
+            "run1": 2514,
+            "run2": 2514,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": -36.552754995889984,
+            "run2": -36.552754995889984,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 263.2460776974948,
+            "run2": 263.2460776974948,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 0.9717948517262948,
+            "run2": 0.9717948517262948,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 34.80509148766905,
+            "run2": 34.80509148766905,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "60": {
+          "trades": {
+            "run1": 3017,
+            "run2": 3017,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": 73.16085033844045,
+            "run2": 73.16085033844045,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 233.95243601424573,
+            "run2": 233.95243601424573,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 1.047386352841449,
+            "run2": 1.047386352841449,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.598276433543255,
+            "run2": 35.598276433543255,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "70": {
+          "trades": {
+            "run1": 3520,
+            "run2": 3520,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": 186.92492712457408,
+            "run2": 186.92492712457408,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 197.23727517166873,
+            "run2": 197.23727517166873,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 1.104000284760099,
+            "run2": 1.104000284760099,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.76704545454545,
+            "run2": 35.76704545454545,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "80": {
+          "trades": {
+            "run1": 4023,
+            "run2": 4023,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": 259.91129675688364,
+            "run2": 259.91129675688364,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 219.0240294185487,
+            "run2": 219.0240294185487,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 1.1277931119610443,
+            "run2": 1.1277931119610443,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.520755654983844,
+            "run2": 35.520755654983844,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        },
+        "100": {
+          "trades": {
+            "run1": 5028,
+            "run2": 5028,
+            "abs_diff": 0.0
+          },
+          "net_profit_R": {
+            "run1": 245.9296826592543,
+            "run2": 245.9296826592543,
+            "abs_diff": 0.0
+          },
+          "max_dd_R": {
+            "run1": 305.3174286696801,
+            "run2": 305.3174286696801,
+            "abs_diff": 0.0
+          },
+          "profit_factor": {
+            "run1": 1.0991525948306131,
+            "run2": 1.0991525948306131,
+            "abs_diff": 0.0
+          },
+          "win_rate_pct": {
+            "run1": 35.2824184566428,
+            "run2": 35.2824184566428,
+            "abs_diff": 0.0
+          },
+          "filter_exactly_equal": true
+        }
+      },
+      "keep_pct_rows": [
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        100
+      ]
+    },
+    "stage3_top_k_selections": {
+      "pass": true,
+      "selections": {
+        "20": {
+          "filename": "holdout_trades_top20.csv",
+          "rows_run1": 1006,
+          "rows_run2": 1006,
+          "keys_identical": true,
+          "intersection": 1006,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "30": {
+          "filename": "holdout_trades_top30.csv",
+          "rows_run1": 1509,
+          "rows_run2": 1509,
+          "keys_identical": true,
+          "intersection": 1509,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "40": {
+          "filename": "holdout_trades_top40.csv",
+          "rows_run1": 2012,
+          "rows_run2": 2012,
+          "keys_identical": true,
+          "intersection": 2012,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "50": {
+          "filename": "holdout_trades_top50.csv",
+          "rows_run1": 2514,
+          "rows_run2": 2514,
+          "keys_identical": true,
+          "intersection": 2514,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "60": {
+          "filename": "holdout_trades_top60.csv",
+          "rows_run1": 3017,
+          "rows_run2": 3017,
+          "keys_identical": true,
+          "intersection": 3017,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "70": {
+          "filename": "holdout_trades_top70.csv",
+          "rows_run1": 3520,
+          "rows_run2": 3520,
+          "keys_identical": true,
+          "intersection": 3520,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        },
+        "80": {
+          "filename": "holdout_trades_top80.csv",
+          "rows_run1": 4023,
+          "rows_run2": 4023,
+          "keys_identical": true,
+          "intersection": 4023,
+          "only_in_run1": 0,
+          "only_in_run2": 0
+        }
+      },
+      "key_rule": "origin_bar/entry_bar/leg, giống luật chọn ceil(5028*keep_pct/100) của Stage 3"
+    },
+    "stage4_numeric_tables": {
+      "pass": true,
+      "tables": {
+        "table1_classification_metrics.csv": {
+          "pass": true,
+          "filename": "table1_classification_metrics.csv",
+          "rows_run1": 5,
+          "rows_run2": 5,
+          "dataframes_exactly_equal": true,
+          "columns": {
+            "method": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
+            "roc_auc": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "f1_at_0_5": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            }
+          }
+        },
+        "table2_financial_metrics_top50.csv": {
+          "pass": true,
+          "filename": "table2_financial_metrics_top50.csv",
+          "rows_run1": 7,
+          "rows_run2": 7,
+          "dataframes_exactly_equal": true,
+          "columns": {
+            "method": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
+            "trades": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "net_profit_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "max_dd_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "profit_factor": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "win_rate_pct": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            }
+          }
+        },
+        "holdout_sweep_20_80.csv": {
+          "pass": true,
+          "filename": "holdout_sweep_20_80.csv",
+          "rows_run1": 7,
+          "rows_run2": 7,
+          "dataframes_exactly_equal": true,
+          "columns": {
+            "filter": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
+            "trades": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "net_profit_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "max_dd_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "profit_factor": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "win_rate_pct": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            }
+          }
+        }
+      }
+    },
+    "stage4_charts": {
+      "pass": true,
+      "charts": {
+        "equity-curve-chunk2-5-top50.html": {
+          "run1_path": "outputs/holdout/stage4/equity-curve-chunk2-5-top50.html",
+          "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.html",
+          "run1_exists": true,
+          "run2_exists": true,
+          "run1_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+          "run2_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+          "bytes_identical": true
+        },
+        "equity-curve-holdout-top50.html": {
+          "run1_path": "outputs/holdout/stage4/equity-curve-holdout-top50.html",
+          "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.html",
+          "run1_exists": true,
+          "run2_exists": true,
+          "run1_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
+          "run2_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
+          "bytes_identical": true
+        }
+      }
+    },
+    "stage4_manifest_row_counts": {
+      "pass": true,
+      "manifests_exactly_equal": false,
+      "chart1_rows": {
+        "Baseline": 8024,
+        "Cách 1 — Random K-Fold": 4260,
+        "Cách 1b — Grouped K-Fold": 4363,
+        "Cách 2 — Walk-forward": 4447,
+        "Cách 3 — WF + Purge/Embargo": 4414
+      },
+      "chart1_rows_run2": {
+        "Baseline": 8024,
+        "Cách 1 — Random K-Fold": 4260,
+        "Cách 1b — Grouped K-Fold": 4363,
+        "Cách 2 — Walk-forward": 4447,
+        "Cách 3 — WF + Purge/Embargo": 4414
+      },
+      "chart1_rows_equal": true,
+      "chart2_rows": {
+        "Baseline holdout": 1975,
+        "Holdout top 50%": 1092
+      },
+      "chart2_rows_run2": {
+        "Baseline holdout": 1975,
+        "Holdout top 50%": 1092
+      },
+      "chart2_rows_equal": true,
+      "new_files_equal": false,
+      "new_files_note": "Danh sách new_files chỉ khác ở việc stage4_manifest.json đã tồn tại trong thư mục run 1 khi ghi manifest (iterdir() quét được file cũ), không phải khác biệt dữ liệu."
+    }
+  },
+  "file_hashes": {
+    "holdout_scored.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_scored.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_scored.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "0039f3566ba682e57af44239e207cecec261ac73c243a2942336d351f135bc4c",
+      "run2_sha256": "0039f3566ba682e57af44239e207cecec261ac73c243a2942336d351f135bc4c",
+      "bytes_identical": true
+    },
+    "stage3_backtest_summary.csv": {
+      "run1_path": "outputs/holdout/stage3/stage3_backtest_summary.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/stage3_backtest_summary.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "599e4f60137cbaa6ff9cec5bcc363571ce140a5b91749c9ec0f5c37fe4d54ac4",
+      "run2_sha256": "599e4f60137cbaa6ff9cec5bcc363571ce140a5b91749c9ec0f5c37fe4d54ac4",
+      "bytes_identical": true
+    },
+    "stage3_report.json": {
+      "run1_path": "outputs/holdout/stage3/stage3_report.json",
+      "run2_path": "outputs/holdout/repro/run2/stage3/stage3_report.json",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "f923461dc73942d330f66039e6a0f897ff7e82c2e93d1ffc46e5d8049c5ee0ea",
+      "run2_sha256": "f923461dc73942d330f66039e6a0f897ff7e82c2e93d1ffc46e5d8049c5ee0ea",
+      "bytes_identical": true
+    },
+    "holdout_fixed_trade_universe_scored.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_fixed_trade_universe_scored.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_fixed_trade_universe_scored.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "2d3279cb3eaa1b6bc8c4f81d39819a49a213b6e2f32d3ff877342376dcf87475",
+      "run2_sha256": "2d3279cb3eaa1b6bc8c4f81d39819a49a213b6e2f32d3ff877342376dcf87475",
+      "bytes_identical": true
+    },
+    "holdout_trades_top20.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top20.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top20.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "f13e3b3016dc7f67358e49abfdffa2f2a87003b6f1fd6cd92430001c189bbad5",
+      "run2_sha256": "f13e3b3016dc7f67358e49abfdffa2f2a87003b6f1fd6cd92430001c189bbad5",
+      "bytes_identical": true
+    },
+    "holdout_trades_top30.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top30.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top30.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "c2da8d1191e44f19b21e95e17db72af8a1ee5fa69655d445ee22f95b946275ac",
+      "run2_sha256": "c2da8d1191e44f19b21e95e17db72af8a1ee5fa69655d445ee22f95b946275ac",
+      "bytes_identical": true
+    },
+    "holdout_trades_top40.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top40.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top40.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "27d7a24600c0287baeed341c67beae573c519ab5d83f8ee691e8b1f74cd8335e",
+      "run2_sha256": "27d7a24600c0287baeed341c67beae573c519ab5d83f8ee691e8b1f74cd8335e",
+      "bytes_identical": true
+    },
+    "holdout_trades_top50.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top50.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top50.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "3b07c21f41e7ad1a56261ca7a19d19b7cc5ddb82d409990b63eee7f9e996c58a",
+      "run2_sha256": "3b07c21f41e7ad1a56261ca7a19d19b7cc5ddb82d409990b63eee7f9e996c58a",
+      "bytes_identical": true
+    },
+    "holdout_trades_top60.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top60.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top60.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "368beacab41b56b50c4fc113efbaf267fc9066bb3eb9e9042e8e6db6bb5f39da",
+      "run2_sha256": "368beacab41b56b50c4fc113efbaf267fc9066bb3eb9e9042e8e6db6bb5f39da",
+      "bytes_identical": true
+    },
+    "holdout_trades_top70.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top70.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top70.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "b55c3843fc1b275a7eba17bd3f8b19af53dc08dd280a1b8cc8c1f8c5258d0527",
+      "run2_sha256": "b55c3843fc1b275a7eba17bd3f8b19af53dc08dd280a1b8cc8c1f8c5258d0527",
+      "bytes_identical": true
+    },
+    "holdout_trades_top80.csv": {
+      "run1_path": "outputs/holdout/stage3/holdout_trades_top80.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage3/holdout_trades_top80.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "e198c496bba40e1b3942fb75b2e67b39927b019e8e46f513de79aa9253ecfc8a",
+      "run2_sha256": "e198c496bba40e1b3942fb75b2e67b39927b019e8e46f513de79aa9253ecfc8a",
+      "bytes_identical": true
+    },
+    "table1_classification_metrics.csv": {
+      "run1_path": "outputs/holdout/stage4/table1_classification_metrics.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage4/table1_classification_metrics.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "6821088d7128cbf314369baafb333e0a762bb33ac176c93d470d90e89cbe274e",
+      "run2_sha256": "6821088d7128cbf314369baafb333e0a762bb33ac176c93d470d90e89cbe274e",
+      "bytes_identical": true
+    },
+    "table2_financial_metrics_top50.csv": {
+      "run1_path": "outputs/holdout/stage4/table2_financial_metrics_top50.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage4/table2_financial_metrics_top50.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "d3c3099029e0cb694ae7bb252dc8b42266ea7bf6b52a0f659f977d996a93cdff",
+      "run2_sha256": "d3c3099029e0cb694ae7bb252dc8b42266ea7bf6b52a0f659f977d996a93cdff",
+      "bytes_identical": true
+    },
+    "holdout_sweep_20_80.csv": {
+      "run1_path": "outputs/holdout/stage4/holdout_sweep_20_80.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage4/holdout_sweep_20_80.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "fb50bf6fc5813c9d9971346e1f93c1e314b9914b24ed12fd6632da1cffcdcd85",
+      "run2_sha256": "fb50bf6fc5813c9d9971346e1f93c1e314b9914b24ed12fd6632da1cffcdcd85",
+      "bytes_identical": true
+    },
+    "equity-curve-chunk2-5-top50.html": {
+      "run1_path": "outputs/holdout/stage4/equity-curve-chunk2-5-top50.html",
+      "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.html",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+      "run2_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+      "bytes_identical": true
+    },
+    "equity-curve-holdout-top50.html": {
+      "run1_path": "outputs/holdout/stage4/equity-curve-holdout-top50.html",
+      "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.html",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
+      "run2_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
+      "bytes_identical": true
+    },
+    "stage4_manifest.json": {
+      "run1_path": "outputs/holdout/stage4/stage4_manifest.json",
+      "run2_path": "outputs/holdout/repro/run2/stage4/stage4_manifest.json",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "1a2490c02d49f704a74c0d3f2048f5be3c286bd97cc814865ab936c3bb22669b",
+      "run2_sha256": "5a0db0de49e1e0315c409ed576e627367506199544d0892d80333707f3ce7353",
+      "bytes_identical": false
+    }
+  },
+  "chart_note": null
+}

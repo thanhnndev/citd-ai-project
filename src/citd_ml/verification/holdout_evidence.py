@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from citd_ml import paths
 
 
-def load_evidence() -> dict[str, dict]:
+def load_evidence(stage3_dir: Path | str | None = None) -> dict[str, dict]:
+    """Đọc bằng chứng; stage3_dir=None giữ nguyên hành vi cũ (outputs/holdout/stage3)."""
+    # stage3_dir cho phép dựng báo cáo từ nhánh chạy lại (ví dụ run2) mà không
+    # ghi đè output Stage 3/4 canonical.
+    target_stage3 = paths.HOLDOUT_STAGE3_DIR if stage3_dir is None else Path(stage3_dir)
     files = {
         "stage1": paths.HOLDOUT_STAGE1_DIR / "stage1_validation_report.json",
         "train": paths.HOLDOUT_STAGE2_DIR / "train_run1_report.json",
         "repeat": paths.HOLDOUT_STAGE2_DIR / "stage2_reproducibility_report.json",
-        "stage3": paths.HOLDOUT_STAGE3_DIR / "stage3_report.json",
+        "stage3": target_stage3 / "stage3_report.json",
     }
     return {
         name: json.loads(path.read_text(encoding="utf-8"))

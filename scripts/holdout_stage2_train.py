@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import platform
 import sys
+from importlib.metadata import version
 from pathlib import Path
 
 import catboost
@@ -108,6 +110,10 @@ def run_training(run_id: int) -> int:
             "scikit_learn": sklearn.__version__,
             "pandas": pd.__version__,
             "numpy": np.__version__,
+            # Bổ sung theo góp ý review: ghi rõ hệ điều hành và phiên bản plotly
+            # (plotly là thư viện dựng biểu đồ của Stage 4, trước đây chưa ghi).
+            "platform": platform.platform(),
+            "plotly": version("plotly"),
         },
         "params": PARAMS,
     })

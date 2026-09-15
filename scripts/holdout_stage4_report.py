@@ -1,6 +1,7 @@
 """Stage 4 only: assemble fixed metrics and render the two requested HTML curves."""
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import json
 import sys
@@ -17,9 +18,30 @@ from citd_ml.verification.holdout_evidence import load_evidence, validate_eviden
 
 
 SOURCE = paths.BACKTEST_DIR
-STAGE3 = paths.HOLDOUT_STAGE3_DIR
-OUT = paths.HOLDOUT_STAGE4_DIR
-REPORT = paths.DOCS_DIR / "BAO_CAO_KET_QUA_HOLDOUT.md"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--stage3-dir",
+        type=Path,
+        default=paths.HOLDOUT_STAGE3_DIR,
+        help="Thư mục chứa output Stage 3 (mặc định: outputs/holdout/stage3).",
+    )
+    parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=paths.HOLDOUT_STAGE4_DIR,
+        help="Thư mục ghi bảng và biểu đồ Stage 4 (mặc định: outputs/holdout/stage4).",
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=paths.DOCS_DIR / "BAO_CAO_KET_QUA_HOLDOUT.md",
+        help="Đường dẫn báo cáo Markdown (mặc định: docs/BAO_CAO_KET_QUA_HOLDOUT.md).",
+    )
+    return parser.parse_args()
+
 
 ARTIFACT_DESCRIPTIONS = {
     "dataset_catboost_full_regenerated.csv": "Dataset tái sinh trên toàn bộ lịch sử để kiểm tra và tách holdout",
@@ -127,6 +149,7 @@ def write_submission_report(
     table2_rows: list[list[str]],
     sweep_rows: list[list[str]],
     evidence: dict[str, dict],
+    report_path: Path,
 ) -> None:
     stage1 = evidence["stage1"]
     train = evidence["train"]
@@ -247,15 +270,19 @@ Môi trường sinh artifact: Python {python}; CatBoost {catboost}; scikit-learn
         numpy=versions["numpy"],
         inventory=markdown_table(["File", "Giai đoạn", "Chứa gì", "Quy mô", "Kích thước"], output_inventory()),
     )
-    REPORT.write_text(report.rstrip() + "\n", encoding="utf-8")
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report.rstrip() + "\n", encoding="utf-8")
 
 
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    evidence = load_evidence()
+    args = parse_args()
+    out_dir = Path(args.out_dir)
+    stage3_dir = Path(args.stage3_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    evidence = load_evidence(stage3_dir)
     validate_evidence(evidence)
     prior_sweep = pd.read_csv(SOURCE / "backtest_retention_sweep.csv")
-    stage3_summary = pd.read_csv(STAGE3 / "stage3_backtest_summary.csv")
+    stage3_summary = pd.read_csv(stage3_dir / "stage3_backtest_summary.csv")
     prior50 = prior_sweep.loc[prior_sweep["comparison_keep_pct"] == 50].copy()
     if len(prior50) != 5 or set(prior50["method"]) != {"baseline", "random_kfold", "grouped_kfold", "walk_forward", "purged_walk_forward"}:
         raise ValueError("The handed-over pre-holdout 50% summary is incomplete")
@@ -283,13 +310,13 @@ def main() -> None:
     classification = pd.DataFrame(table1_rows, columns=["method", "roc_auc", "f1_at_0_5"])
     financial = pd.DataFrame(table2_rows, columns=["method", "trades", "net_profit_R", "max_dd_R", "profit_factor", "win_rate_pct"])
     holdout_sweep = pd.DataFrame(sweep_rows, columns=["filter", "trades", "net_profit_R", "max_dd_R", "profit_factor", "win_rate_pct"])
-    classification.to_csv(OUT / "table1_classification_metrics.csv", index=False)
-    financial.to_csv(OUT / "table2_financial_metrics_top50.csv", index=False)
-    holdout_sweep.to_csv(OUT / "holdout_sweep_20_80.csv", index=False)
+    classification.to_csv(out_dir / "table1_classification_metrics.csv", index=False)
+    financial.to_csv(out_dir / "table2_financial_metrics_top50.csv", index=False)
+    holdout_sweep.to_csv(out_dir / "holdout_sweep_20_80.csv", index=False)
     tables = "# Bảng 1 — Chỉ số phân loại\n\n" + markdown_table(["", "ROC-AUC", "F1 @0.5"], table1_rows)
     tables += "\n# Bảng 2 — Chỉ số tài chính, giữ top 50%\n\n" + markdown_table(["", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], table2_rows)
     tables += "\n# Sweep holdout 20–80%\n\n" + markdown_table(["Lọc", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], sweep_rows)
-    (OUT / "stage4_tables.md").write_text(tables, encoding="utf-8")
+    (out_dir / "stage4_tables.md").write_text(tables, encoding="utf-8")
 
     # Chart 1: read only the handed-over scored universe and reproduce its fixed 50% selection rule.
     universe = pd.read_csv(SOURCE / "backtest_scored_universe.csv", parse_dates=["close_time"])
@@ -302,13 +329,13 @@ def main() -> None:
         selected = evaluation.sort_values([f"probability_{key}", "row_id"], ascending=[False, True], kind="stable").iloc[:expected]
         if len(selected) != expected: raise ValueError("Top-50 selection size is invalid")
         curves1.append((label, equity_by_close_time(selected)))
-    write_chart(OUT / "equity-curve-chunk2-5-top50.html", "Đường vốn: baseline và 4 nhánh, khúc 2–5, top 50%", curves1)
+    write_chart(out_dir / "equity-curve-chunk2-5-top50.html", "Đường vốn: baseline và 4 nhánh, khúc 2–5, top 50%", curves1)
 
     # Chart 2: only consumes the Stage 3 fixed baseline universe and its saved top-50 list.
-    baseline = pd.read_csv(STAGE3 / "holdout_fixed_trade_universe_scored.csv", parse_dates=["close_time"])
-    top50 = pd.read_csv(STAGE3 / "holdout_trades_top50.csv", parse_dates=["close_time"])
+    baseline = pd.read_csv(stage3_dir / "holdout_fixed_trade_universe_scored.csv", parse_dates=["close_time"])
+    top50 = pd.read_csv(stage3_dir / "holdout_trades_top50.csv", parse_dates=["close_time"])
     if len(baseline) != 5028 or len(top50) != 2514: raise ValueError("Stage 3 holdout artifacts have unexpected row counts")
-    write_chart(OUT / "equity-curve-holdout-top50.html", "Đường vốn: baseline và holdout top 50%", [("Baseline holdout", equity_by_close_time(baseline)), ("Holdout, top 50%", equity_by_close_time(top50))])
+    write_chart(out_dir / "equity-curve-holdout-top50.html", "Đường vốn: baseline và holdout top 50%", [("Baseline holdout", equity_by_close_time(baseline)), ("Holdout, top 50%", equity_by_close_time(top50))])
 
     decisions = """# Quyết định triển khai
 
@@ -323,10 +350,10 @@ def main() -> None:
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
 10. CatBoost được ghim thêm `thread_count=1` — đây là tham số kỹ thuật (không thuộc danh sách hyperparameter mô hình đã chốt) để loại số luồng CPU như một nguồn sai lệch đã biết. Phép kiểm Stage 2 chỉ kết luận hai lượt trên cùng máy có prediction giống hệt; không dùng nó để khẳng định giống từng byte giữa mọi máy. Bốn dòng đầu Bảng 1 và năm dòng đầu Bảng 2 vẫn lấy nguyên từ bàn giao; chỉ dòng Holdout và bảng sweep được tính mới.
 """
-    (OUT / "implementation_decisions.md").write_text(decisions, encoding="utf-8")
-    manifest = {"new_files": sorted(p.name for p in OUT.iterdir()), "chart1_rows": {name: len(curve) for name, curve in curves1}, "chart2_rows": {"Baseline holdout": len(equity_by_close_time(baseline)), "Holdout top 50%": len(equity_by_close_time(top50))}}
-    (OUT / "stage4_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    write_submission_report(table1_rows, table2_rows, sweep_rows, evidence)
+    (out_dir / "implementation_decisions.md").write_text(decisions, encoding="utf-8")
+    manifest = {"new_files": sorted(p.name for p in out_dir.iterdir()), "chart1_rows": {name: len(curve) for name, curve in curves1}, "chart2_rows": {"Baseline holdout": len(equity_by_close_time(baseline)), "Holdout top 50%": len(equity_by_close_time(top50))}}
+    (out_dir / "stage4_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_submission_report(table1_rows, table2_rows, sweep_rows, evidence, Path(args.report))
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
 
 

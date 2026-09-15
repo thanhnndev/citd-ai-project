@@ -1,0 +1,22 @@
+{
+  "new_files": [
+    "equity-curve-chunk2-5-top50.html",
+    "equity-curve-holdout-top50.html",
+    "holdout_sweep_20_80.csv",
+    "implementation_decisions.md",
+    "stage4_tables.md",
+    "table1_classification_metrics.csv",
+    "table2_financial_metrics_top50.csv"
+  ],
+  "chart1_rows": {
+    "Baseline": 8024,
+    "Cách 1 — Random K-Fold": 4260,
+    "Cách 1b — Grouped K-Fold": 4363,
+    "Cách 2 — Walk-forward": 4447,
+    "Cách 3 — WF + Purge/Embargo": 4414
+  },
+  "chart2_rows": {
+    "Baseline holdout": 1975,
+    "Holdout top 50%": 1092
+  }
+}

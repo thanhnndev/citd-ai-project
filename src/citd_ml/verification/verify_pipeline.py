@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import platform
 import sys
 from datetime import datetime, timezone
+from functools import partial
 from importlib.metadata import version
 from pathlib import Path
 from unittest.mock import patch
@@ -28,6 +30,13 @@ SOURCE_FILES = (
     paths.PACKAGE_DIR / "training" / "train_catboost.py",
     paths.PACKAGE_DIR / "backtest" / "backtest_pyramid_local.py",
     paths.PACKAGE_DIR / "verification" / "verify_pipeline.py",
+    # Scripts holdout/thí nghiệm sinh artifact niêm phong; ghi hash để biết
+    # manifest được tạo bởi đúng phiên bản mã nguồn.
+    paths.SCRIPTS_DIR / "holdout_stage2_train.py",
+    paths.SCRIPTS_DIR / "holdout_stage3_backtest.py",
+    paths.SCRIPTS_DIR / "holdout_stage4_report.py",
+    paths.SCRIPTS_DIR / "holdout_stage5_repro_check.py",
+    paths.SCRIPTS_DIR / "thread_count_sensitivity.py",
 )
 
 
@@ -36,26 +45,29 @@ def file_hash(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def capture_training() -> dict[str, pd.DataFrame]:
+def capture_training(output_dir: Path | str | None = None) -> dict[str, pd.DataFrame]:
     captured = {}
 
-    def capture(metrics, summary, scores):
+    def capture(metrics, summary, scores, output_dir=None):
         captured["metrics_by_fold.csv"] = metrics
         captured["metrics_summary.csv"] = summary
         for method, frame in scores.items():
             captured[f"oof_{method}.csv"] = frame
 
     with patch.object(training, "save_outputs", capture):
-        training.main()
+        training.main(output_dir=output_dir)
     if len(captured) != 6:
         raise AssertionError("Training không tạo đủ 6 bảng kết quả")
     return captured
 
 
-def capture_backtest() -> dict[str, pd.DataFrame]:
+def capture_backtest(
+    output_dir: Path | str | None = None,
+    oof_dir: Path | str | None = None,
+) -> dict[str, pd.DataFrame]:
     captured = {}
 
-    def capture(trades, universe, summary, sweep, top50):
+    def capture(trades, universe, summary, sweep, top50, output_dir=None):
         captured.update(
             {
                 "baseline_tradelist.csv": trades,
@@ -68,7 +80,7 @@ def capture_backtest() -> dict[str, pd.DataFrame]:
             captured[f"trades_top50_{method}.csv"] = frame
 
     with patch.object(backtest, "save_outputs", capture):
-        backtest.main()
+        backtest.main(output_dir=output_dir, oof_dir=oof_dir)
     if len(captured) != 8:
         raise AssertionError("Backtest không tạo đủ 8 bảng kết quả")
     return captured
@@ -103,21 +115,48 @@ def check_repeated_runs(name, run, output_dir: Path) -> dict:
     }
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Kiểm chứng lặp lại pipeline train/backtest.")
+    parser.add_argument(
+        "--train-dir",
+        type=Path,
+        default=paths.CATBOOST_TRAINING_DIR,
+        help="Thư mục CSV train để đối chiếu (mặc định: outputs/catboost_training).",
+    )
+    parser.add_argument(
+        "--backtest-dir",
+        type=Path,
+        default=paths.BACKTEST_DIR,
+        help="Thư mục CSV backtest để đối chiếu (mặc định: outputs/backtest).",
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=MANIFEST,
+        help="File JSON ghi bằng chứng (mặc định: outputs/verification/reproducibility.json).",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
+    train_dir = Path(args.train_dir).resolve()
+    backtest_dir = Path(args.backtest_dir).resolve()
+    manifest_path = Path(args.manifest).resolve()
     started = datetime.now(timezone.utc).isoformat()
     source_hashes = {
         str(path.relative_to(paths.PROJECT_ROOT)): file_hash(path) for path in SOURCE_FILES
     }
-    csv_paths = sorted(paths.CATBOOST_TRAINING_DIR.glob("*.csv"))
-    csv_paths += sorted(paths.BACKTEST_DIR.glob("*.csv"))
+    csv_paths = sorted(train_dir.glob("*.csv"))
+    csv_paths += sorted(backtest_dir.glob("*.csv"))
     saved_hashes = {
         str(path.relative_to(paths.PROJECT_ROOT)): file_hash(path) for path in csv_paths
     }
     train_result = check_repeated_runs(
-        "training", capture_training, paths.CATBOOST_TRAINING_DIR
+        "training", partial(capture_training, train_dir), train_dir
     )
     backtest_result = check_repeated_runs(
-        "backtest", capture_backtest, paths.BACKTEST_DIR
+        "backtest", partial(capture_backtest, backtest_dir, train_dir), backtest_dir
     )
     for relative, digest in {**source_hashes, **saved_hashes}.items():
         if file_hash(paths.PROJECT_ROOT / relative) != digest:
@@ -126,7 +165,11 @@ def main() -> None:
         "status": "passed",
         "started_utc": started,
         "completed_utc": datetime.now(timezone.utc).isoformat(),
-        "command": "uv run python scripts/verify_pipeline.py",
+        "command": " ".join([sys.executable, *sys.argv]),
+        "output_dirs": {
+            "training": str(train_dir.relative_to(paths.PROJECT_ROOT)),
+            "backtest": str(backtest_dir.relative_to(paths.PROJECT_ROOT)),
+        },
         "python": sys.version,
         "platform": platform.platform(),
         "packages": {
@@ -141,11 +184,11 @@ def main() -> None:
         "scope_note": "Repeatability verifies implementation, not acceptance of the shadow design assumption.",
         "original_and_saved_csv_unchanged": True,
     }
-    MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST.write_text(
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
         json.dumps(evidence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    print(f"\nPASS: bằng chứng kiểm chứng được lưu tại {MANIFEST}", flush=True)
+    print(f"\nPASS: bằng chứng kiểm chứng được lưu tại {manifest_path}", flush=True)
 
 
 if __name__ == "__main__":
