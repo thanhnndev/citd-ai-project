@@ -1,0 +1,459 @@
+{
+  "scope": {
+    "question": "Does varying CatBoost thread_count change model predictions, classification and downstream trade selection when every other parameter, the training data and random_seed are fixed?",
+    "design": [
+      "thread_count is the only parameter varied between configurations: 1 (twice), 2 and -1",
+      "train data, features, hyperparameters and random_seed are identical in all configurations",
+      "train set is the full 25,008-row dataset after the stage-2 purge/embargo filter, which removed 0 rows",
+      "prediction mirrors scripts/holdout_stage2_train.py: model.predict_proba(X)[:, 1] (CatBoost default prediction thread_count=-1)",
+      "top-50% selection mirrors scripts/holdout_stage3_backtest.py: keep_count=ceil(5028*50/100)=2514, probability descending then row_id ascending",
+      "two same-config thread_count=1 runs separate repeatability from a real configuration change",
+      "supplementary probes re-train at thread_count=2 and -1, and re-score the baseline model at prediction thread_count 1, 2 and -1, to locate the difference in the training stage"
+    ],
+    "limitations": [
+      "Single machine, single CatBoost build, single dataset and seed.",
+      "This experiment alone cannot attribute all cross-machine variation to thread count.",
+      "No comparison across CPUs, operating systems or CatBoost versions."
+    ]
+  },
+  "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/thread_count_sensitivity.py",
+  "generated_at_utc": "2026-09-15T09:48:26+00:00",
+  "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
+  "cpu_count": 24,
+  "versions": {
+    "python": "3.12.14",
+    "catboost": "1.2.10",
+    "scikit_learn": "1.9.0",
+    "pandas": "3.0.5",
+    "numpy": "2.5.2"
+  },
+  "data": {
+    "train_dataset": "data/processed/dataset_catboost.csv",
+    "holdout_dataset": "outputs/holdout/stage1/dataset_catboost_holdout.csv",
+    "scored_universe": "outputs/holdout/stage3/holdout_fixed_trade_universe_scored.csv",
+    "train_rows": 25008,
+    "holdout_rows": 5028,
+    "purge_embargo": {
+      "train_rows_before_filtering": 25008,
+      "purge_rows": 0,
+      "embargo_rows": 0,
+      "rows_removed_by_either_condition": 0,
+      "train_rows_after_filtering": 25008
+    },
+    "features": [
+      "breakeven_R",
+      "atr14_pct",
+      "atr_ratio_14_90",
+      "vol20",
+      "vol200",
+      "vol_ratio_20_200",
+      "range_pct",
+      "dist_ema20_atr",
+      "dist_ema50_atr",
+      "dist_ema200_atr",
+      "ret20_atr",
+      "ret50_atr",
+      "pos_in_range50",
+      "dist_hh20_atr",
+      "mom14",
+      "mom_diff",
+      "vwap_dist_atr",
+      "vwap_slope_atr",
+      "rsi14",
+      "vol_ratio_volume",
+      "gap_open_atr",
+      "hour",
+      "dow"
+    ],
+    "top_k_rule": "keep_count=ceil(rows*50/100); sort probability descending then row_id ascending",
+    "keep_count": 2514
+  },
+  "fixed_params": {
+    "iterations": 1000,
+    "learning_rate": 0.05,
+    "depth": 6,
+    "l2_leaf_reg": 3.0,
+    "auto_class_weights": "Balanced",
+    "eval_metric": "AUC",
+    "random_seed": 42
+  },
+  "configurations": [
+    {
+      "name": "tc1_a",
+      "thread_count": 1
+    },
+    {
+      "name": "tc1_b",
+      "thread_count": 1
+    },
+    {
+      "name": "tc2",
+      "thread_count": 2
+    },
+    {
+      "name": "tc_default",
+      "thread_count": -1
+    }
+  ],
+  "configs": [
+    {
+      "name": "tc1_a",
+      "thread_count": 1,
+      "fit_seconds": 4.931,
+      "classification": {
+        "roc_auc": 0.6045544538928682,
+        "f1_at_0_5": 0.40220723482526055
+      },
+      "top50": {
+        "trades": 2514,
+        "net_profit_R": -36.552754995842434,
+        "max_dd_R": 263.2460776974121,
+        "profit_factor": 0.9717948517263314,
+        "win_rate_pct": 34.80509148766905,
+        "overlap_count_vs_tc1_a": 2514,
+        "overlap_pct_vs_tc1_a": 100.0,
+        "identical_selection_vs_tc1_a": true
+      }
+    },
+    {
+      "name": "tc1_b",
+      "thread_count": 1,
+      "fit_seconds": 5.059,
+      "classification": {
+        "roc_auc": 0.6045544538928682,
+        "f1_at_0_5": 0.40220723482526055
+      },
+      "top50": {
+        "trades": 2514,
+        "net_profit_R": -36.552754995842434,
+        "max_dd_R": 263.2460776974121,
+        "profit_factor": 0.9717948517263314,
+        "win_rate_pct": 34.80509148766905,
+        "overlap_count_vs_tc1_a": 2514,
+        "overlap_pct_vs_tc1_a": 100.0,
+        "identical_selection_vs_tc1_a": true
+      }
+    },
+    {
+      "name": "tc2",
+      "thread_count": 2,
+      "fit_seconds": 2.839,
+      "classification": {
+        "roc_auc": 0.6041773010440312,
+        "f1_at_0_5": 0.4068923821039903
+      },
+      "top50": {
+        "trades": 2514,
+        "net_profit_R": -12.260504325594937,
+        "max_dd_R": 249.5688144306139,
+        "profit_factor": 0.9905011099026683,
+        "win_rate_pct": 35.32219570405728,
+        "overlap_count_vs_tc1_a": 2252,
+        "overlap_pct_vs_tc1_a": 89.57836117740652,
+        "identical_selection_vs_tc1_a": false
+      }
+    },
+    {
+      "name": "tc_default",
+      "thread_count": -1,
+      "fit_seconds": 3.279,
+      "classification": {
+        "roc_auc": 0.6023152558719406,
+        "f1_at_0_5": 0.4064693317058285
+      },
+      "top50": {
+        "trades": 2514,
+        "net_profit_R": 30.78592225713001,
+        "max_dd_R": 265.54171790395895,
+        "profit_factor": 1.0238644238065668,
+        "win_rate_pct": 35.20286396181384,
+        "overlap_count_vs_tc1_a": 2254,
+        "overlap_pct_vs_tc1_a": 89.65791567223548,
+        "identical_selection_vs_tc1_a": false
+      }
+    }
+  ],
+  "deltas_vs_tc1_a": {
+    "tc1_a": {
+      "train": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "holdout": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    },
+    "tc1_b": {
+      "train": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "holdout": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    },
+    "tc2": {
+      "train": {
+        "predictions_exactly_equal": false,
+        "max_abs_diff": 0.2831583596788554,
+        "mean_abs_diff": 0.037759258831963405,
+        "pearson_corr": 0.9795324513373492,
+        "count_diff_gt_1e-12": 25008,
+        "count_diff_gt_0": 25008
+      },
+      "holdout": {
+        "predictions_exactly_equal": false,
+        "max_abs_diff": 0.34685634547090655,
+        "mean_abs_diff": 0.05428277327701607,
+        "pearson_corr": 0.9330668361846092,
+        "count_diff_gt_1e-12": 5028,
+        "count_diff_gt_0": 5028
+      }
+    },
+    "tc_default": {
+      "train": {
+        "predictions_exactly_equal": false,
+        "max_abs_diff": 0.2998525853501387,
+        "mean_abs_diff": 0.036822568590072276,
+        "pearson_corr": 0.98058398983154,
+        "count_diff_gt_1e-12": 25008,
+        "count_diff_gt_0": 25008
+      },
+      "holdout": {
+        "predictions_exactly_equal": false,
+        "max_abs_diff": 0.3351941178189333,
+        "mean_abs_diff": 0.050810807226815205,
+        "pearson_corr": 0.940947703060238,
+        "count_diff_gt_1e-12": 5028,
+        "count_diff_gt_0": 5028
+      }
+    }
+  },
+  "same_config_determinism_probe": {
+    "purpose": "Second independent run at thread_count=2 and at thread_count=-1, to test repeatability within a fixed configuration.",
+    "tc2_repeat_vs_tc2": {
+      "train": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "holdout": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    },
+    "tc_default_repeat_vs_tc_default": {
+      "train": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "holdout": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    },
+    "fixed_thread_count_training_is_repeatable": true
+  },
+  "prediction_call_repeatability": {
+    "model": "tc1_a",
+    "protocol": "model.predict_proba(X)[:, 1] called twice on the same fitted model (default prediction thread_count=-1)",
+    "train": {
+      "predictions_exactly_equal": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "pearson_corr": 1.0,
+      "count_diff_gt_1e-12": 0,
+      "count_diff_gt_0": 0
+    },
+    "holdout": {
+      "predictions_exactly_equal": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "pearson_corr": 1.0,
+      "count_diff_gt_1e-12": 0,
+      "count_diff_gt_0": 0
+    }
+  },
+  "prediction_thread_count_sensitivity": {
+    "model": "tc1_a",
+    "training_thread_count": 1,
+    "protocol": "same fitted model, prediction thread_count varied explicitly",
+    "train": {
+      "thread_count=1": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "thread_count=2": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "thread_count=-1": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    },
+    "holdout": {
+      "thread_count=1": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "thread_count=2": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "thread_count=-1": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      }
+    }
+  },
+  "baseline_vs_committed_stage3": {
+    "note": "tc1_a is a fresh training run with the same fixed parameters as the committed stage-2 model; this check confirms the experiment reproduces the committed pipeline before interpreting thread_count deltas.",
+    "stage2_model": "outputs/holdout/stage2/catboost_final_holdout_run1.cbm",
+    "model_predictions": {
+      "train": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "holdout": {
+        "predictions_exactly_equal": true,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "pearson_corr": 1.0,
+        "count_diff_gt_1e-12": 0,
+        "count_diff_gt_0": 0
+      },
+      "predictions_exactly_equal": true
+    },
+    "classification_match": true,
+    "classification_experiment": {
+      "roc_auc": 0.6045544538928682,
+      "f1_at_0_5": 0.40220723482526055
+    },
+    "classification_stage3": {
+      "roc_auc": 0.6045544538928682,
+      "f1_at_0_5": 0.40220723482526055
+    },
+    "top50_metrics_match_within_csv_precision": true,
+    "top50_metrics_exactly_equal": false,
+    "top50_metrics_abs_diff": {
+      "net_profit_R": 4.7549519877065904e-11,
+      "max_dd_R": 8.270717444247566e-11,
+      "profit_factor": 3.6637359812630166e-14,
+      "win_rate_pct": 0.0
+    },
+    "top50_metrics_precision_note": "R is read back from holdout_fixed_trade_universe_scored.csv, which stage 3 wrote with float_format='%.12g'; top-50 R metrics therefore agree only to ~1e-11, while model predictions and the selected row_id set are compared exactly.",
+    "top50_metrics_experiment": {
+      "net_profit_R": -36.552754995842434,
+      "max_dd_R": 263.2460776974121,
+      "profit_factor": 0.9717948517263314,
+      "win_rate_pct": 34.80509148766905
+    },
+    "top50_metrics_stage3": {
+      "net_profit_R": -36.552754995889984,
+      "max_dd_R": 263.2460776974948,
+      "profit_factor": 0.9717948517262948,
+      "win_rate_pct": 34.80509148766905
+    },
+    "top50_row_id_overlap_count": 2514,
+    "top50_row_id_overlap_total": 2514
+  },
+  "conclusion_facts": {
+    "two_same_config_tc1_runs_exactly_equal_train": true,
+    "two_same_config_tc1_runs_exactly_equal_holdout": true,
+    "tc1_a_vs_tc1_b_train_max_abs_diff": 0.0,
+    "tc1_a_vs_tc1_b_holdout_max_abs_diff": 0.0,
+    "tc2_vs_tc1_a_train_max_abs_diff": 0.2831583596788554,
+    "tc2_vs_tc1_a_holdout_max_abs_diff": 0.34685634547090655,
+    "tc2_vs_tc1_a_train_count_diff_gt_1e-12": 25008,
+    "tc2_vs_tc1_a_holdout_count_diff_gt_1e-12": 5028,
+    "tc_default_vs_tc1_a_train_max_abs_diff": 0.2998525853501387,
+    "tc_default_vs_tc1_a_holdout_max_abs_diff": 0.3351941178189333,
+    "tc_default_vs_tc1_a_train_count_diff_gt_1e-12": 25008,
+    "tc_default_vs_tc1_a_holdout_count_diff_gt_1e-12": 5028,
+    "all_configs_produced_exactly_equal_train_predictions": false,
+    "all_configs_produced_exactly_equal_holdout_predictions": false,
+    "tc2_top50_selection_identical_to_tc1_a": false,
+    "tc_default_top50_selection_identical_to_tc1_a": false,
+    "holdout_roc_auc_range_across_configs": [
+      0.6023152558719406,
+      0.6045544538928682
+    ],
+    "holdout_f1_at_0_5_range_across_configs": [
+      0.40220723482526055,
+      0.4068923821039903
+    ],
+    "holdout_top50_net_profit_R_range_across_configs": [
+      -36.552754995842434,
+      30.78592225713001
+    ],
+    "baseline_reproduces_committed_stage3": true,
+    "fixed_thread_count_training_is_repeatable": true,
+    "repeated_inference_on_same_model_exactly_equal": true,
+    "prediction_thread_count_changed_predictions": false,
+    "attribution": "On this machine: repeated training at the same fixed thread_count was exactly equal; repeated inference on the same fitted model was exactly equal; varying the prediction thread_count did not change predictions; varying the training thread_count changed predictions.",
+    "catboost_doc_claim": "CatBoost docs state thread_count \"optimizes execution speed without affecting results\" (training parameters) and the predict_proba docstring says it \"doesn't affect results\". This experiment confirms the prediction-stage statement on this machine but measures a different result for the training stage.",
+    "cross_machine_attribution": "not established by this experiment: only one machine, one CatBoost build, one dataset and one seed were measured"
+  }
+}
