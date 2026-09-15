@@ -1,0 +1,1438 @@
+{
+  "scope_note": "Sổ này dựng lại đầy đủ số liệu của ba lần mở holdout niêm phong từ git history. Nó chứng minh các con số cũ đã được ghi lại và không bị thay thế, nhưng không tự chứng minh không có cherry-picking: người review cần đối chiếu chính các số đã thu hồi.",
+  "head": {
+    "commit": "2239ba7b2251d4a9250086560a3a2aad9c9769ab",
+    "commit_short": "2239ba7",
+    "commit_date": "2026-09-13T22:57:01+07:00",
+    "commit_subject": "docs(changelog): record report review fixes"
+  },
+  "provenance": {
+    "method": "git show <commit>:<path> (không checkout)",
+    "entries": [
+      {
+        "commit": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+        "commit_short": "dc25cd3",
+        "path": "outputs/holdout/stage3/holdout_scored.csv",
+        "git_blob_sha1": "05bf64e6994139ba5f9713765f6ce617056e28c7",
+        "bytes": 1666608,
+        "sha256": "0c0b3e15ab2c517ae6a821441ca0e5713b88b3b800230ee2c562a2c62b7c0c0a",
+        "read_via": "git show dc25cd3:outputs/holdout/stage3/holdout_scored.csv"
+      },
+      {
+        "commit": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+        "commit_short": "dc25cd3",
+        "path": "outputs/holdout/stage3/stage3_report.json",
+        "git_blob_sha1": "cb71482d1303e6d475848c122e49ed12aa2b53a5",
+        "bytes": 3285,
+        "sha256": "1d5a8ed7cd543c67b8485811d338eac575b0b131c0ab80335525f69f65fc3e1c",
+        "read_via": "git show dc25cd3:outputs/holdout/stage3/stage3_report.json"
+      },
+      {
+        "commit": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+        "commit_short": "dc25cd3",
+        "path": "outputs/holdout/stage2/train_run1_report.json",
+        "git_blob_sha1": "50601c082ba39b194fc072a26f9bff09116734af",
+        "bytes": 1878,
+        "sha256": "384f30cf1074084ba4380ec74b87e97cc2344cb9703db86b21b4faf6f5ec78c4",
+        "read_via": "git show dc25cd3:outputs/holdout/stage2/train_run1_report.json"
+      },
+      {
+        "commit": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+        "commit_short": "5f46e41",
+        "path": "outputs/holdout/stage3/holdout_scored.csv",
+        "git_blob_sha1": "ee56ec7c56a346ea72c1f8855b4201d14614a8fe",
+        "bytes": 1661560,
+        "sha256": "833d784096a6ff1052b80b1de161784646e53aabcf29a5eafd441732cf8c9dc6",
+        "read_via": "git show 5f46e41:outputs/holdout/stage3/holdout_scored.csv"
+      },
+      {
+        "commit": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+        "commit_short": "5f46e41",
+        "path": "outputs/holdout/stage3/stage3_report.json",
+        "git_blob_sha1": "681272b33063c114a2fa3da9300d83ca9343b29d",
+        "bytes": 3288,
+        "sha256": "fbadee98a571ca3b722e4c191ac123366741ba5da6a6a358d62fc6b32619d26d",
+        "read_via": "git show 5f46e41:outputs/holdout/stage3/stage3_report.json"
+      },
+      {
+        "commit": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+        "commit_short": "5f46e41",
+        "path": "outputs/holdout/stage2/train_run1_report.json",
+        "git_blob_sha1": "8b36af29f4a496bfb6f7bcaddf2c87ecef77fc07",
+        "bytes": 1840,
+        "sha256": "f6815f6115ed26c273b6c9e206c429e272c0df3d173319a416a878c0f6786cd3",
+        "read_via": "git show 5f46e41:outputs/holdout/stage2/train_run1_report.json"
+      },
+      {
+        "commit": "774882844e04a60f88df6db1a97b1148b28566b3",
+        "commit_short": "7748828",
+        "path": "outputs/holdout/stage3/holdout_scored.csv",
+        "git_blob_sha1": "a0bb98a8854c53500c2f33e4b88e3b9c8c6155d7",
+        "bytes": 1661606,
+        "sha256": "0039f3566ba682e57af44239e207cecec261ac73c243a2942336d351f135bc4c",
+        "read_via": "git show 7748828:outputs/holdout/stage3/holdout_scored.csv"
+      },
+      {
+        "commit": "774882844e04a60f88df6db1a97b1148b28566b3",
+        "commit_short": "7748828",
+        "path": "outputs/holdout/stage3/stage3_report.json",
+        "git_blob_sha1": "fba1676f4bd331ac1090384a1e05a49653ce12dd",
+        "bytes": 3288,
+        "sha256": "f923461dc73942d330f66039e6a0f897ff7e82c2e93d1ffc46e5d8049c5ee0ea",
+        "read_via": "git show 7748828:outputs/holdout/stage3/stage3_report.json"
+      },
+      {
+        "commit": "774882844e04a60f88df6db1a97b1148b28566b3",
+        "commit_short": "7748828",
+        "path": "outputs/holdout/stage2/train_run1_report.json",
+        "git_blob_sha1": "80a21c95f49e9535796e3ec47b54f5dc897cb54b",
+        "bytes": 1863,
+        "sha256": "b1b743782baae2360d2763e565f952cf2d9d0943039e0de5b3193541b7a6c021",
+        "read_via": "git show 7748828:outputs/holdout/stage2/train_run1_report.json"
+      }
+    ],
+    "head_files": [
+      {
+        "path": "outputs/catboost_training/oof_random_kfold.csv",
+        "rows": 25008,
+        "sha256": "7d8c4bc3ff9db744d62980f0847b1d2b8422354b65223a0ab4943f0525109bdd"
+      },
+      {
+        "path": "outputs/catboost_training/oof_grouped_kfold.csv",
+        "rows": 25008,
+        "sha256": "f1a78d42763d9c15dd0c7952c17b936cf74cf41acb1a9d699b8212ece5d0fe0a"
+      },
+      {
+        "path": "outputs/catboost_training/oof_walk_forward.csv",
+        "rows": 25008,
+        "sha256": "67ecac4c0da7d86e22f6202195d7cb02a3b62eec3efd7145a1d21c6d763768e8"
+      },
+      {
+        "path": "outputs/catboost_training/oof_purged_walk_forward.csv",
+        "rows": 25008,
+        "sha256": "fa33abe906d8ffab59a16e40cfdd8f99ee33044d3362470af75e655a74a5c196"
+      },
+      {
+        "path": "outputs/backtest/backtest_summary_top50.csv",
+        "rows": 5,
+        "sha256": "961be98d41030b470fef20e3af1d1c2a8967f612c637d7937d78deb7ab234830"
+      },
+      {
+        "path": "outputs/backtest/backtest_retention_sweep.csv",
+        "rows": 35,
+        "sha256": "af99b68be72a36bc22ba592d7e13920584cf6fe69b57f0b4bc528296515d33a1"
+      }
+    ]
+  },
+  "runs": [
+    {
+      "run_index": 1,
+      "label": "Lần 1 — Windows gốc (không ghim thread_count)",
+      "commit": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+      "commit_short": "dc25cd3",
+      "commit_date": "2026-09-12T14:52:41+07:00",
+      "commit_subject": "Initial commit: CITD ML BTCUSD pyramid + CatBoost signal filter",
+      "environment": {
+        "value": "Windows",
+        "recorded": false,
+        "basis": "model_path=C:\\Users\\Admin\\Documents\\Codex\\2026-09-09\\1-c-file-b-n-giao\\holdout_stage2\\catboost_final_holdout_run1.cbm",
+        "note": "train_run1_report.json không có trường OS/platform; giá trị này chỉ suy ra từ dạng đường dẫn, không phải bằng chứng môi trường đầy đủ."
+      },
+      "os_platform_recorded": false,
+      "thread_count": null,
+      "thread_count_recorded": false,
+      "classification": {
+        "roc_auc": 0.60502452277619,
+        "f1_at_0_5": 0.40170679670832066
+      },
+      "baseline_holdout": {
+        "keep_pct": 100,
+        "filter": "Baseline",
+        "trades": 5028,
+        "net_profit_R": 245.9296826592543,
+        "max_dd_R": 305.3174286696801,
+        "profit_factor": 1.0991525948306131,
+        "win_rate_pct": 35.2824184566428
+      },
+      "top50_holdout": {
+        "keep_pct": 50,
+        "filter": "Top 50%",
+        "trades": 2514,
+        "net_profit_R": -23.833050158080326,
+        "max_dd_R": 272.37786182993227,
+        "profit_factor": 0.9815377756960416,
+        "win_rate_pct": 34.884645982498014
+      },
+      "sweep": [
+        {
+          "keep_pct": 20,
+          "filter": "Top 20%",
+          "trades": 1006,
+          "net_profit_R": -25.041180555605266,
+          "max_dd_R": 122.85464520881463,
+          "profit_factor": 0.9489421264263305,
+          "win_rate_pct": 36.48111332007952
+        },
+        {
+          "keep_pct": 30,
+          "filter": "Top 30%",
+          "trades": 1509,
+          "net_profit_R": -39.32733033776272,
+          "max_dd_R": 199.2135339301725,
+          "profit_factor": 0.9479776022587029,
+          "win_rate_pct": 35.71901921802518
+        },
+        {
+          "keep_pct": 40,
+          "filter": "Top 40%",
+          "trades": 2012,
+          "net_profit_R": -44.395117480791924,
+          "max_dd_R": 236.6655064782335,
+          "profit_factor": 0.9566558599780808,
+          "win_rate_pct": 35.337972166998014
+        },
+        {
+          "keep_pct": 50,
+          "filter": "Top 50%",
+          "trades": 2514,
+          "net_profit_R": -23.833050158080326,
+          "max_dd_R": 272.37786182993227,
+          "profit_factor": 0.9815377756960416,
+          "win_rate_pct": 34.884645982498014
+        },
+        {
+          "keep_pct": 60,
+          "filter": "Top 60%",
+          "trades": 3017,
+          "net_profit_R": 64.51337982096103,
+          "max_dd_R": 248.50436676659564,
+          "profit_factor": 1.0414374071486727,
+          "win_rate_pct": 34.96851176665562
+        },
+        {
+          "keep_pct": 70,
+          "filter": "Top 70%",
+          "trades": 3520,
+          "net_profit_R": 164.7044537740509,
+          "max_dd_R": 228.21952566172442,
+          "profit_factor": 1.0917709272964138,
+          "win_rate_pct": 35.53977272727273
+        },
+        {
+          "keep_pct": 80,
+          "filter": "Top 80%",
+          "trades": 4023,
+          "net_profit_R": 249.63135814789456,
+          "max_dd_R": 226.7551103884586,
+          "profit_factor": 1.1226749475800486,
+          "win_rate_pct": 35.62018394233159
+        }
+      ],
+      "model_params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42
+      },
+      "library_versions": {
+        "python": "3.12.14",
+        "catboost": "1.2.10",
+        "scikit_learn": "1.9.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.2"
+      },
+      "stage2_artifacts": {
+        "run_id": 1,
+        "model_sha256": "31c4a8d90b6d228d26c8125d492d9d7e1a90814fdf05d0aeeebae65b3ce76f26",
+        "prediction_sha256": "286d4faf99101da7223ea469d8b7c51293537bfd17ecfcf6e41dcbb8d1324116",
+        "holdout_sha256_before": "acd6a4f8b162d5ca338bb038494a46f6517db637c830b30b2d8b0a3bc01c6648",
+        "holdout_sha256_after": "acd6a4f8b162d5ca338bb038494a46f6517db637c830b30b2d8b0a3bc01c6648",
+        "holdout_file_unchanged": true,
+        "train_rows_after_filtering": 25008
+      },
+      "scored_file": {
+        "rows": 5028,
+        "unique_trade_keys": true,
+        "sha256": "0c0b3e15ab2c517ae6a821441ca0e5713b88b3b800230ee2c562a2c62b7c0c0a"
+      },
+      "checks": [
+        {
+          "metric": "dc25cd3.roc_auc",
+          "recovered": 0.60502452277619,
+          "expected": 0.60502452277619,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "dc25cd3.f1_at_0_5",
+          "recovered": 0.40170679670832066,
+          "expected": 0.40170679670832066,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "dc25cd3.top50_net_profit_R",
+          "recovered": -23.833050158080326,
+          "expected": -23.833050158080326,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "dc25cd3.baseline_net_profit_R",
+          "recovered": 245.9296826592543,
+          "expected": 245.9296826592543,
+          "abs_diff": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "run_index": 2,
+      "label": "Lần 2 — Linux đa luồng (không ghim thread_count)",
+      "commit": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+      "commit_short": "5f46e41",
+      "commit_date": "2026-09-12T15:06:19+07:00",
+      "commit_subject": "data: regenerate processed datasets and outputs on Python 3.12.14 via uv",
+      "environment": {
+        "value": "Linux",
+        "recorded": false,
+        "basis": "model_path=/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/catboost_final_holdout_run1.cbm",
+        "note": "train_run1_report.json không có trường OS/platform; giá trị này chỉ suy ra từ dạng đường dẫn, không phải bằng chứng môi trường đầy đủ."
+      },
+      "os_platform_recorded": false,
+      "thread_count": null,
+      "thread_count_recorded": false,
+      "classification": {
+        "roc_auc": 0.6023152558719406,
+        "f1_at_0_5": 0.4064693317058285
+      },
+      "baseline_holdout": {
+        "keep_pct": 100,
+        "filter": "Baseline",
+        "trades": 5028,
+        "net_profit_R": 245.9296826592543,
+        "max_dd_R": 305.3174286696801,
+        "profit_factor": 1.0991525948306131,
+        "win_rate_pct": 35.2824184566428
+      },
+      "top50_holdout": {
+        "keep_pct": 50,
+        "filter": "Top 50%",
+        "trades": 2514,
+        "net_profit_R": 30.78592225711712,
+        "max_dd_R": 265.5417179040621,
+        "profit_factor": 1.0238644238065564,
+        "win_rate_pct": 35.20286396181384
+      },
+      "sweep": [
+        {
+          "keep_pct": 20,
+          "filter": "Top 20%",
+          "trades": 1006,
+          "net_profit_R": -11.062423196397368,
+          "max_dd_R": 114.34007553777745,
+          "profit_factor": 0.9772911900947754,
+          "win_rate_pct": 36.083499005964214
+        },
+        {
+          "keep_pct": 30,
+          "filter": "Top 30%",
+          "trades": 1509,
+          "net_profit_R": -1.7690864743519228,
+          "max_dd_R": 169.00568257120472,
+          "profit_factor": 0.9976356342940845,
+          "win_rate_pct": 36.18290258449304
+        },
+        {
+          "keep_pct": 40,
+          "filter": "Top 40%",
+          "trades": 2012,
+          "net_profit_R": 28.387168216748478,
+          "max_dd_R": 210.69271812098265,
+          "profit_factor": 1.0279104530436747,
+          "win_rate_pct": 35.834990059642145
+        },
+        {
+          "keep_pct": 50,
+          "filter": "Top 50%",
+          "trades": 2514,
+          "net_profit_R": 30.78592225711712,
+          "max_dd_R": 265.5417179040621,
+          "profit_factor": 1.0238644238065564,
+          "win_rate_pct": 35.20286396181384
+        },
+        {
+          "keep_pct": 60,
+          "filter": "Top 60%",
+          "trades": 3017,
+          "net_profit_R": 35.20653882252449,
+          "max_dd_R": 279.9499440884524,
+          "profit_factor": 1.0224013273381356,
+          "win_rate_pct": 34.637056678820024
+        },
+        {
+          "keep_pct": 70,
+          "filter": "Top 70%",
+          "trades": 3520,
+          "net_profit_R": 122.07668492149972,
+          "max_dd_R": 276.00705669598125,
+          "profit_factor": 1.0671919382272117,
+          "win_rate_pct": 34.85795454545455
+        },
+        {
+          "keep_pct": 80,
+          "filter": "Top 80%",
+          "trades": 4023,
+          "net_profit_R": 160.38143214674486,
+          "max_dd_R": 262.53069251634986,
+          "profit_factor": 1.0780902018032934,
+          "win_rate_pct": 34.899328859060404
+        }
+      ],
+      "model_params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42
+      },
+      "library_versions": {
+        "python": "3.12.14",
+        "catboost": "1.2.10",
+        "scikit_learn": "1.9.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.2"
+      },
+      "stage2_artifacts": {
+        "run_id": 1,
+        "model_sha256": "995d66ef93e625b053e2dffaa16a3953edcc410abffbbaa2b8b077647f50bbf3",
+        "prediction_sha256": "6eb1764fbf495bc73ee4a1376dffe20575c44a07b58a44a36358d2ecc6eb27eb",
+        "holdout_sha256_before": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
+        "holdout_sha256_after": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
+        "holdout_file_unchanged": true,
+        "train_rows_after_filtering": 25008
+      },
+      "scored_file": {
+        "rows": 5028,
+        "unique_trade_keys": true,
+        "sha256": "833d784096a6ff1052b80b1de161784646e53aabcf29a5eafd441732cf8c9dc6"
+      },
+      "checks": [
+        {
+          "metric": "5f46e41.roc_auc",
+          "recovered": 0.6023152558719406,
+          "expected": 0.6023152558719406,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "5f46e41.f1_at_0_5",
+          "recovered": 0.4064693317058285,
+          "expected": 0.4064693317058285,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "5f46e41.top50_net_profit_R",
+          "recovered": 30.78592225711712,
+          "expected": 30.78592225711712,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "5f46e41.baseline_net_profit_R",
+          "recovered": 245.9296826592543,
+          "expected": 245.9296826592543,
+          "abs_diff": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "run_index": 3,
+      "label": "Lần 3 — Linux thread_count=1 (artifact hiện tại)",
+      "commit": "774882844e04a60f88df6db1a97b1148b28566b3",
+      "commit_short": "7748828",
+      "commit_date": "2026-09-12T15:20:39+07:00",
+      "commit_subject": "data: re-run pipeline and holdout with thread_count=1",
+      "environment": {
+        "value": "Linux",
+        "recorded": false,
+        "basis": "model_path=/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/catboost_final_holdout_run1.cbm",
+        "note": "train_run1_report.json không có trường OS/platform; giá trị này chỉ suy ra từ dạng đường dẫn, không phải bằng chứng môi trường đầy đủ."
+      },
+      "os_platform_recorded": false,
+      "thread_count": 1,
+      "thread_count_recorded": true,
+      "classification": {
+        "roc_auc": 0.6045544538928682,
+        "f1_at_0_5": 0.40220723482526055
+      },
+      "baseline_holdout": {
+        "keep_pct": 100,
+        "filter": "Baseline",
+        "trades": 5028,
+        "net_profit_R": 245.9296826592543,
+        "max_dd_R": 305.3174286696801,
+        "profit_factor": 1.0991525948306131,
+        "win_rate_pct": 35.2824184566428
+      },
+      "top50_holdout": {
+        "keep_pct": 50,
+        "filter": "Top 50%",
+        "trades": 2514,
+        "net_profit_R": -36.552754995889984,
+        "max_dd_R": 263.2460776974948,
+        "profit_factor": 0.9717948517262948,
+        "win_rate_pct": 34.80509148766905
+      },
+      "sweep": [
+        {
+          "keep_pct": 20,
+          "filter": "Top 20%",
+          "trades": 1006,
+          "net_profit_R": -30.01336959098738,
+          "max_dd_R": 125.37629802645517,
+          "profit_factor": 0.9384664106536245,
+          "win_rate_pct": 36.18290258449304
+        },
+        {
+          "keep_pct": 30,
+          "filter": "Top 30%",
+          "trades": 1509,
+          "net_profit_R": -50.008563164391504,
+          "max_dd_R": 210.76530990303525,
+          "profit_factor": 0.9342935296755517,
+          "win_rate_pct": 35.52021206096752
+        },
+        {
+          "keep_pct": 40,
+          "filter": "Top 40%",
+          "trades": 2012,
+          "net_profit_R": -53.165425548097744,
+          "max_dd_R": 251.55573706850143,
+          "profit_factor": 0.9485447132985777,
+          "win_rate_pct": 35.039761431411534
+        },
+        {
+          "keep_pct": 50,
+          "filter": "Top 50%",
+          "trades": 2514,
+          "net_profit_R": -36.552754995889984,
+          "max_dd_R": 263.2460776974948,
+          "profit_factor": 0.9717948517262948,
+          "win_rate_pct": 34.80509148766905
+        },
+        {
+          "keep_pct": 60,
+          "filter": "Top 60%",
+          "trades": 3017,
+          "net_profit_R": 73.16085033844045,
+          "max_dd_R": 233.95243601424573,
+          "profit_factor": 1.047386352841449,
+          "win_rate_pct": 35.598276433543255
+        },
+        {
+          "keep_pct": 70,
+          "filter": "Top 70%",
+          "trades": 3520,
+          "net_profit_R": 186.92492712457408,
+          "max_dd_R": 197.23727517166873,
+          "profit_factor": 1.104000284760099,
+          "win_rate_pct": 35.76704545454545
+        },
+        {
+          "keep_pct": 80,
+          "filter": "Top 80%",
+          "trades": 4023,
+          "net_profit_R": 259.91129675688364,
+          "max_dd_R": 219.0240294185487,
+          "profit_factor": 1.1277931119610443,
+          "win_rate_pct": 35.520755654983844
+        }
+      ],
+      "model_params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42,
+        "thread_count": 1
+      },
+      "library_versions": {
+        "python": "3.12.14",
+        "catboost": "1.2.10",
+        "scikit_learn": "1.9.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.2"
+      },
+      "stage2_artifacts": {
+        "run_id": 1,
+        "model_sha256": "0746b2c6a334919ca425aff8b5f8130bf8f2fbd7a638ce3becd555a17bab5986",
+        "prediction_sha256": "2b5d473c35036aa979a033ecdf4355b018c62362b70092d7055b1c6844785e8a",
+        "holdout_sha256_before": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
+        "holdout_sha256_after": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
+        "holdout_file_unchanged": true,
+        "train_rows_after_filtering": 25008
+      },
+      "scored_file": {
+        "rows": 5028,
+        "unique_trade_keys": true,
+        "sha256": "0039f3566ba682e57af44239e207cecec261ac73c243a2942336d351f135bc4c"
+      },
+      "checks": [
+        {
+          "metric": "7748828.roc_auc",
+          "recovered": 0.6045544538928682,
+          "expected": 0.6045544538928682,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "7748828.f1_at_0_5",
+          "recovered": 0.40220723482526055,
+          "expected": 0.40220723482526055,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "7748828.top50_net_profit_R",
+          "recovered": -36.552754995889984,
+          "expected": -36.552754995889984,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "metric": "7748828.baseline_net_profit_R",
+          "recovered": 245.9296826592543,
+          "expected": 245.9296826592543,
+          "abs_diff": 0.0,
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "pairwise_deltas": [
+    {
+      "run_a": "dc25cd3",
+      "run_b": "5f46e41",
+      "commit_a": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+      "commit_b": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+      "merged_rows": 5028,
+      "max_abs_diff": 0.31904005654299994,
+      "mean_abs_diff": 0.050925383711152364,
+      "pearson_r": 0.9396134057252777,
+      "count_diff_gt_1e-12": 5028,
+      "top50": {
+        "selection_size": 2514,
+        "intersection": 2275,
+        "only_in_a": 239,
+        "only_in_b": 239,
+        "jaccard": 0.8263712313839447
+      }
+    },
+    {
+      "run_a": "dc25cd3",
+      "run_b": "7748828",
+      "commit_a": "dc25cd3ca8afec1d83965cb5b5e9a4008b019501",
+      "commit_b": "774882844e04a60f88df6db1a97b1148b28566b3",
+      "merged_rows": 5028,
+      "max_abs_diff": 0.15237350116899995,
+      "mean_abs_diff": 0.02266262024698146,
+      "pearson_r": 0.98803304946295,
+      "count_diff_gt_1e-12": 5028,
+      "top50": {
+        "selection_size": 2514,
+        "intersection": 2397,
+        "only_in_a": 117,
+        "only_in_b": 117,
+        "jaccard": 0.9110604332953249
+      }
+    },
+    {
+      "run_a": "5f46e41",
+      "run_b": "7748828",
+      "commit_a": "5f46e41c2a67b042659bbb5bf5cefb66fe611e8c",
+      "commit_b": "774882844e04a60f88df6db1a97b1148b28566b3",
+      "merged_rows": 5028,
+      "max_abs_diff": 0.33519411781899994,
+      "mean_abs_diff": 0.05081080722681638,
+      "pearson_r": 0.9409477030602359,
+      "count_diff_gt_1e-12": 5028,
+      "top50": {
+        "selection_size": 2514,
+        "intersection": 2254,
+        "only_in_a": 260,
+        "only_in_b": 260,
+        "jaccard": 0.8125450612833454
+      }
+    }
+  ],
+  "external_verification": {
+    "reported_by": "Bùi Quốc Thịnh",
+    "reported_on": "2026-09-12",
+    "reported_environment": "Windows",
+    "branch": "main",
+    "command": "scripts/holdout_stage2_train.py --run-id 1|2 --verify",
+    "claims": [
+      "Hai lượt train độc lập trên cùng một máy cho prediction giống hệt nhau (run1 so với run2).",
+      "Prediction của teammate so với prediction bản hiện có tương đương trong sai số 1e-15.",
+      "Không byte-identical giữa hai máy khác nhau.",
+      "Không ghi lại số metric nào kèm theo."
+    ],
+    "evidence_class": "reported_by_teammate_not_recomputable_from_committed_artifacts",
+    "limitations": "Đây là báo cáo miệng của teammate, không có artifact đối chứng được commit (không có prediction/hash/log từ máy Windows trong repo) và không thể tái tạo từ git. Chỉ ghi nhận như thông tin tham khảo, không dùng thay bằng chứng PASS."
+  },
+  "handover_reference": {
+    "table1_classification_chunk1_removed": {
+      "rule": "giữ fold>=1 và chunk!=1; tính AUC/F1 từng fold trên phần còn lại rồi lấy trung bình; chunk chia theo row_id với biên [0,5001,10003,15004,20006,25008] (searchsorted side=right, giống backtest_pyramid_local.py)",
+      "expected_precision": "artifact bàn giao ghi 4 chữ số thập phân; dung sai đối chiếu 5e-5",
+      "branches": [
+        {
+          "method": "random_kfold",
+          "display_name": "Cách 1 — Random K-Fold",
+          "mean_roc_auc": 0.8594955970246115,
+          "mean_f1_at_0_5": 0.6524771196164297,
+          "handover_reported_roc_auc": 0.8595,
+          "handover_reported_f1_at_0_5": 0.6525,
+          "abs_diff_roc_auc": 4.402975388506647e-06,
+          "abs_diff_f1_at_0_5": 2.288038357023403e-05,
+          "per_fold": [
+            {
+              "fold": 1,
+              "rows": 4019,
+              "roc_auc": 0.8459008458754926,
+              "f1_at_0_5": 0.6185476815398075
+            },
+            {
+              "fold": 2,
+              "rows": 3988,
+              "roc_auc": 0.8664062502582294,
+              "f1_at_0_5": 0.6637478108581436
+            },
+            {
+              "fold": 3,
+              "rows": 3996,
+              "roc_auc": 0.8672669850215888,
+              "f1_at_0_5": 0.6675392670157068
+            },
+            {
+              "fold": 4,
+              "rows": 4043,
+              "roc_auc": 0.8600711241109487,
+              "f1_at_0_5": 0.6616791354945969
+            },
+            {
+              "fold": 5,
+              "rows": 3961,
+              "roc_auc": 0.8578327798567984,
+              "f1_at_0_5": 0.6508717031738936
+            }
+          ]
+        },
+        {
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b — Grouped K-Fold",
+          "mean_roc_auc": 0.7474686023427632,
+          "mean_f1_at_0_5": 0.5105026761576312,
+          "handover_reported_roc_auc": 0.7475,
+          "handover_reported_f1_at_0_5": 0.5105,
+          "abs_diff_roc_auc": 3.1397657236809096e-05,
+          "abs_diff_f1_at_0_5": 2.676157631276155e-06,
+          "per_fold": [
+            {
+              "fold": 1,
+              "rows": 4024,
+              "roc_auc": 0.7369795771317917,
+              "f1_at_0_5": 0.49663224068253253
+            },
+            {
+              "fold": 2,
+              "rows": 4079,
+              "roc_auc": 0.7331261201257436,
+              "f1_at_0_5": 0.5
+            },
+            {
+              "fold": 3,
+              "rows": 3884,
+              "roc_auc": 0.7701087177750388,
+              "f1_at_0_5": 0.5637808448347972
+            },
+            {
+              "fold": 4,
+              "rows": 4008,
+              "roc_auc": 0.737150819236137,
+              "f1_at_0_5": 0.47703180212014135
+            },
+            {
+              "fold": 5,
+              "rows": 4012,
+              "roc_auc": 0.7599777774451048,
+              "f1_at_0_5": 0.5150684931506849
+            }
+          ]
+        },
+        {
+          "method": "walk_forward",
+          "display_name": "Cách 2 — Walk-forward",
+          "mean_roc_auc": 0.5867245510957,
+          "mean_f1_at_0_5": 0.3267281763159643,
+          "handover_reported_roc_auc": 0.5867,
+          "handover_reported_f1_at_0_5": 0.3267,
+          "abs_diff_roc_auc": 2.4551095699987258e-05,
+          "abs_diff_f1_at_0_5": 2.8176315964301146e-05,
+          "per_fold": [
+            {
+              "fold": 1,
+              "rows": 5002,
+              "roc_auc": 0.611951380457437,
+              "f1_at_0_5": 0.26990291262135924
+            },
+            {
+              "fold": 2,
+              "rows": 5001,
+              "roc_auc": 0.5508697410114309,
+              "f1_at_0_5": 0.2604570935748167
+            },
+            {
+              "fold": 3,
+              "rows": 5002,
+              "roc_auc": 0.549641778117497,
+              "f1_at_0_5": 0.3676514473291555
+            },
+            {
+              "fold": 4,
+              "rows": 5002,
+              "roc_auc": 0.6344353047964348,
+              "f1_at_0_5": 0.4089012517385257
+            }
+          ]
+        },
+        {
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 — WF + Purge/Embargo",
+          "mean_roc_auc": 0.5947758031653603,
+          "mean_f1_at_0_5": 0.330422316621776,
+          "handover_reported_roc_auc": 0.5948,
+          "handover_reported_f1_at_0_5": 0.3304,
+          "abs_diff_roc_auc": 2.4196834639722553e-05,
+          "abs_diff_f1_at_0_5": 2.2316621775986256e-05,
+          "per_fold": [
+            {
+              "fold": 1,
+              "rows": 5002,
+              "roc_auc": 0.6185024486504971,
+              "f1_at_0_5": 0.2711528946066304
+            },
+            {
+              "fold": 2,
+              "rows": 5001,
+              "roc_auc": 0.5590109827326304,
+              "f1_at_0_5": 0.25911286780852
+            },
+            {
+              "fold": 3,
+              "rows": 5002,
+              "roc_auc": 0.5619358599761531,
+              "f1_at_0_5": 0.37616052710392334
+            },
+            {
+              "fold": 4,
+              "rows": 5002,
+              "roc_auc": 0.6396539213021606,
+              "f1_at_0_5": 0.4152629769680303
+            }
+          ]
+        }
+      ]
+    },
+    "table2_financial_top50": {
+      "source": "outputs/backtest/backtest_summary_top50.csv",
+      "rows": [
+        {
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 6998.30245001,
+          "max_dd_R": 75.7079153439,
+          "profit_factor": 2.5626741632,
+          "win_rate_pct": 44.8820471811
+        },
+        {
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 4724.34170646,
+          "max_dd_R": 99.4989562423,
+          "profit_factor": 1.9417922414,
+          "win_rate_pct": 39.2443022791
+        },
+        {
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 2207.25000145,
+          "max_dd_R": 205.31135334,
+          "profit_factor": 1.422595568,
+          "win_rate_pct": 34.856057577
+        },
+        {
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 2253.72240101,
+          "max_dd_R": 154.110090204,
+          "profit_factor": 1.4349907111,
+          "win_rate_pct": 35.1659336265
+        }
+      ],
+      "note": "Các dòng này lấy nguyên từ artifact bàn giao đã niêm phong; chỉ đọc, không sửa."
+    },
+    "backtest_retention_sweep": {
+      "source": "outputs/backtest/backtest_retention_sweep.csv",
+      "rows": [
+        {
+          "comparison_keep_pct": 20,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 20,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 20,
+          "actual_keep_pct": 20.0029989504,
+          "trades": 4002,
+          "net_profit_R": 5291.5659784,
+          "max_dd_R": 16.0026000199,
+          "profit_factor": 6.410047978,
+          "win_rate_pct": 65.1174412794
+        },
+        {
+          "comparison_keep_pct": 20,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 20,
+          "actual_keep_pct": 20.0029989504,
+          "trades": 4002,
+          "net_profit_R": 2820.08820929,
+          "max_dd_R": 36.5585707567,
+          "profit_factor": 2.7984450889,
+          "win_rate_pct": 48.075962019
+        },
+        {
+          "comparison_keep_pct": 20,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 20,
+          "actual_keep_pct": 20.0029989504,
+          "trades": 4002,
+          "net_profit_R": 1004.49526065,
+          "max_dd_R": 103.860631887,
+          "profit_factor": 1.51999715,
+          "win_rate_pct": 37.3813093453
+        },
+        {
+          "comparison_keep_pct": 20,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 20,
+          "actual_keep_pct": 20.0029989504,
+          "trades": 4002,
+          "net_profit_R": 1232.38279381,
+          "max_dd_R": 97.6748648002,
+          "profit_factor": 1.6506055596,
+          "win_rate_pct": 38.8055972014
+        },
+        {
+          "comparison_keep_pct": 30,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 30,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 30,
+          "actual_keep_pct": 30.0044984256,
+          "trades": 6003,
+          "net_profit_R": 6627.07858404,
+          "max_dd_R": 21.634486772,
+          "profit_factor": 4.4290285207,
+          "win_rate_pct": 57.4379476928
+        },
+        {
+          "comparison_keep_pct": 30,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 30,
+          "actual_keep_pct": 30.0044984256,
+          "trades": 6003,
+          "net_profit_R": 3755.74648027,
+          "max_dd_R": 63.1946010355,
+          "profit_factor": 2.4387676434,
+          "win_rate_pct": 44.8775612194
+        },
+        {
+          "comparison_keep_pct": 30,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 30,
+          "actual_keep_pct": 30.0044984256,
+          "trades": 6003,
+          "net_profit_R": 1297.99713273,
+          "max_dd_R": 162.582947289,
+          "profit_factor": 1.4318593363,
+          "win_rate_pct": 36.331834083
+        },
+        {
+          "comparison_keep_pct": 30,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 30,
+          "actual_keep_pct": 30.0044984256,
+          "trades": 6003,
+          "net_profit_R": 1401.75632651,
+          "max_dd_R": 165.932615534,
+          "profit_factor": 1.4728993525,
+          "win_rate_pct": 36.7149758454
+        },
+        {
+          "comparison_keep_pct": 40,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 40,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 40,
+          "actual_keep_pct": 40.0009996501,
+          "trades": 8003,
+          "net_profit_R": 7005.90906152,
+          "max_dd_R": 40.7904107464,
+          "profit_factor": 3.2226875263,
+          "win_rate_pct": 50.4060977134
+        },
+        {
+          "comparison_keep_pct": 40,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 40,
+          "actual_keep_pct": 40.0009996501,
+          "trades": 8003,
+          "net_profit_R": 4402.78030559,
+          "max_dd_R": 70.3614021282,
+          "profit_factor": 2.1710640931,
+          "win_rate_pct": 41.984255904
+        },
+        {
+          "comparison_keep_pct": 40,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 40,
+          "actual_keep_pct": 40.0009996501,
+          "trades": 8003,
+          "net_profit_R": 1759.22930416,
+          "max_dd_R": 184.681433595,
+          "profit_factor": 1.4298350015,
+          "win_rate_pct": 35.5616643759
+        },
+        {
+          "comparison_keep_pct": 40,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 40,
+          "actual_keep_pct": 40.0009996501,
+          "trades": 8003,
+          "net_profit_R": 1702.32139522,
+          "max_dd_R": 141.494163399,
+          "profit_factor": 1.4170215142,
+          "win_rate_pct": 35.5991503186
+        },
+        {
+          "comparison_keep_pct": 50,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 50,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 6998.30245001,
+          "max_dd_R": 75.7079153439,
+          "profit_factor": 2.5626741632,
+          "win_rate_pct": 44.8820471811
+        },
+        {
+          "comparison_keep_pct": 50,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 4724.34170646,
+          "max_dd_R": 99.4989562423,
+          "profit_factor": 1.9417922414,
+          "win_rate_pct": 39.2443022791
+        },
+        {
+          "comparison_keep_pct": 50,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 2207.25000145,
+          "max_dd_R": 205.31135334,
+          "profit_factor": 1.422595568,
+          "win_rate_pct": 34.856057577
+        },
+        {
+          "comparison_keep_pct": 50,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 50,
+          "actual_keep_pct": 50.0024991253,
+          "trades": 10004,
+          "net_profit_R": 2253.72240101,
+          "max_dd_R": 154.110090204,
+          "profit_factor": 1.4349907111,
+          "win_rate_pct": 35.1659336265
+        },
+        {
+          "comparison_keep_pct": 60,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 60,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 60,
+          "actual_keep_pct": 60.0039986005,
+          "trades": 12005,
+          "net_profit_R": 6439.83013791,
+          "max_dd_R": 93.6636636287,
+          "profit_factor": 2.0897482844,
+          "win_rate_pct": 40.3748438151
+        },
+        {
+          "comparison_keep_pct": 60,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 60,
+          "actual_keep_pct": 60.0039986005,
+          "trades": 12005,
+          "net_profit_R": 4795.38330211,
+          "max_dd_R": 165.473327873,
+          "profit_factor": 1.7619865665,
+          "win_rate_pct": 37.0179092045
+        },
+        {
+          "comparison_keep_pct": 60,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 60,
+          "actual_keep_pct": 60.0039986005,
+          "trades": 12005,
+          "net_profit_R": 2500.98410414,
+          "max_dd_R": 239.97971489,
+          "profit_factor": 1.392226308,
+          "win_rate_pct": 34.3023740108
+        },
+        {
+          "comparison_keep_pct": 60,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 60,
+          "actual_keep_pct": 60.0039986005,
+          "trades": 12005,
+          "net_profit_R": 2411.01284032,
+          "max_dd_R": 210.787152611,
+          "profit_factor": 1.379436199,
+          "win_rate_pct": 34.3107038734
+        },
+        {
+          "comparison_keep_pct": 70,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 70,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 70,
+          "actual_keep_pct": 70.0004998251,
+          "trades": 14005,
+          "net_profit_R": 5761.04078853,
+          "max_dd_R": 138.957305027,
+          "profit_factor": 1.7831564696,
+          "win_rate_pct": 37.1367368797
+        },
+        {
+          "comparison_keep_pct": 70,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 70,
+          "actual_keep_pct": 70.0004998251,
+          "trades": 14005,
+          "net_profit_R": 4623.85471803,
+          "max_dd_R": 195.980151946,
+          "profit_factor": 1.608410485,
+          "win_rate_pct": 35.2302749018
+        },
+        {
+          "comparison_keep_pct": 70,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 70,
+          "actual_keep_pct": 70.0004998251,
+          "trades": 14005,
+          "net_profit_R": 2708.99456214,
+          "max_dd_R": 292.271469521,
+          "profit_factor": 1.3581568549,
+          "win_rate_pct": 33.6237058194
+        },
+        {
+          "comparison_keep_pct": 70,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 70,
+          "actual_keep_pct": 70.0004998251,
+          "trades": 14005,
+          "net_profit_R": 2867.13358393,
+          "max_dd_R": 221.717580045,
+          "profit_factor": 1.3826961228,
+          "win_rate_pct": 33.987861478
+        },
+        {
+          "comparison_keep_pct": 80,
+          "method": "baseline",
+          "display_name": "Baseline",
+          "requested_keep_pct": 100,
+          "actual_keep_pct": 100.0,
+          "trades": 20007,
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.293973326,
+          "win_rate_pct": 31.713900135
+        },
+        {
+          "comparison_keep_pct": 80,
+          "method": "random_kfold",
+          "display_name": "Cách 1 - Random K-Fold",
+          "requested_keep_pct": 80,
+          "actual_keep_pct": 80.0019993002,
+          "trades": 16006,
+          "net_profit_R": 4872.56818111,
+          "max_dd_R": 188.263853415,
+          "profit_factor": 1.5524273068,
+          "win_rate_pct": 34.4308384356
+        },
+        {
+          "comparison_keep_pct": 80,
+          "method": "grouped_kfold",
+          "display_name": "Cách 1b - Grouped K-Fold",
+          "requested_keep_pct": 80,
+          "actual_keep_pct": 80.0019993002,
+          "trades": 16006,
+          "net_profit_R": 4391.33674105,
+          "max_dd_R": 213.006010363,
+          "profit_factor": 1.4927993731,
+          "win_rate_pct": 33.7311008372
+        },
+        {
+          "comparison_keep_pct": 80,
+          "method": "walk_forward",
+          "display_name": "Cách 2 - Walk-forward",
+          "requested_keep_pct": 80,
+          "actual_keep_pct": 80.0019993002,
+          "trades": 16006,
+          "net_profit_R": 3126.83949128,
+          "max_dd_R": 273.516982346,
+          "profit_factor": 1.3587122601,
+          "win_rate_pct": 33.4686992378
+        },
+        {
+          "comparison_keep_pct": 80,
+          "method": "purged_walk_forward",
+          "display_name": "Cách 3 - Purged Walk-forward",
+          "requested_keep_pct": 80,
+          "actual_keep_pct": 80.0019993002,
+          "trades": 16006,
+          "net_profit_R": 3138.78362159,
+          "max_dd_R": 242.508681424,
+          "profit_factor": 1.3610864383,
+          "win_rate_pct": 33.5436711233
+        }
+      ]
+    }
+  },
+  "assertions": {
+    "tolerance": 1e-12,
+    "checks": [
+      {
+        "metric": "dc25cd3.roc_auc",
+        "recovered": 0.60502452277619,
+        "expected": 0.60502452277619,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "dc25cd3.f1_at_0_5",
+        "recovered": 0.40170679670832066,
+        "expected": 0.40170679670832066,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "dc25cd3.top50_net_profit_R",
+        "recovered": -23.833050158080326,
+        "expected": -23.833050158080326,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "dc25cd3.baseline_net_profit_R",
+        "recovered": 245.9296826592543,
+        "expected": 245.9296826592543,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "5f46e41.roc_auc",
+        "recovered": 0.6023152558719406,
+        "expected": 0.6023152558719406,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "5f46e41.f1_at_0_5",
+        "recovered": 0.4064693317058285,
+        "expected": 0.4064693317058285,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "5f46e41.top50_net_profit_R",
+        "recovered": 30.78592225711712,
+        "expected": 30.78592225711712,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "5f46e41.baseline_net_profit_R",
+        "recovered": 245.9296826592543,
+        "expected": 245.9296826592543,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "7748828.roc_auc",
+        "recovered": 0.6045544538928682,
+        "expected": 0.6045544538928682,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "7748828.f1_at_0_5",
+        "recovered": 0.40220723482526055,
+        "expected": 0.40220723482526055,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "7748828.top50_net_profit_R",
+        "recovered": -36.552754995889984,
+        "expected": -36.552754995889984,
+        "abs_diff": 0.0,
+        "passed": true
+      },
+      {
+        "metric": "7748828.baseline_net_profit_R",
+        "recovered": 245.9296826592543,
+        "expected": 245.9296826592543,
+        "abs_diff": 0.0,
+        "passed": true
+      }
+    ],
+    "history_integrity": {
+      "commits_are_ancestors_of_head": true,
+      "scored_rows_per_run": 5028,
+      "unique_trade_keys_per_run": true,
+      "sweep_rows_per_run": 7
+    }
+  }
+}
