@@ -2,8 +2,9 @@
 """Stage 5: đối chiếu end-to-end hai lần chạy holdout độc lập (run 1 vs run 2).
 
 So sánh toàn bộ chuỗi Stage 3–4 của hai lần train Stage 2 độc lập: xác suất
-holdout, metrics backtest, sweep, các danh sách top 20–80%, bảng số Stage 4 và
-hash biểu đồ. Kết quả ghi vào outputs/holdout/repro/stage5_repro_report.json.
+holdout, metrics backtest, sweep, các danh sách top 20–80%, bảng số Stage 4
+(gồm bảng sweep 20–80% của bốn nhánh canonical) và hash biểu đồ (hai HTML +
+hai PNG). Kết quả ghi vào outputs/holdout/repro/stage5_repro_report.json.
 
 Giới hạn phạm vi: phép kiểm này chứng minh hai lần chạy độc lập trên cùng một
 máy, cùng mã nguồn cho kết quả giống hệt nhau; nó không chứng minh giống từng
@@ -36,11 +37,14 @@ KEEP_RATES = (20, 30, 40, 50, 60, 70, 80)
 STAGE4_TABLES = (
     "table1_classification_metrics.csv",
     "table2_financial_metrics_top50.csv",
+    "table3_branch_sweep_20_80.csv",
     "holdout_sweep_20_80.csv",
 )
 STAGE4_CHARTS = (
     "equity-curve-chunk2-5-top50.html",
     "equity-curve-holdout-top50.html",
+    "equity-curve-chunk2-5-top50.png",
+    "equity-curve-holdout-top50.png",
 )
 SCOPE_NOTE = (
     "two independent training runs, same machine, same code; does not establish "

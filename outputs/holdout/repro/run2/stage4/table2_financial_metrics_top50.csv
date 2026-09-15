@@ -1,8 +1,13 @@
-method,trades,net_profit_R,max_dd_R,profit_factor,win_rate_pct
-Baseline (khúc 2–5),"20,007","+3,358.3",236.1,1.294,31.7
-Cách 1,"10,004","+6,998.3",75.7,2.563,44.9
-Cách 1b,"10,004","+4,724.3",99.5,1.942,39.2
-Cách 2,"10,004","+2,207.3",205.3,1.423,34.9
-Cách 3,"10,004","+2,253.7",154.1,1.435,35.2
-Baseline holdout,"5,028",+245.93,305.32,1.0992,35.28
-"Holdout, top 50%","2,514",-36.55,263.25,0.9718,34.81
+block,method,trades,net_profit_R,max_dd_R,profit_factor,win_rate_pct
+chunk2_5_thread_count_1,baseline,"20,007","+3,358.25",236.13,1.2940,31.71
+chunk2_5_thread_count_1,random_kfold,"10,004","+6,937.53",73.76,2.5437,44.65
+chunk2_5_thread_count_1,grouped_kfold,"10,004","+4,752.04",99.71,1.9500,39.26
+chunk2_5_thread_count_1,walk_forward,"10,004","+2,148.31",211.29,1.4117,34.76
+chunk2_5_thread_count_1,purged_walk_forward,"10,004","+2,119.48",142.36,1.4074,34.99
+chunk2_5_handover_no_thread_pin,baseline,"20,007","+3,358.25",236.13,1.2940,31.71
+chunk2_5_handover_no_thread_pin,random_kfold,"10,004","+6,998.30",75.71,2.5627,44.88
+chunk2_5_handover_no_thread_pin,grouped_kfold,"10,004","+4,724.34",99.50,1.9418,39.24
+chunk2_5_handover_no_thread_pin,walk_forward,"10,004","+2,207.25",205.31,1.4226,34.86
+chunk2_5_handover_no_thread_pin,purged_walk_forward,"10,004","+2,253.72",154.11,1.4350,35.17
+holdout,baseline_holdout,"5,028",+245.93,305.32,1.0992,35.28
+holdout,top_50,"2,514",-36.55,263.25,0.9718,34.81

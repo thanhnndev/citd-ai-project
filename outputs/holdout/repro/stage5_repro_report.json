@@ -2,7 +2,7 @@
   "status": "PASS",
   "scope_note": "two independent training runs, same machine, same code; does not establish cross-machine byte identity",
   "scope_note_vi": "Hai lần train độc lập trên cùng một máy, cùng mã nguồn; không chứng minh giống từng byte giữa các máy khác nhau.",
-  "generated_at_utc": "2026-09-15T09:55:34+00:00",
+  "generated_at_utc": "2026-09-15T10:16:06+00:00",
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/holdout_stage5_repro_check.py",
   "environment": {
     "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
@@ -392,10 +392,15 @@
         "table1_classification_metrics.csv": {
           "pass": true,
           "filename": "table1_classification_metrics.csv",
-          "rows_run1": 5,
-          "rows_run2": 5,
+          "rows_run1": 13,
+          "rows_run2": 13,
           "dataframes_exactly_equal": true,
           "columns": {
+            "block": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
             "method": {
               "strings_exactly_equal": true,
               "max_abs_diff": null,
@@ -416,14 +421,63 @@
         "table2_financial_metrics_top50.csv": {
           "pass": true,
           "filename": "table2_financial_metrics_top50.csv",
-          "rows_run1": 7,
-          "rows_run2": 7,
+          "rows_run1": 12,
+          "rows_run2": 12,
+          "dataframes_exactly_equal": true,
+          "columns": {
+            "block": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
+            "method": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": null,
+              "numeric_exactly_equal": null
+            },
+            "trades": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "net_profit_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "max_dd_R": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "profit_factor": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            },
+            "win_rate_pct": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
+            }
+          }
+        },
+        "table3_branch_sweep_20_80.csv": {
+          "pass": true,
+          "filename": "table3_branch_sweep_20_80.csv",
+          "rows_run1": 28,
+          "rows_run2": 28,
           "dataframes_exactly_equal": true,
           "columns": {
             "method": {
               "strings_exactly_equal": true,
               "max_abs_diff": null,
               "numeric_exactly_equal": null
+            },
+            "keep_pct": {
+              "strings_exactly_equal": true,
+              "max_abs_diff": 0.0,
+              "numeric_exactly_equal": true
             },
             "trades": {
               "strings_exactly_equal": true,
@@ -501,8 +555,8 @@
           "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.html",
           "run1_exists": true,
           "run2_exists": true,
-          "run1_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
-          "run2_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+          "run1_sha256": "b6dfb52e80c96edd1c633257dbad17e174a9de33d97b5869df23eb577ac04d54",
+          "run2_sha256": "b6dfb52e80c96edd1c633257dbad17e174a9de33d97b5869df23eb577ac04d54",
           "bytes_identical": true
         },
         "equity-curve-holdout-top50.html": {
@@ -513,38 +567,56 @@
           "run1_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
           "run2_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
           "bytes_identical": true
+        },
+        "equity-curve-chunk2-5-top50.png": {
+          "run1_path": "outputs/holdout/stage4/equity-curve-chunk2-5-top50.png",
+          "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.png",
+          "run1_exists": true,
+          "run2_exists": true,
+          "run1_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+          "run2_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+          "bytes_identical": true
+        },
+        "equity-curve-holdout-top50.png": {
+          "run1_path": "outputs/holdout/stage4/equity-curve-holdout-top50.png",
+          "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.png",
+          "run1_exists": true,
+          "run2_exists": true,
+          "run1_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+          "run2_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+          "bytes_identical": true
         }
       }
     },
     "stage4_manifest_row_counts": {
       "pass": true,
-      "manifests_exactly_equal": false,
+      "manifests_exactly_equal": true,
       "chart1_rows": {
         "Baseline": 8024,
-        "Cách 1 — Random K-Fold": 4260,
-        "Cách 1b — Grouped K-Fold": 4363,
-        "Cách 2 — Walk-forward": 4447,
-        "Cách 3 — WF + Purge/Embargo": 4414
+        "Cách 1 — Random K-Fold": 4298,
+        "Cách 1b — Grouped K-Fold": 4348,
+        "Cách 2 — Walk-forward": 4431,
+        "Cách 3 — WF + Purge/Embargo": 4437
       },
       "chart1_rows_run2": {
         "Baseline": 8024,
-        "Cách 1 — Random K-Fold": 4260,
-        "Cách 1b — Grouped K-Fold": 4363,
-        "Cách 2 — Walk-forward": 4447,
-        "Cách 3 — WF + Purge/Embargo": 4414
+        "Cách 1 — Random K-Fold": 4298,
+        "Cách 1b — Grouped K-Fold": 4348,
+        "Cách 2 — Walk-forward": 4431,
+        "Cách 3 — WF + Purge/Embargo": 4437
       },
       "chart1_rows_equal": true,
       "chart2_rows": {
         "Baseline holdout": 1975,
-        "Holdout top 50%": 1092
+        "Holdout, top 50%": 1092
       },
       "chart2_rows_run2": {
         "Baseline holdout": 1975,
-        "Holdout top 50%": 1092
+        "Holdout, top 50%": 1092
       },
       "chart2_rows_equal": true,
-      "new_files_equal": false,
-      "new_files_note": "Danh sách new_files chỉ khác ở việc stage4_manifest.json đã tồn tại trong thư mục run 1 khi ghi manifest (iterdir() quét được file cũ), không phải khác biệt dữ liệu."
+      "new_files_equal": true,
+      "new_files_note": null
     }
   },
   "file_hashes": {
@@ -652,8 +724,8 @@
       "run2_path": "outputs/holdout/repro/run2/stage4/table1_classification_metrics.csv",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "6821088d7128cbf314369baafb333e0a762bb33ac176c93d470d90e89cbe274e",
-      "run2_sha256": "6821088d7128cbf314369baafb333e0a762bb33ac176c93d470d90e89cbe274e",
+      "run1_sha256": "e87d0d47ca656d6943ea689a588591ab1ebf7a3d450dc1c26d3f262e6c8ece2a",
+      "run2_sha256": "e87d0d47ca656d6943ea689a588591ab1ebf7a3d450dc1c26d3f262e6c8ece2a",
       "bytes_identical": true
     },
     "table2_financial_metrics_top50.csv": {
@@ -661,8 +733,17 @@
       "run2_path": "outputs/holdout/repro/run2/stage4/table2_financial_metrics_top50.csv",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "d3c3099029e0cb694ae7bb252dc8b42266ea7bf6b52a0f659f977d996a93cdff",
-      "run2_sha256": "d3c3099029e0cb694ae7bb252dc8b42266ea7bf6b52a0f659f977d996a93cdff",
+      "run1_sha256": "dde750f720500073e2eaa93d7021fa9339d0243cc8097252d004123a10c9e1f4",
+      "run2_sha256": "dde750f720500073e2eaa93d7021fa9339d0243cc8097252d004123a10c9e1f4",
+      "bytes_identical": true
+    },
+    "table3_branch_sweep_20_80.csv": {
+      "run1_path": "outputs/holdout/stage4/table3_branch_sweep_20_80.csv",
+      "run2_path": "outputs/holdout/repro/run2/stage4/table3_branch_sweep_20_80.csv",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "b2013efe043d24847c24392337882f6b1bdc9fae0448415bf91c03aa8beeeb53",
+      "run2_sha256": "b2013efe043d24847c24392337882f6b1bdc9fae0448415bf91c03aa8beeeb53",
       "bytes_identical": true
     },
     "holdout_sweep_20_80.csv": {
@@ -679,8 +760,8 @@
       "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.html",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
-      "run2_sha256": "ff32e9391ff444e08418d794a078d7ef40b8beca43be7dfcd214bf51080fafcc",
+      "run1_sha256": "b6dfb52e80c96edd1c633257dbad17e174a9de33d97b5869df23eb577ac04d54",
+      "run2_sha256": "b6dfb52e80c96edd1c633257dbad17e174a9de33d97b5869df23eb577ac04d54",
       "bytes_identical": true
     },
     "equity-curve-holdout-top50.html": {
@@ -692,14 +773,32 @@
       "run2_sha256": "def6acfef4b8b8671b1a876f2f49682a66dd9cd97c1972d9cd3524af409f9d13",
       "bytes_identical": true
     },
+    "equity-curve-chunk2-5-top50.png": {
+      "run1_path": "outputs/holdout/stage4/equity-curve-chunk2-5-top50.png",
+      "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.png",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+      "run2_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+      "bytes_identical": true
+    },
+    "equity-curve-holdout-top50.png": {
+      "run1_path": "outputs/holdout/stage4/equity-curve-holdout-top50.png",
+      "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.png",
+      "run1_exists": true,
+      "run2_exists": true,
+      "run1_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+      "run2_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+      "bytes_identical": true
+    },
     "stage4_manifest.json": {
       "run1_path": "outputs/holdout/stage4/stage4_manifest.json",
       "run2_path": "outputs/holdout/repro/run2/stage4/stage4_manifest.json",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "1a2490c02d49f704a74c0d3f2048f5be3c286bd97cc814865ab936c3bb22669b",
-      "run2_sha256": "5a0db0de49e1e0315c409ed576e627367506199544d0892d80333707f3ce7353",
-      "bytes_identical": false
+      "run1_sha256": "2920ddcb0472a3d1d36665e59fcf51ee4ea1c872bd221623a023814a71787e26",
+      "run2_sha256": "2920ddcb0472a3d1d36665e59fcf51ee4ea1c872bd221623a023814a71787e26",
+      "bytes_identical": true
     }
   },
   "chart_note": null
