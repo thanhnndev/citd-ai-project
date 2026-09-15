@@ -1,7 +1,7 @@
 {
   "status": "passed",
-  "started_utc": "2026-09-15T10:00:04.031938+00:00",
-  "completed_utc": "2026-09-15T10:04:18.097845+00:00",
+  "started_utc": "2026-09-15T10:18:37.919413+00:00",
+  "completed_utc": "2026-09-15T10:22:36.382120+00:00",
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/verify_pipeline.py --train-dir outputs/step4_thread1/catboost_training --backtest-dir outputs/step4_thread1/backtest --manifest outputs/step4_thread1/verification/reproducibility.json",
   "output_dirs": {
     "training": "outputs/step4_thread1/catboost_training",
@@ -39,8 +39,8 @@
     "src/citd_ml/verification/verify_pipeline.py": "73b82815078b0dfe4b5b8d18012812cffcee68f1f22bcfce74a61b34b0345cf1",
     "scripts/holdout_stage2_train.py": "7dfd460721e98a60e798c518f5c6e3f216ba93e32a58acc8346c23c309c3fc7b",
     "scripts/holdout_stage3_backtest.py": "d227f87e0516b1c462660dca6d692fb76d035a7aa02eba5a497585da368f4456",
-    "scripts/holdout_stage4_report.py": "b5c25e257f76dd048e91b0f164d801e3f83aa0ad8ac361c04639e6d58a142ecd",
-    "scripts/holdout_stage5_repro_check.py": "3355f02a8cb559dd216626691afa8739ae4247ddf2ab07b3d808b9fd7cc336a8",
+    "scripts/holdout_stage4_report.py": "28d2ba541d0649d1e9b90a87585cf8aff0f8457ad6926064413b4fa5c5d45388",
+    "scripts/holdout_stage5_repro_check.py": "ccdb7cf781cf6e4065d76d8e7cb06b917e717c25f9439774bf02dc1f248f4ede",
     "scripts/thread_count_sensitivity.py": "b918ce5a40af611767e0a3b29fe610d6be3ff0ad68bca0ab3392e788d7962491"
   },
   "training": {

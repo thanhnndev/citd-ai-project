@@ -22,28 +22,65 @@ sang hai phía train/test và thổi phồng điểm. Đồ án so sánh 4 cách
 
 Mốc holdout cố định: **`2025-02-08 15:30:00`** (bar M15 số 199,968).
 
+Các khối chính dưới đây là **bản chạy lại canonical `thread_count=1`** đã commit
+trong [`outputs/step4_thread1/`](outputs/step4_thread1/); cả 8 file CSV được đối
+chiếu giống hệt từng byte với artifact `thread_count=1` của commit `7748828`.
+Số nhánh bàn giao (sinh trước khi ghim `thread_count`) được giữ làm khối tham
+chiếu có dán nhãn; các dòng holdout không đổi.
+
 ### Bảng 1 — Chỉ số phân loại, đã bỏ khúc 1 ở cả 4 nhánh
 
 | Cách chia | ROC-AUC | F1 @ 0.5 |
 |---|---:|---:|
-| Cách 1 — Random K-Fold | 0.8595 | 0.6525 |
-| Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 |
-| Cách 2 — Walk-forward | 0.5867 | 0.3267 |
-| Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 |
+| Cách 1 — Random K-Fold | 0.8582 | 0.6494 |
+| Cách 1b — Grouped K-Fold | 0.7454 | 0.5077 |
+| Cách 2 — Walk-forward | 0.5875 | 0.3288 |
+| Cách 3 — WF + Purge/Embargo | 0.5895 | 0.3247 |
 | **Holdout** | **0.6046** | **0.4022** |
 
-Khoảng cách giữa Random K-Fold (0.86) và các cách chia có ý thức rò rỉ (~0.59)
+Khối tham chiếu — artifact bàn giao (không ghim `thread_count`), kèm chênh lệch
+canonical trừ tham chiếu:
+
+| Cách chia | ROC-AUC tham chiếu | F1 tham chiếu | ΔROC-AUC | ΔF1 |
+|---|---:|---:|---:|---:|
+| Cách 1 — Random K-Fold | 0.8595 | 0.6525 | −0.0013 | −0.0031 |
+| Cách 1b — Grouped K-Fold | 0.7475 | 0.5105 | −0.0021 | −0.0028 |
+| Cách 2 — Walk-forward | 0.5867 | 0.3267 | +0.0007 | +0.0020 |
+| Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 | −0.0052 | −0.0057 |
+
+Khoảng cách giữa Random K-Fold (~0.86) và các cách chia có ý thức rò rỉ (~0.59)
 chính là hiệu ứng leakage mà đồ án muốn chứng minh.
 
 ### Bảng 2 — Chỉ số tài chính, giữ top 50%
 
+Khối chính canonical `thread_count=1`:
+
 | | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate % |
 |---|---:|---:|---:|---:|---:|
-| Baseline (khúc 2–5) | 20,007 | +3,358.3 | 236.1 | 1.294 | 31.7 |
-| Cách 1 — Random K-Fold | 10,004 | +6,998.3 | 75.7 | 2.563 | 44.9 |
-| Cách 1b — Grouped K-Fold | 10,004 | +4,724.3 | 99.5 | 1.942 | 39.2 |
-| Cách 2 — Walk-forward | 10,004 | +2,207.3 | 205.3 | 1.423 | 34.9 |
-| Cách 3 — WF + Purge/Embargo | 10,004 | +2,253.7 | 154.1 | 1.435 | 35.2 |
+| Baseline (khúc 2–5) | 20,007 | +3,358.25 | 236.13 | 1.2940 | 31.71 |
+| Cách 1 — Random K-Fold | 10,004 | +6,937.53 | 73.76 | 2.5437 | 44.65 |
+| Cách 1b — Grouped K-Fold | 10,004 | +4,752.04 | 99.71 | 1.9500 | 39.26 |
+| Cách 2 — Walk-forward | 10,004 | +2,148.31 | 211.29 | 1.4117 | 34.76 |
+| Cách 3 — WF + Purge/Embargo | 10,004 | +2,119.48 | 142.36 | 1.4074 | 34.99 |
+
+Khối tham chiếu — artifact bàn giao:
+
+| | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate % |
+|---|---:|---:|---:|---:|---:|
+| Baseline (khúc 2–5) | 20,007 | +3,358.25 | 236.13 | 1.2940 | 31.71 |
+| Cách 1 — Random K-Fold | 10,004 | +6,998.30 | 75.71 | 2.5627 | 44.88 |
+| Cách 1b — Grouped K-Fold | 10,004 | +4,724.34 | 99.50 | 1.9418 | 39.24 |
+| Cách 2 — Walk-forward | 10,004 | +2,207.25 | 205.31 | 1.4226 | 34.86 |
+| Cách 3 — WF + Purge/Embargo | 10,004 | +2,253.72 | 154.11 | 1.4350 | 35.17 |
+
+Net R top 50% canonical lệch khối bàn giao −60.77 / +27.70 / −58.94 / −134.24 R
+cho bốn nhánh theo thứ tự (đối chiếu từng file trong
+[`outputs/step4_thread1/comparison_report.json`](outputs/step4_thread1/comparison_report.json)).
+
+Khối holdout (không đổi):
+
+| | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate % |
+|---|---:|---:|---:|---:|---:|
 | **Baseline holdout** | 5,028 | +245.93 | 305.32 | 1.0992 | 35.28 |
 | **Holdout, top 50%** | 2,514 | −36.55 | 263.25 | 0.9718 | 34.81 |
 
@@ -52,6 +89,30 @@ Trên holdout niêm phong, bộ lọc vẫn **không** thắng baseline không l
 và profit factor 1.099 của baseline đủ 5,028 lệnh. Bảng sweep đầy đủ 20–80% nằm trong
 [`outputs/holdout/stage4/`](outputs/holdout/stage4/), báo cáo đầy đủ ở
 [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
+
+### Độ nhạy `thread_count` và lịch sử mở holdout
+
+Thí nghiệm có kiểm soát chỉ đổi `thread_count`
+([`outputs/thread_count_sensitivity/`](outputs/thread_count_sensitivity/)) cho
+thấy trên máy này hai lần chạy `thread_count=1` giống hệt từng bit
+(`max|Δp| = 0`), còn `thread_count=2` / `-1` làm **toàn bộ** prediction thay đổi
+(train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352; Pearson holdout
+0.9331 / 0.9409). Net R top 50% holdout: **−36.55 R** (`tc=1`) so với
+**−12.26 R** (`tc=2`) và **+30.79 R** (mặc định). Ảnh hưởng nằm ở bước train,
+không phải inference: chấm lại cùng model đã fit với prediction `thread_count`
+1 / 2 / −1 cho xác suất giống hệt nhau. CatBoost mô tả `thread_count` là tham số
+tốc độ không ảnh hưởng kết quả; phép đo trên máy này xác nhận ở bước prediction
+nhưng không xác nhận ở bước train. Phạm vi: một máy, một build CatBoost, một
+dataset, một seed.
+
+Cả ba lần mở holdout niêm phong được dựng lại từ git history trong
+[`outputs/verification/holdout_run_history.json`](outputs/verification/holdout_run_history.json)
+([Markdown](outputs/verification/holdout_run_history.md)): `dc25cd3` Windows
+0.60502 / 0.40171, top-50 −23.83 R; `5f46e41` Linux đa luồng
+0.60232 / 0.40647, +30.79 R; `7748828` Linux `thread_count=1`
+0.60455 / 0.40221, −36.55 R. Phép kiểm toàn chuỗi run1-vs-run2
+([`outputs/holdout/repro/stage5_repro_report.json`](outputs/holdout/repro/stage5_repro_report.json))
+**PASS** với mọi delta 0.0 và cả bốn biểu đồ giống hệt từng byte.
 
 ---
 
@@ -88,20 +149,26 @@ citd-ml-project/
 │   ├── train_models.py        train 4 nhánh, ghi bảng OOF
 │   ├── run_backtest.py        baseline + sweep 20–80%
 │   ├── verify_pipeline.py     chạy 2 lần, đối chiếu từng byte
+│   ├── thread_count_sensitivity.py   thí nghiệm thread_count có kiểm soát
+│   ├── holdout_run_history.py        dựng lại 3 lần mở holdout từ git
 │   ├── holdout_stage1_split.py
 │   ├── holdout_stage2_train.py
 │   ├── holdout_stage3_backtest.py
-│   └── holdout_stage4_report.py
+│   ├── holdout_stage4_report.py
+│   └── holdout_stage5_repro_check.py đối chiếu chuỗi run1 vs run2
 │
 ├── outputs/                   kết quả/bằng chứng đã commit
-│   ├── catboost_training/     4 bảng OOF + metric từng fold
-│   ├── backtest/              scored universe, sweep, top-50
-│   ├── verification/          manifest tái lập
+│   ├── catboost_training/     4 bảng OOF + metric từng fold bàn giao (tham chiếu đóng băng)
+│   ├── backtest/              scored universe, sweep, top-50 bàn giao (tham chiếu đóng băng)
+│   ├── step4_thread1/         bản chạy lại canonical thread_count=1 + comparison_report.json
+│   ├── thread_count_sensitivity/  JSON thí nghiệm + CSV tổng hợp
+│   ├── verification/          manifest bàn giao + holdout_run_history.json/.md
 │   └── holdout/
 │       ├── stage1/            dataset tái sinh + holdout, kiểm tra
 │       ├── stage2/            model cuối (.cbm), dự đoán, báo cáo
 │       ├── stage3/            holdout chấm điểm, top-20…80%, tổng hợp
-│       └── stage4/            bảng, quyết định, biểu đồ HTML
+│       ├── stage4/            bảng, quyết định, biểu đồ HTML
+│       └── repro/             báo cáo stage5 run1-vs-run2 + cây run2 độc lập
 │
 ├── docs/                      đề bài bàn giao + báo cáo kết quả
 └── tests/                     test layout/hằng số nhẹ
@@ -188,11 +255,15 @@ Các lệnh dưới đây chạy từ thư mục gốc repo, dùng `uv run` (tha
 nếu bạn tự kích hoạt `.venv`).
 
 > **Artifact bước 4 đã niêm phong.** `outputs/catboost_training/`,
-> `outputs/backtest/` và `outputs/verification/` là kết quả bước 4 bàn giao,
-> được giữ nguyên từng byte. Các bước 3–5 dưới đây chạy lại pipeline bước 4 và
-> **ghi đè** chúng; CatBoost phụ thuộc phần cứng nên chạy lại trên máy khác sẽ
-> không tái tạo đúng số đã niêm phong. Quy trình holdout niêm phong ở mục sau là
-> phần bàn giao bước 5 và không đụng tới các thư mục đó.
+> `outputs/backtest/` và `outputs/verification/reproducibility.json` là kết quả
+> bước 4 bàn giao, được giữ nguyên từng byte. Chúng chỉ còn là **tham chiếu**:
+> cây đối chiếu canonical là
+> [`outputs/step4_thread1/`](outputs/step4_thread1/) (`thread_count=1`), và
+> CatBoost phụ thuộc phần cứng nên các file bàn giao cố ý không tái lập byte
+> trên Linux. Vì vậy các bước 3–5 dưới đây ghi vào cây canonical qua
+> `--output-dir` / `--oof-dir`; chạy thiếu các cờ đó sẽ **ghi đè** thư mục bàn
+> giao. Quy trình holdout niêm phong ở mục sau là phần bàn giao bước 5 và không
+> đụng tới các thư mục đó.
 
 ### 1. Sinh dataset
 
@@ -216,35 +287,50 @@ việc holdout còn niêm phong. Exit code khác 0 nghĩa là **dừng lại**.
 ### 3. Train 4 nhánh
 
 ```bash
-uv run python scripts/train_models.py
+uv run python scripts/train_models.py \
+    --output-dir outputs/step4_thread1/catboost_training
 ```
 
 Train Random K-Fold, Grouped K-Fold, Walk-forward và Purged Walk-forward, ghi
-xác suất OOF + metric từng fold vào `outputs/catboost_training/`.
+xác suất OOF + metric từng fold vào thư mục `--output-dir`
+(mặc định: `outputs/catboost_training/`).
 
 ### 4. Backtest và sweep
 
 ```bash
-uv run python scripts/run_backtest.py
+uv run python scripts/run_backtest.py \
+    --output-dir outputs/step4_thread1/backtest \
+    --oof-dir outputs/step4_thread1/catboost_training
 ```
 
 Chạy baseline vũ trụ lệnh cố định, lọc bằng từng bảng điểm OOF ở mức 20–80%,
-ghi báo cáo vào `outputs/backtest/`.
+ghi báo cáo vào `--output-dir` (mặc định: `outputs/backtest/`); `--oof-dir`
+chọn bảng OOF để lọc.
 
-### 5. Kiểm chứng tái lập
+### 5. Kiểm chứng tái lập (cây canonical)
 
 ```bash
-uv run python scripts/verify_pipeline.py
+uv run python scripts/verify_pipeline.py \
+    --train-dir outputs/step4_thread1/catboost_training \
+    --backtest-dir outputs/step4_thread1/backtest \
+    --manifest outputs/step4_thread1/verification/reproducibility.json
 ```
 
-Chạy training và backtest hai lượt, khẳng định kết quả giống hệt các CSV đã
-commit từng byte. Ghi `outputs/verification/reproducibility.json`.
+Chạy training và backtest hai lượt, khẳng định kết quả giống hệt các CSV
+canonical đã lưu từng byte (~10 phút). `--train-dir` / `--backtest-dir` chọn cây
+để kiểm tra, `--manifest` chọn nơi ghi JSON bằng chứng.
+`outputs/verification/reproducibility.json` là manifest **bàn giao** và được cố
+ý giữ nguyên; manifest canonical nằm trong cây
+`outputs/step4_thread1/verification/`. Chạy `verify_pipeline.py` không tham số
+sẽ nhắm vào thư mục bàn giao và ghi đè
+`outputs/verification/reproducibility.json`; không dùng trong luồng canonical.
 
 ---
 
 ## Quy trình holdout niêm phong
 
-Holdout chỉ mở một lần, qua 4 giai đoạn. Chạy tuần tự.
+Holdout chỉ mở một lần, qua 4 giai đoạn, rồi được đối chiếu ở phép kiểm thứ 5.
+Chạy tuần tự.
 
 ```bash
 # Giai đoạn 1 — tái sinh toàn bộ lịch sử và tách holdout
@@ -262,7 +348,26 @@ uv run python scripts/holdout_stage3_backtest.py
 
 # Giai đoạn 4 — dựng bảng tổng hợp và biểu đồ đường vốn HTML
 uv run python scripts/holdout_stage4_report.py
+
+# Lần chạy 2 độc lập, ghi vào cây repro (không đụng stage3/stage4)
+uv run python scripts/holdout_stage3_backtest.py --run-id 2 \
+    --out-dir outputs/holdout/repro/run2/stage3
+uv run python scripts/holdout_stage4_report.py \
+    --stage3-dir outputs/holdout/repro/run2/stage3 \
+    --out-dir outputs/holdout/repro/run2/stage4 \
+    --report outputs/holdout/repro/run2/BAO_CAO_holdout_run2.md
+
+# Giai đoạn 5 — đối chiếu run 1 và run 2 toàn chuỗi (Stage 3–4)
+uv run python scripts/holdout_stage5_repro_check.py
 ```
+
+Giai đoạn 3 nhận `--run-id` và `--out-dir`; Giai đoạn 4 nhận `--stage3-dir`,
+`--out-dir` và `--report` (cùng các cờ ghi đè `--canonical-dir`,
+`--sensitivity-json`, `--run-history-json`, `--stage5-json`). Cây run 2 nằm tại
+[`outputs/holdout/repro/run2/`](outputs/holdout/repro/run2/), và Giai đoạn 5
+đối chiếu hai lần chạy toàn chuỗi: **PASS** với mọi delta 0.0 và cả bốn biểu đồ
+giống hệt từng byte
+([`stage5_repro_report.json`](outputs/holdout/repro/stage5_repro_report.json)).
 
 Giai đoạn 1 còn chứng minh bản tái sinh trước holdout chứa đủ 25,008 khóa cũ
 và khớp toàn bộ 575,184 ô feature. Giai đoạn 2 kiểm tra purge/embargo cắt 0
@@ -282,15 +387,21 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | Feature / metadata | 23 `FEATURES`, 7 `META` |
 | Ranh giới 5 khúc | `[0, 5001, 10003, 15004, 20006, 25008]` |
 | Hyperparameter CatBoost | iterations 1000, lr 0.05, depth 6, l2_leaf_reg 3.0, `auto_class_weights=Balanced`, `eval_metric=AUC`, seed 42, `thread_count=1` |
-| Môi trường đã kiểm | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 |
+| Môi trường đã kiểm | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 · plotly 7.0.0 |
 
 > `thread_count=1` là **tham số kỹ thuật thêm vào**, không thuộc danh sách
 > hyperparameter mô hình gốc: nó loại bỏ số luồng CPU như một nguồn sai lệch đã
-> biết. Phép kiểm tự động hiện chứng minh tái lập chính xác giữa hai lượt trên
-> cùng máy; chưa đủ để khẳng định model giống từng byte trên mọi máy. Các
-> artifact nhánh 80% đầu trong
-> `outputs/catboost_training/` và `outputs/backtest/` được sinh khi chưa có nó và
-> được giữ nguyên (xem Changelog).
+> biết. Thí nghiệm có kiểm soát commit ngày 2026-09-15 đo trên máy này: hai lần
+> chạy cùng cấu hình `thread_count=1` giống hệt từng bit (`max|Δp| = 0`), còn
+> đổi `thread_count` lúc **train** sang `2` hoặc `-1` làm toàn bộ prediction
+> thay đổi (train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352) và đổi
+> net R top 50% holdout (−36.55 / −12.26 / +30.79 R). Ảnh hưởng nằm ở bước
+> train, không phải inference. Điều này xác nhận mô tả của CatBoost ở bước
+> prediction nhưng mâu thuẫn ở bước train; phạm vi là một máy, một build
+> CatBoost, một dataset và một seed, nên không quy toàn bộ sai lệch liên máy
+> cho số luồng. Các artifact nhánh bàn giao trong `outputs/catboost_training/`
+> và `outputs/backtest/` được sinh khi chưa có nó và được giữ nguyên (xem
+> Changelog).
 
 ---
 
@@ -304,14 +415,24 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   mới ra thư mục riêng để giữ nguyên các artifact đã niêm phong.
 - **Tái lập:** đã ghim cả `random_seed=42` lẫn `thread_count=1`. Trên máy tạo
   artifact, hai lượt train độc lập cho mảng prediction giống hệt; hai file
-  `.cbm` khác SHA-256 do phần metadata tuần tự hóa. Teammate chạy trên Windows
-  báo prediction tương đương trong sai số `1e-15`, nhưng chưa có artifact đối
-  chứng được commit để kiểm độc lập và chưa có thí nghiệm thay đổi riêng
-  `thread_count`; vì vậy báo cáo không quy toàn bộ sai lệch liên máy cho đa
-  luồng. Các artifact bước 4 bàn giao
-  (`outputs/catboost_training/`, `outputs/backtest/`) được giữ nguyên từng byte
-  và sinh trên máy gốc khi chưa có `thread_count`, nên chạy lại bước 3–4 trên
-  máy khác sẽ không tái tạo đúng các file đó.
+  `.cbm` khác SHA-256 do phần metadata tuần tự hóa. Bản chạy commit `7748828`
+  được tái tạo từng byte bởi bản chạy lại canonical (8 file CSV được đối
+  chiếu); manifest `verify_pipeline` bàn giao được giữ nguyên, manifest
+  canonical nằm trong `outputs/step4_thread1/verification/`. Thí nghiệm có kiểm
+  soát đã commit cho thấy `thread_count` **có** làm thay đổi kết quả train trên
+  máy này (train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352; net R top
+  50% holdout −36.55 so với −12.26 và +30.79 R cho `tc=1` / `tc=2` / mặc
+  định), trong khi chấm lại cùng model đã fit thì không đổi. **Số của
+  `thread_count=1` không được chọn có lợi (không cherry-pick):** chúng *xấu
+  hơn* bản đa luồng bàn giao (top 50% holdout −36.55 R so với +30.79 R), và
+  toàn bộ khối tham chiếu bàn giao vẫn được giữ. Tương đương liên máy **chưa
+  được chứng minh**: teammate Windows báo prediction trùng trong `1e-15`
+  (không byte-identical) và không có artifact đối chứng. Chuỗi đầy đủ run1-vs-
+  run2 trên cùng máy (Stage 3–4) PASS, mọi delta 0.0 và biểu đồ giống hệt từng
+  byte. Các artifact bước 4 bàn giao (`outputs/catboost_training/`,
+  `outputs/backtest/`) được giữ nguyên từng byte và sinh trên máy gốc khi chưa
+  có `thread_count`, nên chạy lại bước 3–4 trên máy khác sẽ không tái tạo đúng
+  các file đó.
 
 ## Tài liệu
 
@@ -325,11 +446,67 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 
 ## Changelog
 
+### 2026-09-15 — Vòng feedback review: chạy lại canonical thread_count, thí nghiệm có kiểm soát, sổ lịch sử holdout, kiểm chứng toàn chuỗi
+
+- **Chạy lại canonical `thread_count=1` cho 4 cách chia** (`54eed41`,
+  `outputs/step4_thread1/`): `scripts/train_models.py` và
+  `scripts/run_backtest.py` nhận `--output-dir` / `--oof-dir` để chạy lại 4
+  nhánh mà không đụng thư mục bàn giao đóng băng. Chỉ số chunk 2–5 canonical:
+  0.8582/0.6494, 0.7454/0.5077, 0.5875/0.3288, 0.5895/0.3247 (bàn giao:
+  0.8595/0.6525, 0.7475/0.5105, 0.5867/0.3267, 0.5948/0.3304); net R top 50%
+  canonical +6,937.53 / +4,752.04 / +2,148.31 / +2,119.48 (baseline 20,007
+  lệnh, +3,358.25 R) so với bàn giao +6,998.30 / +4,724.34 / +2,207.25 /
+  +2,253.72. Cả 8 file CSV được đối chiếu giống hệt từng byte với commit
+  `7748828`; phần so với bàn giao nằm trong `comparison_report.json`.
+- **Thí nghiệm `thread_count` có kiểm soát** (`b278617`,
+  `outputs/thread_count_sensitivity/`): chỉ đổi `thread_count`, hai lần chạy
+  `thread_count=1` giống hệt từng bit (`max|Δp| = 0`), còn `thread_count=2` /
+  `-1` làm toàn bộ prediction thay đổi (train `max|Δp|` 0.2832 / 0.2999;
+  holdout 0.3469 / 0.3352; Pearson 0.9331 / 0.9409). Net R top 50% holdout:
+  −36.55 (`tc=1`) / −12.26 (`tc=2`) / +30.79 (mặc định). Ảnh hưởng nằm ở bước
+  train, không phải inference. CatBoost mô tả `thread_count` là tham số tốc độ;
+  phép đo trên máy này xác nhận ở bước prediction nhưng mâu thuẫn ở bước train.
+  Phạm vi: một máy, một build CatBoost, một dataset, một seed.
+- **Dựng lại sổ lịch sử mở holdout** (`a3ff712`,
+  `outputs/verification/holdout_run_history.json` + `.md`): cả ba lần mở được
+  dựng lại từ git kèm sweep 20–80% đầy đủ và delta pairwise — `dc25cd3`
+  Windows 0.60502/0.40171, top-50 −23.83 R; `5f46e41` Linux đa luồng
+  0.60232/0.40647, +30.79 R; `7748828` Linux `thread_count=1`
+  0.60455/0.40221, −36.55 R. Sổ cũng ghi xác minh Windows của teammate Bùi Quốc
+  Thịnh (prediction trùng trong `1e-15`, không byte-identical, không ghi metric)
+  như bằng chứng ngoài không tái tạo được, và kiểm lại cả 12 giá trị đã biết
+  với dung sai `1e-12`.
+- **Kiểm chứng toàn chuỗi run1-vs-run2** (`8003c82`,
+  `outputs/holdout/repro/stage5_repro_report.json`): Stage 2/3/4 nhận thêm
+  `--run-id` / `--out-dir` / `--stage3-dir` / `--report`; Stage 3–4 của run 2
+  được sinh lại dưới `outputs/holdout/repro/run2/` và Stage 5 đối chiếu toàn
+  chuỗi: **PASS**, mọi delta 0.0, cả bốn biểu đồ giống hệt từng byte. Report
+  Stage 2 nay ghi cả OS (`platform`) và phiên bản plotly.
+- **Manifest `verify_pipeline` canonical** (`8003c82`): `verify_pipeline.py`
+  nhận `--train-dir` / `--backtest-dir` / `--manifest`; lượt chạy canonical
+  (train ×2, backtest ×2) giống hệt `outputs/step4_thread1/` và ghi
+  `outputs/step4_thread1/verification/reproducibility.json`. File đóng băng
+  `outputs/verification/reproducibility.json` được giữ nguyên.
+- **Sinh lại báo cáo kết quả từ artifact** (`ee24520`,
+  `docs/BAO_CAO_KET_QUA_HOLDOUT.md`): khối chính Bảng 1/2/3 dùng cây canonical,
+  số bàn giao thành khối tham chiếu có dán nhãn kèm bảng chênh lệch; Bảng 4 giữ
+  sweep holdout 20–80%; thêm mục lịch sử mở holdout và thí nghiệm
+  `thread_count`; nhúng ảnh PNG cạnh link HTML; ghi 4 lệnh biên
+  (25,008 + 4 + 5,028 = 30,040) và giai đoạn holdout 2025-02-09 → 2026-08-21;
+  cập nhật bảng kiểm chứng.
+- **Làm mới bằng chứng bị vô hiệu bởi các sửa đổi mã nguồn:** sổ lịch sử chạy
+  lại tại HEAD `ee24520`; lệnh `verify_pipeline` canonical ở trên chạy lại
+  **PASS** (hai lượt train + hai lượt backtest, manifest canonical được làm
+  mới); `holdout_stage5_repro_check.py` chạy lại **PASS**; bộ test
+  **13 passed**.
+
 ### 2026-09-13 — Hoàn thiện bàn giao holdout và phạm vi bằng chứng
 
 - **Áp dụng feedback cuối cho báo cáo:** bổ sung lịch sử và lý do kỹ thuật phải
   chạy lại holdout; chú thích Bảng 1 là trung bình theo fold sau khi bỏ khúc 1;
-  ghi rõ chưa chứng minh toàn pipeline tái lập từng byte; mô tả mục đích cụ thể
+  ghi rõ toàn pipeline tái lập từng byte **lúc đó** chưa được chứng minh — đã
+  được thay thế ngày 2026-09-15: chuỗi run1-vs-run2 trên cùng máy nay PASS,
+  còn tương đương liên máy vẫn còn giới hạn. Đồng thời mô tả mục đích cụ thể
   của từng artifact.
 - **Chặn sinh báo cáo theo cơ chế fail-closed:** Stage 4 kiểm trực tiếp các cờ
   evidence và số đếm kỳ vọng từ Stage 1–3 trước khi ghi output. Test âm xác nhận
@@ -351,7 +528,8 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 - **Làm hai biểu đồ Plotly tái sinh ổn định:** cố định `div_id` trong HTML để
   chạy lại Stage 4 không tạo diff giả chỉ vì UUID ngẫu nhiên.
 - **Bổ sung test nhất quán** cho bằng chứng reproducibility, bảng holdout đã làm
-  tròn và ID biểu đồ deterministic. Bộ test cuối pass 5/5.
+  tròn và ID biểu đồ deterministic. Bộ test lúc đó pass 5/5 (nay là 13 test,
+  tính đến 2026-09-15).
 - **Sửa hướng dẫn cài mới** thành `uv sync --extra dev`, bảo đảm có `pytest`
   trước khi chạy lệnh test trong README.
 - **Valid lại toàn bộ quy trình holdout:** 25,008/25,008 khóa cũ và
@@ -364,7 +542,9 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 - **Khôi phục** `data/processed/dataset_catboost.csv`,
   `outputs/catboost_training/`, `outputs/backtest/` và `outputs/verification/`
   về đúng bản bàn giao (trước đó đã bị sinh lại trên Linux), để Bảng 1/2 và
-  biểu đồ 1 dùng đúng số nhánh đã niêm phong.
+  biểu đồ 1 dùng đúng số nhánh đã niêm phong (thay thế ngày 2026-09-15: khối
+  chính Bảng 1/2 nay dùng cây canonical `thread_count=1`; số bàn giao đóng băng
+  trở thành khối tham chiếu có dán nhãn).
 - **Sửa** biểu đồ 1 (`equity-curve-chunk2-5-top50.html`): nay dựng từ file
   `backtest_scored_universe.csv` bàn giao đã khôi phục, nên 4 điểm cuối của
   nhánh khớp Bảng 2 (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R).
@@ -378,8 +558,11 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 - **Quan sát ban đầu:** CatBoost đặt `random_seed=42` nhưng không đặt
   `thread_count`, nên số luồng thực thi phụ thuộc cấu hình máy. Đây là một cơ
   chế có thể làm thay đổi thứ tự phép toán dấu phẩy động. Dữ liệu hiện lưu cho
-  thấy các lượt chạy trước từng lệch, nhưng không có thí nghiệm đối chứng chỉ
-  thay `thread_count`; do đó không tuyên bố đây là nguyên nhân duy nhất.
+  thấy các lượt chạy trước từng lệch, nhưng lúc đó không có thí nghiệm đối
+  chứng chỉ thay `thread_count`; do đó không tuyên bố đây là nguyên nhân duy
+  nhất (thay thế ngày 2026-09-15: thí nghiệm có kiểm soát nay đã commit trong
+  `outputs/thread_count_sensitivity/` và cho thấy đổi `thread_count` làm thay
+  đổi kết quả train trên máy này).
 - **Fix:** ghim `thread_count=1` trong
   `src/citd_ml/training/train_catboost.py` và
   `scripts/holdout_stage2_train.py`.
