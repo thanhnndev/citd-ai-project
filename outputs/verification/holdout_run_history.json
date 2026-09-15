@@ -1,10 +1,10 @@
 {
   "scope_note": "Sổ này dựng lại đầy đủ số liệu của ba lần mở holdout niêm phong từ git history. Nó chứng minh các con số cũ đã được ghi lại và không bị thay thế, nhưng không tự chứng minh không có cherry-picking: người review cần đối chiếu chính các số đã thu hồi.",
   "head": {
-    "commit": "ee245205e34b53fd1aea081255660d3d0f389a56",
-    "commit_short": "ee24520",
-    "commit_date": "2026-09-15T17:17:29+07:00",
-    "commit_subject": "docs(report): regenerate results report from artifacts (feedback 1-6)"
+    "commit": "bdf25eba0be50a46df97011eed2ecad2cd47c34f",
+    "commit_short": "bdf25eb",
+    "commit_date": "2026-09-15T17:23:47+07:00",
+    "commit_subject": "docs(changelog): complete README changelogs and refresh final evidence"
   },
   "provenance": {
     "method": "git show <commit>:<path> (không checkout)",

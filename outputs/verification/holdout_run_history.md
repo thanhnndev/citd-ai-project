@@ -1,6 +1,6 @@
 # SỔ ĐỐI CHIẾU LỊCH SỬ CHẠY HOLDOUT
 
-> Sinh tự động bởi `scripts/holdout_run_history.py` từ git history (đọc bằng `git show`, không checkout). HEAD khi sinh: `ee24520` (2026-09-15T17:17:29+07:00).
+> Sinh tự động bởi `scripts/holdout_run_history.py` từ git history (đọc bằng `git show`, không checkout). HEAD khi sinh: `bdf25eb` (2026-09-15T17:23:47+07:00).
 >
 > Mục đích: ghi lại đầy đủ số của cả ba lần mở holdout niêm phong để người review tự kiểm tra, thay vì chỉ có lời thừa nhận trong changelog.
 
