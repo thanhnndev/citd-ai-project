@@ -1,0 +1,5 @@
+method,roc_auc,f1
+random_kfold,0.8582,0.6494
+grouped_kfold,0.7454,0.5077
+walk_forward,0.5875,0.3288
+purged_walk_forward,0.5895,0.3247

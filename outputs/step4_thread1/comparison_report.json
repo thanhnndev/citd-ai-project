@@ -1,0 +1,710 @@
+{
+  "generated_utc": "2026-09-15T09:47:49.832771+00:00",
+  "purpose": "Canonical thread_count=1 rerun of the four-split pipeline for report review; never overwrites frozen handover artifacts.",
+  "canonical_tree": {
+    "catboost_training": "outputs/step4_thread1/catboost_training",
+    "backtest": "outputs/step4_thread1/backtest"
+  },
+  "canonical_config": {
+    "thread_count": 1,
+    "random_seed": 42,
+    "iterations": 1000,
+    "source": "src/citd_ml/training/train_catboost.py::MODEL_PARAMS"
+  },
+  "git": {
+    "head": "2239ba7b2251d4a9250086560a3a2aad9c9769ab",
+    "status_short": [
+      " M scripts/run_backtest.py",
+      " M scripts/train_models.py",
+      " M src/citd_ml/backtest/backtest_pyramid_local.py",
+      " M src/citd_ml/training/train_catboost.py",
+      "?? outputs/step4_thread1/",
+      "?? outputs/thread_count_sensitivity/",
+      "?? outputs/verification/holdout_run_history.json",
+      "?? outputs/verification/holdout_run_history.md",
+      "?? scripts/holdout_run_history.py",
+      "?? scripts/thread_count_sensitivity.py"
+    ]
+  },
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
+    "packages": {
+      "catboost": "1.2.10",
+      "scikit-learn": "1.9.0",
+      "pandas": "3.0.5",
+      "numpy": "2.5.2"
+    }
+  },
+  "source_sha256": {
+    "src/citd_ml/training/train_catboost.py": "6bb4b528b76d22195c69f2978107882a7c6cf67bd4660c9b4960e139b33d36eb",
+    "src/citd_ml/backtest/backtest_pyramid_local.py": "bd1144b8d70ff23a08ae8cc1f52787f0c086390743cd8c9236dc6c97e2a3bf50",
+    "scripts/train_models.py": "c97d865a2288a5d084ae87927c21357e7d7bbb919927c62472d74ed00a7b0bae",
+    "scripts/run_backtest.py": "bde38a4ee62d746c8678201f58617b0b3837aef016db12daf8733ebdff6644ba"
+  },
+  "commands": [
+    ".venv/bin/python scripts/train_models.py --output-dir outputs/step4_thread1/catboost_training",
+    ".venv/bin/python scripts/run_backtest.py --output-dir outputs/step4_thread1/backtest --oof-dir outputs/step4_thread1/catboost_training"
+  ],
+  "chunk2_5_classification": {
+    "formula": "chunk=1+searchsorted([5001,10003,15004,20006,25008], row_id, 'right'); keep fold>=1 and chunk!=1; mean of per-fold ROC-AUC and F1@0.5",
+    "handover_validation": {
+      "random_kfold": {
+        "roc_auc": 0.8595,
+        "f1": 0.6525
+      },
+      "grouped_kfold": {
+        "roc_auc": 0.7475,
+        "f1": 0.5105
+      },
+      "walk_forward": {
+        "roc_auc": 0.5867,
+        "f1": 0.3267
+      },
+      "purged_walk_forward": {
+        "roc_auc": 0.5948,
+        "f1": 0.3304
+      }
+    },
+    "handover_matches_expected": true,
+    "canonical": {
+      "random_kfold": {
+        "roc_auc": 0.8582,
+        "f1": 0.6494
+      },
+      "grouped_kfold": {
+        "roc_auc": 0.7454,
+        "f1": 0.5077
+      },
+      "walk_forward": {
+        "roc_auc": 0.5875,
+        "f1": 0.3288
+      },
+      "purged_walk_forward": {
+        "roc_auc": 0.5895,
+        "f1": 0.3247
+      }
+    },
+    "canonical_matches_expected": {
+      "random_kfold": true,
+      "grouped_kfold": true,
+      "walk_forward": true,
+      "purged_walk_forward": true
+    }
+  },
+  "vs_handover": {
+    "reference": {
+      "catboost_training": "outputs/catboost_training",
+      "backtest": "outputs/backtest"
+    },
+    "files": {
+      "metrics_by_fold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/metrics_by_fold.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/metrics_by_fold.csv",
+        "canonical_sha256": "79bb32f4d7404a1abcf3cf285a7cd02c87f32db3659b7917708561a4264b3909",
+        "reference_sha256": "8be617e4ea20e64a3477bd34363daa786ef741a3b3b91334fbbd869ff859b579",
+        "bytes_identical": false,
+        "canonical_rows": 18,
+        "reference_rows": 18,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "fold": 0.0,
+          "train_size": 0.0,
+          "test_size": 0.0,
+          "train_positive_rate": 0.0,
+          "test_positive_rate": 0.0,
+          "roc_auc": 0.010958175854000052,
+          "f1": 0.014853000883000012
+        },
+        "max_abs_numeric_diff_overall": 0.014853000883000012,
+        "differing_rows": 14,
+        "exactly_equal": false
+      },
+      "metrics_summary.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/metrics_summary.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/metrics_summary.csv",
+        "canonical_sha256": "5cd3aafa0f9dfe60c562247c8307fbae6a24795f9f953d00ae3c951082ee2341",
+        "reference_sha256": "7f5f8a7ce836410eef3b10ef2d548c07b03e168db4b942a1322f811c66281a3d",
+        "bytes_identical": false,
+        "canonical_rows": 4,
+        "reference_rows": 4,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "folds": 0.0,
+          "mean_roc_auc": 0.005241647150999951,
+          "mean_f1": 0.005735309708000014
+        },
+        "max_abs_numeric_diff_overall": 0.005735309708000014,
+        "differing_rows": 4,
+        "exactly_equal": false
+      },
+      "oof_random_kfold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_random_kfold.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/oof_random_kfold.csv",
+        "canonical_sha256": "ac6724ff2e5cfa398968e302a9d4fcae26e2b34b676a5cf4aa9b77610ec6552a",
+        "reference_sha256": "7d8c4bc3ff9db744d62980f0847b1d2b8422354b65223a0ab4943f0525109bdd",
+        "bytes_identical": false,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.365803414322
+        },
+        "max_abs_numeric_diff_overall": 0.365803414322,
+        "differing_rows": 25008,
+        "exactly_equal": false
+      },
+      "oof_grouped_kfold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_grouped_kfold.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/oof_grouped_kfold.csv",
+        "canonical_sha256": "106449d28c25eecddeb3768a82bef7d5abcce51dd6610c59ab83d72e387c15a0",
+        "reference_sha256": "f1a78d42763d9c15dd0c7952c17b936cf74cf41acb1a9d699b8212ece5d0fe0a",
+        "bytes_identical": false,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.521553914414
+        },
+        "max_abs_numeric_diff_overall": 0.521553914414,
+        "differing_rows": 25008,
+        "exactly_equal": false
+      },
+      "oof_walk_forward.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_walk_forward.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/oof_walk_forward.csv",
+        "canonical_sha256": "8637dc2c3c98f84cbe8431908fcb6afbf82d84b3ee4554ee60f55fb3ccc3d4e0",
+        "reference_sha256": "67ecac4c0da7d86e22f6202195d7cb02a3b62eec3efd7145a1d21c6d763768e8",
+        "bytes_identical": false,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.392591435298
+        },
+        "max_abs_numeric_diff_overall": 0.392591435298,
+        "differing_rows": 10004,
+        "exactly_equal": false
+      },
+      "oof_purged_walk_forward.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_purged_walk_forward.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/catboost_training/oof_purged_walk_forward.csv",
+        "canonical_sha256": "dd505a6e52a0bba640cf315ee1bba061a4471f17d88034f5e560e95ddd513d7c",
+        "reference_sha256": "fa33abe906d8ffab59a16e40cfdd8f99ee33044d3362470af75e655a74a5c196",
+        "bytes_identical": false,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.416502519563
+        },
+        "max_abs_numeric_diff_overall": 0.416502519563,
+        "differing_rows": 10004,
+        "exactly_equal": false
+      },
+      "backtest_summary_top50.csv": {
+        "canonical": "outputs/step4_thread1/backtest/backtest_summary_top50.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/backtest/backtest_summary_top50.csv",
+        "canonical_sha256": "d5bd53abafbb7fdc7227adcd89e148f87e2d923cd7f324034ac5ba30eb2bb595",
+        "reference_sha256": "961be98d41030b470fef20e3af1d1c2a8967f612c637d7937d78deb7ab234830",
+        "bytes_identical": false,
+        "canonical_rows": 5,
+        "reference_rows": 5,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "requested_keep_pct": 0.0,
+          "actual_keep_pct": 0.0,
+          "trades": 0.0,
+          "net_profit_R": 134.2442092199999,
+          "max_dd_R": 11.745764639999976,
+          "profit_factor": 0.027639578370000084,
+          "win_rate_pct": 0.22990803679999772
+        },
+        "max_abs_numeric_diff_overall": 134.2442092199999,
+        "differing_rows": 4,
+        "exactly_equal": false
+      },
+      "backtest_retention_sweep.csv": {
+        "canonical": "outputs/step4_thread1/backtest/backtest_retention_sweep.csv",
+        "reference": "/home/thanhnndev/develop/citd-ml-project/outputs/backtest/backtest_retention_sweep.csv",
+        "canonical_sha256": "24224540b3ec64aab37569e125bca010b32b4d97f4b1d535835a6dd052ec98aa",
+        "reference_sha256": "af99b68be72a36bc22ba592d7e13920584cf6fe69b57f0b4bc528296515d33a1",
+        "bytes_identical": false,
+        "canonical_rows": 35,
+        "reference_rows": 35,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "comparison_keep_pct": 0.0,
+          "requested_keep_pct": 0.0,
+          "actual_keep_pct": 0.0,
+          "trades": 0.0,
+          "net_profit_R": 178.17371141000012,
+          "max_dd_R": 26.753437704999982,
+          "profit_factor": 0.08437772814999978,
+          "win_rate_pct": 0.5497251373999958
+        },
+        "max_abs_numeric_diff_overall": 178.17371141000012,
+        "differing_rows": 28,
+        "exactly_equal": false
+      }
+    },
+    "key_metrics_top50": {
+      "baseline": {
+        "canonical": {
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.29397332599,
+          "win_rate_pct": 31.713900135
+        },
+        "reference": {
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.29397332599,
+          "win_rate_pct": 31.713900135
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      },
+      "random_kfold": {
+        "canonical": {
+          "net_profit_R": 6937.53476724,
+          "max_dd_R": 73.7647865271,
+          "profit_factor": 2.5437365568,
+          "win_rate_pct": 44.6521391443
+        },
+        "reference": {
+          "net_profit_R": 6998.30245001,
+          "max_dd_R": 75.7079153439,
+          "profit_factor": 2.56267416316,
+          "win_rate_pct": 44.8820471811
+        },
+        "delta": {
+          "net_profit_R": -60.76768276999974,
+          "max_dd_R": -1.943128816799998,
+          "profit_factor": -0.018937606360000192,
+          "win_rate_pct": -0.22990803679999772
+        }
+      },
+      "grouped_kfold": {
+        "canonical": {
+          "net_profit_R": 4752.04217114,
+          "max_dd_R": 99.7093146848,
+          "profit_factor": 1.95000124355,
+          "win_rate_pct": 39.2642942823
+        },
+        "reference": {
+          "net_profit_R": 4724.34170646,
+          "max_dd_R": 99.4989562423,
+          "profit_factor": 1.94179224141,
+          "win_rate_pct": 39.2443022791
+        },
+        "delta": {
+          "net_profit_R": 27.70046468000055,
+          "max_dd_R": 0.21035844250000935,
+          "profit_factor": 0.008209002140000088,
+          "win_rate_pct": 0.019992003200002273
+        }
+      },
+      "walk_forward": {
+        "canonical": {
+          "net_profit_R": 2148.30521167,
+          "max_dd_R": 211.293790488,
+          "profit_factor": 1.41165125232,
+          "win_rate_pct": 34.756097561
+        },
+        "reference": {
+          "net_profit_R": 2207.25000145,
+          "max_dd_R": 205.31135334,
+          "profit_factor": 1.42259556798,
+          "win_rate_pct": 34.856057577
+        },
+        "delta": {
+          "net_profit_R": -58.944789780000065,
+          "max_dd_R": 5.9824371480000025,
+          "profit_factor": -0.010944315659999981,
+          "win_rate_pct": -0.09996001600000426
+        }
+      },
+      "purged_walk_forward": {
+        "canonical": {
+          "net_profit_R": 2119.47819179,
+          "max_dd_R": 142.364325564,
+          "profit_factor": 1.40735113276,
+          "win_rate_pct": 34.9860055978
+        },
+        "reference": {
+          "net_profit_R": 2253.72240101,
+          "max_dd_R": 154.110090204,
+          "profit_factor": 1.43499071113,
+          "win_rate_pct": 35.1659336265
+        },
+        "delta": {
+          "net_profit_R": -134.2442092199999,
+          "max_dd_R": -11.745764639999976,
+          "profit_factor": -0.027639578370000084,
+          "win_rate_pct": -0.17992802869999736
+        }
+      }
+    }
+  },
+  "vs_commit_7748828": {
+    "commit": "774882844e04a60f88df6db1a97b1148b28566b3",
+    "commit_subject": "data: re-run pipeline and holdout with thread_count=1",
+    "reference_export": "/tmp/opencode/ref_7748828",
+    "files": {
+      "metrics_by_fold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/metrics_by_fold.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/metrics_by_fold.csv",
+        "canonical_sha256": "79bb32f4d7404a1abcf3cf285a7cd02c87f32db3659b7917708561a4264b3909",
+        "reference_sha256": "79bb32f4d7404a1abcf3cf285a7cd02c87f32db3659b7917708561a4264b3909",
+        "bytes_identical": true,
+        "canonical_rows": 18,
+        "reference_rows": 18,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "fold": 0.0,
+          "train_size": 0.0,
+          "test_size": 0.0,
+          "train_positive_rate": 0.0,
+          "test_positive_rate": 0.0,
+          "roc_auc": 0.0,
+          "f1": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "metrics_summary.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/metrics_summary.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/metrics_summary.csv",
+        "canonical_sha256": "5cd3aafa0f9dfe60c562247c8307fbae6a24795f9f953d00ae3c951082ee2341",
+        "reference_sha256": "5cd3aafa0f9dfe60c562247c8307fbae6a24795f9f953d00ae3c951082ee2341",
+        "bytes_identical": true,
+        "canonical_rows": 4,
+        "reference_rows": 4,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "folds": 0.0,
+          "mean_roc_auc": 0.0,
+          "mean_f1": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "oof_random_kfold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_random_kfold.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/oof_random_kfold.csv",
+        "canonical_sha256": "ac6724ff2e5cfa398968e302a9d4fcae26e2b34b676a5cf4aa9b77610ec6552a",
+        "reference_sha256": "ac6724ff2e5cfa398968e302a9d4fcae26e2b34b676a5cf4aa9b77610ec6552a",
+        "bytes_identical": true,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "oof_grouped_kfold.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_grouped_kfold.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/oof_grouped_kfold.csv",
+        "canonical_sha256": "106449d28c25eecddeb3768a82bef7d5abcce51dd6610c59ab83d72e387c15a0",
+        "reference_sha256": "106449d28c25eecddeb3768a82bef7d5abcce51dd6610c59ab83d72e387c15a0",
+        "bytes_identical": true,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "oof_walk_forward.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_walk_forward.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/oof_walk_forward.csv",
+        "canonical_sha256": "8637dc2c3c98f84cbe8431908fcb6afbf82d84b3ee4554ee60f55fb3ccc3d4e0",
+        "reference_sha256": "8637dc2c3c98f84cbe8431908fcb6afbf82d84b3ee4554ee60f55fb3ccc3d4e0",
+        "bytes_identical": true,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "oof_purged_walk_forward.csv": {
+        "canonical": "outputs/step4_thread1/catboost_training/oof_purged_walk_forward.csv",
+        "reference": "/tmp/opencode/ref_7748828/catboost_training/oof_purged_walk_forward.csv",
+        "canonical_sha256": "dd505a6e52a0bba640cf315ee1bba061a4471f17d88034f5e560e95ddd513d7c",
+        "reference_sha256": "dd505a6e52a0bba640cf315ee1bba061a4471f17d88034f5e560e95ddd513d7c",
+        "bytes_identical": true,
+        "canonical_rows": 25008,
+        "reference_rows": 25008,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "row_id": 0.0,
+          "origin_bar": 0.0,
+          "entry_bar": 0.0,
+          "entry_price": 0.0,
+          "leg": 0.0,
+          "entry_vs_base_R": 0.0,
+          "label": 0.0,
+          "fold": 0.0,
+          "probability": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "backtest_summary_top50.csv": {
+        "canonical": "outputs/step4_thread1/backtest/backtest_summary_top50.csv",
+        "reference": "/tmp/opencode/ref_7748828/backtest/backtest_summary_top50.csv",
+        "canonical_sha256": "d5bd53abafbb7fdc7227adcd89e148f87e2d923cd7f324034ac5ba30eb2bb595",
+        "reference_sha256": "d5bd53abafbb7fdc7227adcd89e148f87e2d923cd7f324034ac5ba30eb2bb595",
+        "bytes_identical": true,
+        "canonical_rows": 5,
+        "reference_rows": 5,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "requested_keep_pct": 0.0,
+          "actual_keep_pct": 0.0,
+          "trades": 0.0,
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      },
+      "backtest_retention_sweep.csv": {
+        "canonical": "outputs/step4_thread1/backtest/backtest_retention_sweep.csv",
+        "reference": "/tmp/opencode/ref_7748828/backtest/backtest_retention_sweep.csv",
+        "canonical_sha256": "24224540b3ec64aab37569e125bca010b32b4d97f4b1d535835a6dd052ec98aa",
+        "reference_sha256": "24224540b3ec64aab37569e125bca010b32b4d97f4b1d535835a6dd052ec98aa",
+        "bytes_identical": true,
+        "canonical_rows": 35,
+        "reference_rows": 35,
+        "columns_identical": true,
+        "same_shape": true,
+        "keys_identical": true,
+        "max_abs_numeric_diff": {
+          "comparison_keep_pct": 0.0,
+          "requested_keep_pct": 0.0,
+          "actual_keep_pct": 0.0,
+          "trades": 0.0,
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        },
+        "max_abs_numeric_diff_overall": 0.0,
+        "differing_rows": 0,
+        "exactly_equal": true
+      }
+    },
+    "key_metrics_top50": {
+      "baseline": {
+        "canonical": {
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.29397332599,
+          "win_rate_pct": 31.713900135
+        },
+        "reference": {
+          "net_profit_R": 3358.25107471,
+          "max_dd_R": 236.126175479,
+          "profit_factor": 1.29397332599,
+          "win_rate_pct": 31.713900135
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      },
+      "random_kfold": {
+        "canonical": {
+          "net_profit_R": 6937.53476724,
+          "max_dd_R": 73.7647865271,
+          "profit_factor": 2.5437365568,
+          "win_rate_pct": 44.6521391443
+        },
+        "reference": {
+          "net_profit_R": 6937.53476724,
+          "max_dd_R": 73.7647865271,
+          "profit_factor": 2.5437365568,
+          "win_rate_pct": 44.6521391443
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      },
+      "grouped_kfold": {
+        "canonical": {
+          "net_profit_R": 4752.04217114,
+          "max_dd_R": 99.7093146848,
+          "profit_factor": 1.95000124355,
+          "win_rate_pct": 39.2642942823
+        },
+        "reference": {
+          "net_profit_R": 4752.04217114,
+          "max_dd_R": 99.7093146848,
+          "profit_factor": 1.95000124355,
+          "win_rate_pct": 39.2642942823
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      },
+      "walk_forward": {
+        "canonical": {
+          "net_profit_R": 2148.30521167,
+          "max_dd_R": 211.293790488,
+          "profit_factor": 1.41165125232,
+          "win_rate_pct": 34.756097561
+        },
+        "reference": {
+          "net_profit_R": 2148.30521167,
+          "max_dd_R": 211.293790488,
+          "profit_factor": 1.41165125232,
+          "win_rate_pct": 34.756097561
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      },
+      "purged_walk_forward": {
+        "canonical": {
+          "net_profit_R": 2119.47819179,
+          "max_dd_R": 142.364325564,
+          "profit_factor": 1.40735113276,
+          "win_rate_pct": 34.9860055978
+        },
+        "reference": {
+          "net_profit_R": 2119.47819179,
+          "max_dd_R": 142.364325564,
+          "profit_factor": 1.40735113276,
+          "win_rate_pct": 34.9860055978
+        },
+        "delta": {
+          "net_profit_R": 0.0,
+          "max_dd_R": 0.0,
+          "profit_factor": 0.0,
+          "win_rate_pct": 0.0
+        }
+      }
+    },
+    "all_files_bytes_identical": true,
+    "all_files_elementwise_equal": true
+  }
+}

@@ -31,6 +31,11 @@ TOP50_SUMMARY_OUT = OUTPUT_DIR / "backtest_summary_top50.csv"
 RETENTION_SWEEP_OUT = OUTPUT_DIR / "backtest_retention_sweep.csv"
 
 
+def _resolve_dir(value: Path | str | None, default: Path) -> Path:
+    """Cho phép ghi đè thư mục nhưng mặc định giữ nguyên đường dẫn chuẩn."""
+    return default if value is None else Path(value)
+
+
 # --------------------------------------------------------------- task config
 K = 3
 EXPECTED_DATASET_ROWS = 25_008
@@ -422,8 +427,9 @@ def validate_against_reference(trades: pd.DataFrame) -> None:
 
 
 # --------------------------------------------------------------- OOF scores
-def load_score_tables() -> dict[str, pd.DataFrame]:
+def load_score_tables(oof_dir: Path | str | None = None) -> dict[str, pd.DataFrame]:
     """Load and strictly validate the four saved OOF probability tables."""
+    target_dir = _resolve_dir(oof_dir, OOF_DIR)
     score_tables: dict[str, pd.DataFrame] = {}
     df, X, y, meta, _, chunks = prepare_dataset()
     meta_columns = list(meta.columns) + ["label"]
@@ -432,7 +438,7 @@ def load_score_tables() -> dict[str, pd.DataFrame]:
     first_eval_row = EXPECTED_DATASET_ROWS // 5
 
     for method in METHODS:
-        path = OOF_DIR / f"oof_{method}.csv"
+        path = target_dir / f"oof_{method}.csv"
         if not path.exists():
             raise FileNotFoundError(f"Thiếu bảng điểm OOF: {path}")
 
@@ -728,22 +734,24 @@ def save_outputs(
     top50_summary: pd.DataFrame,
     retention_sweep: pd.DataFrame,
     top50_trades: dict[str, pd.DataFrame],
+    output_dir: Path | str | None = None,
 ) -> None:
-    """Write only generated artifacts under outputs/backtest."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    """Write only generated artifacts under outputs/backtest (or output_dir)."""
+    target_dir = _resolve_dir(output_dir, OUTPUT_DIR)
+    target_dir.mkdir(parents=True, exist_ok=True)
 
     csv_options = {
         "index": False,
         "float_format": "%.12g",
         "date_format": "%Y-%m-%d %H:%M:%S",
     }
-    trades.to_csv(BASELINE_OUT, **csv_options)
-    universe.to_csv(SCORED_UNIVERSE_OUT, **csv_options)
-    top50_summary.to_csv(TOP50_SUMMARY_OUT, **csv_options)
-    retention_sweep.to_csv(RETENTION_SWEEP_OUT, **csv_options)
+    trades.to_csv(target_dir / BASELINE_OUT.name, **csv_options)
+    universe.to_csv(target_dir / SCORED_UNIVERSE_OUT.name, **csv_options)
+    top50_summary.to_csv(target_dir / TOP50_SUMMARY_OUT.name, **csv_options)
+    retention_sweep.to_csv(target_dir / RETENTION_SWEEP_OUT.name, **csv_options)
 
     for method, selected in top50_trades.items():
-        selected.to_csv(OUTPUT_DIR / f"trades_top50_{method}.csv", **csv_options)
+        selected.to_csv(target_dir / f"trades_top50_{method}.csv", **csv_options)
 
 
 def print_summary(top50_summary: pd.DataFrame) -> None:
@@ -765,7 +773,10 @@ def print_summary(top50_summary: pd.DataFrame) -> None:
     )
 
 
-def main() -> None:
+def main(
+    output_dir: Path | str | None = None,
+    oof_dir: Path | str | None = None,
+) -> None:
     """Run baseline, score each intended opening, and produce all reports."""
     m15, m1_high, m1_low, lo, hi = load()
 
@@ -775,7 +786,7 @@ def main() -> None:
     validate_against_reference(trades)
 
     print("\nLoading CatBoost OOF scores...")
-    score_tables = load_score_tables()
+    score_tables = load_score_tables(oof_dir)
     universe, edges = build_scored_universe(trades, score_tables)
 
     evaluation = universe.loc[universe["row_id"] >= edges[1]].copy()
@@ -819,10 +830,22 @@ def main() -> None:
         first_eval_row=edges[1],
         filtered_results=filtered_results,
     )
-    save_outputs(trades, universe, top50_summary, retention_sweep, top50_trades)
+    if output_dir is None:
+        # Giữ đúng 5 tham số để không phá vỡ call site cũ (verify_pipeline patch).
+        save_outputs(trades, universe, top50_summary, retention_sweep, top50_trades)
+    else:
+        save_outputs(
+            trades,
+            universe,
+            top50_summary,
+            retention_sweep,
+            top50_trades,
+            output_dir=output_dir,
+        )
     print_summary(top50_summary)
 
-    print(f"\nĐã lưu output tại: {OUTPUT_DIR}")
+    target_dir = _resolve_dir(output_dir, OUTPUT_DIR)
+    print(f"\nĐã lưu output tại: {target_dir}")
     print(f"  - {TOP50_SUMMARY_OUT.name}")
     print(f"  - {RETENTION_SWEEP_OUT.name}")
     print(f"  - {SCORED_UNIVERSE_OUT.name}")

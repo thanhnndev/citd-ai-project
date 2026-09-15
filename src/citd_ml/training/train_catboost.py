@@ -151,25 +151,28 @@ def save_outputs(
     metrics_by_fold: pd.DataFrame,
     metrics_summary: pd.DataFrame,
     scores_by_method: dict[str, pd.DataFrame],
+    output_dir: Path | str | None = None,
 ) -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # output_dir=None giữ nguyên hành vi cũ (outputs/catboost_training).
+    target_dir = OUTPUT_DIR if output_dir is None else Path(output_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
     metrics_by_fold.to_csv(
-        OUTPUT_DIR / "metrics_by_fold.csv", index=False, float_format="%.12g"
+        target_dir / "metrics_by_fold.csv", index=False, float_format="%.12g"
     )
     metrics_summary.to_csv(
-        OUTPUT_DIR / "metrics_summary.csv", index=False, float_format="%.12g"
+        target_dir / "metrics_summary.csv", index=False, float_format="%.12g"
     )
 
     for method in METHOD_ORDER:
         scores_by_method[method].to_csv(
-            OUTPUT_DIR / f"oof_{method}.csv",
+            target_dir / f"oof_{method}.csv",
             index=False,
             float_format="%.12g",
             date_format="%Y-%m-%d %H:%M:%S",
         )
 
 
-def main() -> None:
+def main(output_dir: Path | str | None = None) -> None:
     df, X, y, meta, edges, chunks = prepare_dataset()
     all_folds = make_all_folds(X, y, meta, chunks)
     validate_all_folds(all_folds, meta, chunks, len(df))
@@ -200,7 +203,16 @@ def main() -> None:
         raise ValueError("ROC-AUC hoặc F1 nằm ngoài đoạn [0, 1]")
 
     metrics_summary = build_summary(metrics_by_fold)
-    save_outputs(metrics_by_fold, metrics_summary, scores_by_method)
+    if output_dir is None:
+        # Giữ đúng 3 tham số để không phá vỡ call site cũ (verify_pipeline patch).
+        save_outputs(metrics_by_fold, metrics_summary, scores_by_method)
+    else:
+        save_outputs(
+            metrics_by_fold,
+            metrics_summary,
+            scores_by_method,
+            output_dir=output_dir,
+        )
 
     print("\nKết quả trung bình:")
     print(
@@ -208,7 +220,8 @@ def main() -> None:
             index=False, float_format=lambda value: f"{value:.6f}"
         )
     )
-    print(f"\nĐã lưu output tại: {OUTPUT_DIR}")
+    target_dir = OUTPUT_DIR if output_dir is None else Path(output_dir)
+    print(f"\nĐã lưu output tại: {target_dir}")
 
 
 if __name__ == "__main__":
