@@ -471,7 +471,7 @@ These values are fixed by the handover spec and must not be changed
 - Updated the main results report and its generator: three Git-retrievable historical result versions, the 12 September hypothesis versus the 15 September controlled experiment, fixed top 50%, and the boundary-trade replay scope.
 - Added a six-item feedback checklist to the report's verification section. Removed claims that worse results prove no cherry-picking or that Git captures every holdout access.
 - Regenerated both report copies and the run-history ledger; numerical results and model settings remain unchanged. Cross-machine equality remains unestablished.
-- The main deliverable for Nhi is [the results report](docs/BAO_CAO_KET_QUA_HOLDOUT.md); the context audit is a supplementary review record.
+- The main deliverable for Nhi is [the results report](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
 ### 2026-09-15 — Review feedback round: canonical thread-count rerun, controlled experiment, run history, full-chain verification
 

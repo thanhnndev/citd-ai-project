@@ -459,7 +459,7 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 - Sửa báo cáo kết quả và script sinh: ba phiên bản lịch sử truy xuất từ Git, nghi ngờ ngày 12/09 và thí nghiệm ngày 15/09, giữ top 50%, phạm vi replay bốn lệnh biên.
 - Thêm bảng đối chiếu sáu feedback trong phần kiểm chứng. Bỏ khẳng định kết quả xấu hơn chứng minh không cherry-pick hoặc Git ghi đủ mọi lần truy cập holdout.
 - Sinh lại hai bản report và sổ lịch sử; số liệu và cấu hình model giữ nguyên. Chưa chứng minh tái lập liên máy.
-- Tài liệu chính gửi Nhi là [báo cáo kết quả](docs/BAO_CAO_KET_QUA_HOLDOUT.md); audit context chỉ là hồ sơ kiểm tra bổ sung.
+- Tài liệu chính gửi Nhi là [báo cáo kết quả](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
 ### 2026-09-15 — Vòng feedback review: chạy lại canonical thread_count, thí nghiệm có kiểm soát, sổ lịch sử holdout, kiểm chứng toàn chuỗi
 
