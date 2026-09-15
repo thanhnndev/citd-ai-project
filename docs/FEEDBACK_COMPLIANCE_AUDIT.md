@@ -1,5 +1,8 @@
 # AUDIT ĐỐI CHIẾU FEEDBACK REVIEW — CITD ML (holdout)
 
+> **Cập nhật sau vòng sửa cuối:** Báo cáo chính gửi Nhi là [BAO_CAO_KET_QUA_HOLDOUT.md](BAO_CAO_KET_QUA_HOLDOUT.md). Đã sửa script và sinh lại báo cáo, README/README_VI: giới hạn sổ ở ba phiên bản lịch sử truy xuất được, phân biệt nghi ngờ 12/09 với thí nghiệm 15/09, bỏ suy luận kết quả xấu hơn chứng minh không cherry-pick, làm rõ replay bốn lệnh biên. Bảng đối chiếu sáu feedback nằm trong Phần 4 báo cáo chính. Nội dung audit bên dưới là snapshot trước sửa; các mục “cần sửa” đã được xử lý. Giới hạn lịch sử quyết định và tái lập liên máy vẫn còn; không đọc kết luận PASS cũ như bằng chứng loại trừ cherry-pick hoặc đã tuân thủ chỉ một lần thực thi holdout.
+
+
 - **Ngày audit:** 2026-09-15
 - **Phạm vi:** read-only. Không sửa file nào; tài liệu này là file duy nhất được tạo.
   Không chạy `git add/commit/push`.

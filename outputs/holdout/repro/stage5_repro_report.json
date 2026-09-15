@@ -2,7 +2,7 @@
   "status": "PASS",
   "scope_note": "two independent training runs, same machine, same code; does not establish cross-machine byte identity",
   "scope_note_vi": "Hai lần train độc lập trên cùng một máy, cùng mã nguồn; không chứng minh giống từng byte giữa các máy khác nhau.",
-  "generated_at_utc": "2026-09-15T14:12:31+00:00",
+  "generated_at_utc": "2026-09-15T16:54:21+00:00",
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/holdout_stage5_repro_check.py",
   "environment": {
     "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",

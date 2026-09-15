@@ -365,11 +365,11 @@ def render_markdown(ledger: dict) -> str:
     )
     lines.append(">")
     lines.append(
-        "> Mục đích: ghi lại đầy đủ số của cả ba lần mở holdout niêm phong để người review "
-        "tự kiểm tra, thay vì chỉ có lời thừa nhận trong changelog."
+        "> Mục đích: ghi số của ba phiên bản kết quả holdout lịch sử truy xuất được từ Git để người review "
+        "tự kiểm tra. Sổ không xác nhận tổng số lần thực thi hoặc các lần không được lưu trong Git."
     )
     lines.append("")
-    lines.append("## 1. Ba lần chạy holdout")
+    lines.append("## 1. Ba phiên bản kết quả holdout lịch sử")
     lines.append("")
     rows = []
     for run in runs:
@@ -450,7 +450,7 @@ def render_markdown(ledger: dict) -> str:
             f"{delta['top50']['jaccard']:.4f}",
         ])
     lines.append(markdown_table(
-        ["Cặp lần chạy", "max |Δp|", "mean |Δp|", "Pearson r", "Số dòng lệch > 1e-12", "Top 50 trùng", "Jaccard"],
+        ["Cặp lần chạy", "max abs(Δp)", "mean abs(Δp)", "Pearson r", "Số dòng lệch > 1e-12", "Top 50 trùng", "Jaccard"],
         rows,
     ))
     lines.append("")
@@ -576,7 +576,7 @@ def main() -> None:
     head_commit = git_text("rev-parse", "HEAD").strip()
     ledger = {
         "scope_note": (
-            "Sổ này dựng lại đầy đủ số liệu của ba lần mở holdout niêm phong từ git history. "
+            "Sổ này truy xuất ba phiên bản kết quả holdout lịch sử từ ba commit Git định sẵn; không xác nhận tổng số lần thực thi. "
             "Nó chứng minh các con số cũ đã được ghi lại và không bị thay thế, nhưng không tự "
             "chứng minh không có cherry-picking: người review cần đối chiếu chính các số đã thu hồi."
         ),

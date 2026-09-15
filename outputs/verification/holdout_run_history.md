@@ -1,10 +1,10 @@
 # SỔ ĐỐI CHIẾU LỊCH SỬ CHẠY HOLDOUT
 
-> Sinh tự động bởi `scripts/holdout_run_history.py` từ git history (đọc bằng `git show`, không checkout). HEAD khi sinh: `bdf25eb` (2026-09-15T17:23:47+07:00).
+> Sinh tự động bởi `scripts/holdout_run_history.py` từ git history (đọc bằng `git show`, không checkout). HEAD khi sinh: `cdc16b6` (2026-09-15T21:17:06+07:00).
 >
-> Mục đích: ghi lại đầy đủ số của cả ba lần mở holdout niêm phong để người review tự kiểm tra, thay vì chỉ có lời thừa nhận trong changelog.
+> Mục đích: ghi số của ba phiên bản kết quả holdout lịch sử truy xuất được từ Git để người review tự kiểm tra. Sổ không xác nhận tổng số lần thực thi hoặc các lần không được lưu trong Git.
 
-## 1. Ba lần chạy holdout
+## 1. Ba phiên bản kết quả holdout lịch sử
 
 | Lần | Commit | Ngày | Môi trường | thread_count | ROC-AUC | F1 @0.5 | Top 50% net R | Top 50% PF |
 |---|---|---|---|---|---|---|---|---|
@@ -44,7 +44,7 @@ Hai lần chạy trên Linux dùng đúng cùng một file holdout (`7be58aad...
 
 ## 2. Đối chiếu pairwise prediction
 
-| Cặp lần chạy | max |Δp| | mean |Δp| | Pearson r | Số dòng lệch > 1e-12 | Top 50 trùng | Jaccard |
+| Cặp lần chạy | max abs(Δp) | mean abs(Δp) | Pearson r | Số dòng lệch > 1e-12 | Top 50 trùng | Jaccard |
 |---|---|---|---|---|---|---|
 | `dc25cd3` × `5f46e41` | 0.31904 | 0.0509254 | 0.939613 | 5,028 / 5,028 | 2,275 / 2,514 | 0.8264 |
 | `dc25cd3` × `7748828` | 0.152374 | 0.0226626 | 0.988033 | 5,028 / 5,028 | 2,397 / 2,514 | 0.9111 |

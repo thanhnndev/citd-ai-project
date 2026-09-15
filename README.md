@@ -12,9 +12,10 @@ pyramid legs (four orders per `origin_bar` family), so siblings are almost
 guaranteed to share the same outcome. A naive random split puts siblings on
 both sides of train/test and inflates the score. This project compares four
 splits of increasing strictness and then evaluates the model on a **sealed
-holdout period**: no development decision used it — no feature, hyperparameter,
-train/holdout split or top-k rule changed between openings — and every opening
-(three times) is documented in
+holdout period**. Three historical result versions can be retrieved from Git;
+technical reruns and later thread-count experiments are disclosed separately.
+This does not establish the total number of executions or prove that no
+development decision was influenced by viewing the holdout. See
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 
 > Vietnamese guide: [`README_VI.md`](README_VI.md). The original handover task
@@ -111,7 +112,7 @@ that does not affect results; the measurement on this machine confirms that at
 prediction time but contradicts it at training time. Scope: one machine, one
 CatBoost build, one dataset, one seed.
 
-All three sealed-holdout openings are reconstructed from git history in
+Three historical holdout result versions are retrieved from Git in
 [`outputs/verification/holdout_run_history.json`](outputs/verification/holdout_run_history.json)
 ([Markdown](outputs/verification/holdout_run_history.md)): `dc25cd3` Windows
 0.60502 / 0.40171, top-50 −23.83 R; `5f46e41` Linux multi-thread
@@ -338,9 +339,10 @@ canonical flow.
 ## Sealed holdout workflow
 
 The workflow runs the holdout in four stages, then compares the two runs with a
-fifth check; every opening is logged in
+fifth check. The three historical result versions are recorded in
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
-Run them in order.
+The ledger is not an exhaustive execution log. Rechecks and the thread-count
+experiment are additional holdout accesses. Run the stages in order.
 
 ```bash
 # Stage 1 — regenerate full history and split out the holdout
@@ -401,8 +403,8 @@ These values are fixed by the handover spec and must not be changed
 | Verified environment | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 · plotly 7.0.0 |
 
 > `thread_count=1` is an **added technical setting**, not one of the original
-> model hyperparameters: it removes CPU thread count as one known source of
-> numerical variation. The controlled experiment committed on 2026-09-15
+> model hyperparameters. It was pinned on 2026-09-12 based on an initial
+> technical hypothesis; the controlled experiment was added on 2026-09-15. It
 > measures on this machine that two same-configuration `thread_count=1` runs are
 > bit-identical (`max|Δp| = 0`), while moving the **training** `thread_count` to
 > `2` or `-1` changes every prediction (train `max|Δp|` 0.2832 / 0.2999;
@@ -438,16 +440,19 @@ These values are fixed by the handover spec and must not be changed
   training results on this machine (train `max|Δp|` 0.2832 / 0.2999; holdout
   0.3469 / 0.3352; top-50 holdout net R −36.55 vs −12.26 vs +30.79 R for
   `tc=1` / `tc=2` / default), while repeated inference on a fitted model is
-  unchanged. **The `thread_count=1` numbers are not cherry-picked:** they are
-  *worse* than the multi-thread handed-over run (holdout top-50 −36.55 R vs
-  +30.79 R), and the frozen branch reference is kept in full. Cross-machine
+  unchanged. The retained `thread_count=1` result has lower top-50 net R
+  (−36.55 R) than the historical Linux multi-thread result (+30.79 R). This
+  supports transparency but does not prove the absence of cherry-picking or
+  replace the decision history. The pre-agreed top 50% remains fixed; the
+  holdout sweep is not used to select a new retention rate. Cross-machine
   equality is **not established**: the Windows teammate reported predictions
   within `1e-15` (not byte-identical) with no committed artifact. Same-machine
   full-chain run1-vs-run2 (Stage 3–4) is PASS with all deltas 0.0 and
   byte-identical charts. The handed-over step-4 artifacts
   (`outputs/catboost_training/`, `outputs/backtest/`) are kept byte-identical
   and were produced on the original machine without `thread_count`, so
-  re-running steps 3–4 will not reproduce those files on a different host.
+  the Linux rerun did not reproduce those original files byte for byte.
+  This observation is not a guarantee of failure on every other host.
 
 ## Documentation
 
@@ -460,6 +465,13 @@ These values are fixed by the handover spec and must not be changed
 | [`docs/handover_README.md`](docs/handover_README.md) | Original handover README |
 
 ## Changelog
+
+### 2026-09-15 — Final report for Nhi: evidence scope and requirements check
+
+- Updated the main results report and its generator: three Git-retrievable historical result versions, the 12 September hypothesis versus the 15 September controlled experiment, fixed top 50%, and the boundary-trade replay scope.
+- Added a six-item feedback checklist to the report's verification section. Removed claims that worse results prove no cherry-picking or that Git captures every holdout access.
+- Regenerated both report copies and the run-history ledger; numerical results and model settings remain unchanged. Cross-machine equality remains unestablished.
+- The main deliverable for Nhi is [the results report](docs/BAO_CAO_KET_QUA_HOLDOUT.md); the context audit is a supplementary review record.
 
 ### 2026-09-15 — Review feedback round: canonical thread-count rerun, controlled experiment, run history, full-chain verification
 
@@ -484,7 +496,7 @@ These values are fixed by the handover spec and must not be changed
   on this machine. Scope: one machine, one CatBoost build, one dataset, one
   seed.
 - **Sealed-holdout run history recovered** (`a3ff712`,
-  `outputs/verification/holdout_run_history.json` + `.md`): all three openings
+  `outputs/verification/holdout_run_history.json` + `.md`): the three historical result versions
   reconstructed from git with full 20–80% sweeps and pairwise deltas —
   `dc25cd3` Windows 0.60502/0.40171, top-50 −23.83 R; `5f46e41` Linux
   multi-thread 0.60232/0.40647, +30.79 R; `7748828` Linux `thread_count=1`

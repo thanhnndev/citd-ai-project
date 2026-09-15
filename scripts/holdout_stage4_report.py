@@ -100,7 +100,7 @@ def parse_args() -> argparse.Namespace:
         "--run-history-json",
         type=Path,
         default=DEFAULT_RUN_HISTORY_JSON,
-        help="Sổ lịch sử ba lần mở holdout (mặc định: outputs/verification/holdout_run_history.json).",
+        help="Sổ ba phiên bản kết quả holdout lịch sử (mặc định: outputs/verification/holdout_run_history.json).",
     )
     parser.add_argument(
         "--stage5-json",
@@ -740,7 +740,7 @@ def verification_section(evidence: dict, canonical_verification_path: Path) -> s
 def ledger_section(run_history: dict, stage3_dir: Path, canonical_dir: Path) -> str:
     runs = run_history["runs"]
     if len(runs) != 3:
-        raise ValueError(f"Sổ lịch sử phải có đúng ba lần mở holdout, thấy {len(runs)}")
+        raise ValueError(f"Sổ lịch sử phải có đúng ba phiên bản kết quả holdout, thấy {len(runs)}")
     rows = []
     for run in runs:
         environment = run["environment"]
@@ -769,7 +769,7 @@ def ledger_section(run_history: dict, stage3_dir: Path, canonical_dir: Path) -> 
     canonical = runs[-1]
     return (
         markdown_table(
-            ["Lần", "Commit", "Ngày", "Môi trường suy ra", "`thread_count`", "ROC-AUC", "F1 @0.5", "Top 50% net R", "Top 50% PF"],
+            ["Phiên bản", "Commit", "Ngày commit", "Môi trường suy ra", "`thread_count`", "ROC-AUC", "F1 @0.5", "Top 50% net R", "Top 50% PF"],
             rows,
         )
         + f"\nBaseline holdout giống nhau ở cả ba lần: {fmt_count(runs[0]['baseline_holdout']['trades'])} lệnh, "
@@ -778,7 +778,7 @@ def ledger_section(run_history: dict, stage3_dir: Path, canonical_dir: Path) -> 
         + f"{external['reported_by']}, ngày {external['reported_on']}, môi trường {external['reported_environment']}, "
         + f"nhánh `{external['branch']}`, lệnh `{external['command']}`.\n\n"
         + claims
-        + "\n\nDiễn giải ghi nhận: hai máy khác nhau cho kết quả trùng trong `1e-15` "
+        + "\n\nTheo tin nhắn teammate: prediction trên tập train giữa hai máy trùng trong `1e-15` "
         + "(không byte-identical); lần xác minh này không ghi lại metric nào và không có artifact "
         + "đối chứng được commit, nên chỉ là thông tin tham khảo.\n"
         + f"\nArtifact canonical của báo cáo: lần 3 — commit `{canonical['commit_short']}`, "
@@ -789,8 +789,14 @@ def ledger_section(run_history: dict, stage3_dir: Path, canonical_dir: Path) -> 
         + f"`{paths.BACKTEST_DIR.relative_to(paths.PROJECT_ROOT)}` chỉ còn là khối tham chiếu.\n"
         + "\nLý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; lần 3 chỉ thêm "
         + "`thread_count=1` như thiết lập kỹ thuật, không đổi feature, hyperparameter mô hình, tập train, "
-        + "tập holdout hay luật chọn top-k. Toàn bộ số của các lần trước được giữ trong sổ lịch sử, "
-        + "không thay thế.\n"
+        + "tập holdout hay luật chọn top-k. Các số lịch sử truy xuất được được giữ trong sổ.\n"
+        + "\nTrình tự quyết định: ngày 12/09 ghim một luồng theo nghi ngờ kỹ thuật về khác biệt số luồng giữa máy; "
+        + "ngày 15/09 mới bổ sung thí nghiệm đối chứng (mục 1.6). Kết quả thí nghiệm xác nhận ảnh hưởng "
+        + "trong môi trường hiện tại, không chứng minh giả thuyết ban đầu đã được kiểm chứng trước khi đổi cấu hình.\n"
+        + "\nGiữ top 50% đã chốt trong task bàn giao; sweep 20–80% chỉ tổng hợp từ cùng bảng điểm, "
+        + "không dùng để chọn lại tỷ lệ theo holdout. Net R của bản được giữ lại thấp hơn hai phiên bản lịch sử "
+        + "là dữ kiện hỗ trợ minh bạch, không tự chứng minh không cherry-pick hoặc thay thế lịch sử quyết định. "
+        + "Việc công khai các lần kiểm tra không khôi phục trạng thái holdout chưa từng được xem.\n"
     )
 
 
@@ -807,7 +813,7 @@ def evidence_section(report_dir: Path, stage5_path: Path, canonical_dir: Path, r
         ],
         [
             relative_link(run_history_path, report_dir),
-            "Sổ ba lần mở holdout dựng từ git history: AUC/F1, top-50, sweep, pairwise deltas, xác minh teammate và khối tham chiếu bàn giao.",
+            "Ba phiên bản kết quả holdout lịch sử truy xuất từ Git: AUC/F1, top-50, sweep, pairwise deltas, xác minh teammate và khối tham chiếu bàn giao.",
         ],
         [
             relative_link(stage5_path, report_dir),
@@ -870,9 +876,11 @@ def build_report(
 
 ## Lịch sử mở holdout và lý do chạy lại
 
-Bảng A ghi lại toàn bộ ba lần mở holdout đã thực hiện. Số liệu được dựng lại từ
-git history và giữ nguyên trong `{run_history_path.relative_to(paths.PROJECT_ROOT)}`,
-không có số cũ nào bị thay thế.
+Bảng A ghi ba phiên bản kết quả holdout lịch sử truy xuất được từ Git, lưu trong
+`{run_history_path.relative_to(paths.PROJECT_ROOT)}`. Đây không phải nhật ký đầy đủ
+của mọi lần thực thi hoặc chấm điểm: sổ dùng ba commit đã xác định, không ghi nhận
+các lần không được lưu vào Git. Ngày trong bảng là ngày commit, không phải log thời điểm chạy.
+Các lần lặp để kiểm chứng và thí nghiệm bổ sung ngày 15/09 được trình bày riêng ở mục 1.6 và Phần 4.
 
 {ledger_section(run_history, stage3_dir, canonical_dir)}
 ## Phần 1 — Số liệu
@@ -942,18 +950,31 @@ nội tuyến nên mở độc lập được.
 2. Xếp `probability` giảm dần, dùng `row_id` tăng dần để phá hòa; vũ trụ lệnh baseline giữ cố định nên lệnh bị loại không làm đổi tín hiệu sau đó.
 3. Equity ghi nhận tại `close_time`; các lệnh đóng cùng lúc được cộng thành một điểm rồi mới cập nhật đường vốn.
 4. Khối chính của Bảng 1–3 là cây canonical `thread_count=1` (`outputs/step4_thread1`); số bàn giao (không ghim `thread_count`) chỉ còn là khối tham chiếu được dán nhãn, kèm bảng chênh lệch canonical − bàn giao ở Bảng 1.
-5. Thêm `thread_count=1` như thiết lập kỹ thuật để loại số luồng CPU như một nguồn sai lệch đã biết; mục 1.6 đo ảnh hưởng thực tế của `thread_count` trên máy này và giới hạn kết luận ở một máy, một build, một dataset, một seed.
+5. Ngày 12/09 thêm `thread_count=1` để cố định số luồng theo nghi ngờ kỹ thuật ban đầu; thí nghiệm đối chứng được bổ sung ngày 15/09; mục 1.6 đo ảnh hưởng thực tế của `thread_count` trên máy này và giới hạn kết luận ở một máy, một build, một dataset, một seed.
 6. Dùng đường bậc thang ngang-rồi-dọc (`hv` cho HTML, `steps-post` cho PNG) để equity giữ nguyên giữa hai mốc đóng lệnh và chỉ nhảy tại thời điểm R được ghi nhận.
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên {train['train_rows_after_filtering']:,} dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
 10. Biểu đồ 1 dùng `backtest_scored_universe.csv` của cây canonical và chỉ nhận các dòng `chunk` 2–5; biểu đồ 2 bắt đầu lại từ R = 0 tại holdout, dùng trực tiếp vũ trụ baseline và danh sách Top 50% đã lưu từ Giai đoạn 3.
-11. Bốn lệnh biên giữa dataset tái sinh và dataset đóng băng không thuộc train cũng không thuộc holdout; chúng không được dùng để train hay backtest, chỉ được ghi nhận trong mục 1.7.
+11. Bốn lệnh biên không thuộc tập train và không được đưa vào chỉ số đánh giá holdout. Replay toàn lịch sử vẫn xử lý giai đoạn này để duy trì trạng thái chiến lược; các lệnh được liệt kê ở mục 1.7.
 12. Hai thư mục bàn giao `outputs/catboost_training` và `outputs/backtest` chỉ được đọc, không bị ghi đè; mọi bảng canonical, sweep và biểu đồ đều lấy từ cây `outputs/step4_thread1`.
 
 ## Phần 4 — Kiểm chứng
 
 {verification_section(evidence, canonical_verification_path)}
+### Đối chiếu yêu cầu bàn giao và feedback
+
+| Yêu cầu của nhóm trưởng | Nội dung đã cung cấp | Phạm vi / giới hạn |
+|---|---|---|
+| 1. Số bốn cách chia nhất quán với holdout; giải thích số luồng | Bảng 1–3 dùng canonical `thread_count=1`, khối bàn giao riêng; thí nghiệm mục 1.6 | Ghim luồng ngày 12/09 theo nghi ngờ; đối chứng bổ sung ngày 15/09, chỉ kết luận trong môi trường đã đo |
+| 2. Công khai kết quả holdout lịch sử và lần kiểm tra của teammate | Bảng A, sổ Git, ghi nhận prediction train Windows trong `1e-15` | Ba phiên bản truy xuất được, không phải tổng số lần thực thi; không có artifact Windows để kiểm lại; không tự chứng minh không cherry-pick |
+| 3. Sweep 20–80% của bốn cách chia và holdout | Bảng 3 có 28 dòng, Bảng 4 có 7 dòng | Giữ top 50% đã chốt, không chọn lại từ sweep holdout |
+| 4. Hai biểu đồ nhúng và HTML | Phần 2 có hai PNG và hai HTML | Cùng dữ liệu đường vốn, trục `close_time`, R cộng dồn từ 0 |
+| 5. Kiểm lặp đủ chuỗi, môi trường | Phần 4: Stage 2 và Stage 3–4; OS, Python và thư viện ở mục 1.1 | PASS trong phạm vi hai run trên cùng máy; không bảo đảm liên máy hoặc binary model giống byte |
+| 6. Tách khối bảng, chữ số, thời gian và bốn lệnh biên | Bảng 2 tách khối; mục 1.7 ghi thời gian, quy ước và 25,008 + 4 + 5,028 = 30,040 | Bốn lệnh biên không thuộc train hoặc chỉ số holdout; replay vẫn đi qua giai đoạn này |
+
+Yêu cầu chạy holdout một lần không được đáp ứng theo nghĩa chỉ có một lần thực thi: đã có chạy lại kỹ thuật và thí nghiệm bổ sung, được công khai ở trên. Các bảng và bằng chứng hiện tại không thay thế việc nhóm trưởng đánh giá giới hạn phương pháp này. Báo cáo giữ số liệu và quyết định triển khai, không chọn cách chia tốt nhất hay viết biện luận thay báo cáo chính.
+
 ## Phần 5 — Bảng file sinh ra
 
 {markdown_table(["File", "Giai đoạn", "Chứa gì", "Quy mô", "Kích thước"], output_inventory(report_dir))}
@@ -1061,7 +1082,7 @@ def main() -> None:
 6. Đường vốn dùng dạng bậc thang ngang-rồi-dọc (`hv`) cho HTML; PNG xuất bằng matplotlib từ đúng dữ liệu đó với `drawstyle="steps-post"`, `dpi=110`, figsize cố định và không có timestamp trong phần chữ nên byte ổn định giữa các lần chạy.
 7. Bảng 1–3 dùng khối canonical `thread_count=1`; số bàn giao không ghim `thread_count` được giữ nguyên trong khối tham chiếu dán nhãn và không trộn vào khối chính.
 8. Bảng 3 lấy trực tiếp từ `{canonical}/backtest/backtest_retention_sweep.csv`; baseline chỉ nêu một lần phía trên bảng.
-9. Bốn lệnh biên giữa dataset tái sinh và dataset đóng băng được liệt kê trong mục 1.7; chúng không thuộc train và không thuộc holdout.
+9. Bốn lệnh biên được liệt kê trong mục 1.7: không thuộc tập train và không được đưa vào chỉ số đánh giá holdout. Replay toàn lịch sử vẫn xử lý giai đoạn này để duy trì trạng thái chiến lược.
 10. Purge và embargo đều trả về {purge_rows} dòng, nên train giữ nguyên {train_rows:,} dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 11. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 12. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.

@@ -6,11 +6,13 @@
 
 ## Lịch sử mở holdout và lý do chạy lại
 
-Bảng A ghi lại toàn bộ ba lần mở holdout đã thực hiện. Số liệu được dựng lại từ
-git history và giữ nguyên trong `outputs/verification/holdout_run_history.json`,
-không có số cũ nào bị thay thế.
+Bảng A ghi ba phiên bản kết quả holdout lịch sử truy xuất được từ Git, lưu trong
+`outputs/verification/holdout_run_history.json`. Đây không phải nhật ký đầy đủ
+của mọi lần thực thi hoặc chấm điểm: sổ dùng ba commit đã xác định, không ghi nhận
+các lần không được lưu vào Git. Ngày trong bảng là ngày commit, không phải log thời điểm chạy.
+Các lần lặp để kiểm chứng và thí nghiệm bổ sung ngày 15/09 được trình bày riêng ở mục 1.6 và Phần 4.
 
-| Lần | Commit | Ngày | Môi trường suy ra | `thread_count` | ROC-AUC | F1 @0.5 | Top 50% net R | Top 50% PF |
+| Phiên bản | Commit | Ngày commit | Môi trường suy ra | `thread_count` | ROC-AUC | F1 @0.5 | Top 50% net R | Top 50% PF |
 |---|---|---|---|---|---|---|---|---|
 | Lần 1 — Windows gốc (không ghim thread_count) | `dc25cd3` | 2026-09-12 | Windows (suy từ đường dẫn) | không ghim | 0.6050 | 0.4017 | -23.83 | 0.9815 |
 | Lần 2 — Linux đa luồng (không ghim thread_count) | `5f46e41` | 2026-09-12 | Linux (suy từ đường dẫn) | không ghim | 0.6023 | 0.4065 | +30.79 | 1.0239 |
@@ -25,11 +27,15 @@ Xác minh độc lập của teammate (`external_verification` trong sổ lịch
 - Không byte-identical giữa hai máy khác nhau.
 - Không ghi lại số metric nào kèm theo.
 
-Diễn giải ghi nhận: hai máy khác nhau cho kết quả trùng trong `1e-15` (không byte-identical); lần xác minh này không ghi lại metric nào và không có artifact đối chứng được commit, nên chỉ là thông tin tham khảo.
+Theo tin nhắn teammate: prediction trên tập train giữa hai máy trùng trong `1e-15` (không byte-identical); lần xác minh này không ghi lại metric nào và không có artifact đối chứng được commit, nên chỉ là thông tin tham khảo.
 
 Artifact canonical của báo cáo: lần 3 — commit `7748828`, `thread_count=1`. Các bảng holdout lấy từ `outputs/holdout/repro/run2/stage3` (run 2) và bảng bốn cách chia canonical lấy từ cây `outputs/step4_thread1`; hai thư mục bàn giao đóng băng `outputs/catboost_training` và `outputs/backtest` chỉ còn là khối tham chiếu.
 
-Lý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; lần 3 chỉ thêm `thread_count=1` như thiết lập kỹ thuật, không đổi feature, hyperparameter mô hình, tập train, tập holdout hay luật chọn top-k. Toàn bộ số của các lần trước được giữ trong sổ lịch sử, không thay thế.
+Lý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; lần 3 chỉ thêm `thread_count=1` như thiết lập kỹ thuật, không đổi feature, hyperparameter mô hình, tập train, tập holdout hay luật chọn top-k. Các số lịch sử truy xuất được được giữ trong sổ.
+
+Trình tự quyết định: ngày 12/09 ghim một luồng theo nghi ngờ kỹ thuật về khác biệt số luồng giữa máy; ngày 15/09 mới bổ sung thí nghiệm đối chứng (mục 1.6). Kết quả thí nghiệm xác nhận ảnh hưởng trong môi trường hiện tại, không chứng minh giả thuyết ban đầu đã được kiểm chứng trước khi đổi cấu hình.
+
+Giữ top 50% đã chốt trong task bàn giao; sweep 20–80% chỉ tổng hợp từ cùng bảng điểm, không dùng để chọn lại tỷ lệ theo holdout. Net R của bản được giữ lại thấp hơn hai phiên bản lịch sử là dữ kiện hỗ trợ minh bạch, không tự chứng minh không cherry-pick hoặc thay thế lịch sử quyết định. Việc công khai các lần kiểm tra không khôi phục trạng thái holdout chưa từng được xem.
 
 ## Phần 1 — Số liệu
 
@@ -219,13 +225,13 @@ nội tuyến nên mở độc lập được.
 2. Xếp `probability` giảm dần, dùng `row_id` tăng dần để phá hòa; vũ trụ lệnh baseline giữ cố định nên lệnh bị loại không làm đổi tín hiệu sau đó.
 3. Equity ghi nhận tại `close_time`; các lệnh đóng cùng lúc được cộng thành một điểm rồi mới cập nhật đường vốn.
 4. Khối chính của Bảng 1–3 là cây canonical `thread_count=1` (`outputs/step4_thread1`); số bàn giao (không ghim `thread_count`) chỉ còn là khối tham chiếu được dán nhãn, kèm bảng chênh lệch canonical − bàn giao ở Bảng 1.
-5. Thêm `thread_count=1` như thiết lập kỹ thuật để loại số luồng CPU như một nguồn sai lệch đã biết; mục 1.6 đo ảnh hưởng thực tế của `thread_count` trên máy này và giới hạn kết luận ở một máy, một build, một dataset, một seed.
+5. Ngày 12/09 thêm `thread_count=1` để cố định số luồng theo nghi ngờ kỹ thuật ban đầu; thí nghiệm đối chứng được bổ sung ngày 15/09; mục 1.6 đo ảnh hưởng thực tế của `thread_count` trên máy này và giới hạn kết luận ở một máy, một build, một dataset, một seed.
 6. Dùng đường bậc thang ngang-rồi-dọc (`hv` cho HTML, `steps-post` cho PNG) để equity giữ nguyên giữa hai mốc đóng lệnh và chỉ nhảy tại thời điểm R được ghi nhận.
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
 9. Chấm điểm holdout lấy danh sách 23 `FEATURES` trực tiếp từ `build_features.py`; không tự liệt kê cột.
 10. Biểu đồ 1 dùng `backtest_scored_universe.csv` của cây canonical và chỉ nhận các dòng `chunk` 2–5; biểu đồ 2 bắt đầu lại từ R = 0 tại holdout, dùng trực tiếp vũ trụ baseline và danh sách Top 50% đã lưu từ Giai đoạn 3.
-11. Bốn lệnh biên giữa dataset tái sinh và dataset đóng băng không thuộc train cũng không thuộc holdout; chúng không được dùng để train hay backtest, chỉ được ghi nhận trong mục 1.7.
+11. Bốn lệnh biên không thuộc tập train và không được đưa vào chỉ số đánh giá holdout. Replay toàn lịch sử vẫn xử lý giai đoạn này để duy trì trạng thái chiến lược; các lệnh được liệt kê ở mục 1.7.
 12. Hai thư mục bàn giao `outputs/catboost_training` và `outputs/backtest` chỉ được đọc, không bị ghi đè; mọi bảng canonical, sweep và biểu đồ đều lấy từ cây `outputs/step4_thread1`.
 
 ## Phần 4 — Kiểm chứng
@@ -244,6 +250,19 @@ nội tuyến nên mở độc lập được.
 | Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo prediction trùng trong `1e-15` (không byte-identical, không ghi metric hay artifact đối chứng); không thể tái tạo từ git. Thí nghiệm `thread_count` có kiểm soát (mục 1.6) cho thấy `thread_count` làm thay đổi prediction khi train trên máy này, nên không thể quy toàn bộ sai lệch liên máy cho `thread_count`, cũng không loại trừ nó. |
 
 Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Python 3.12.14; CatBoost 1.2.10; scikit-learn 1.9.0; pandas 3.0.5; NumPy 2.5.2; Plotly 7.0.0; Matplotlib 3.11.2.
+
+### Đối chiếu yêu cầu bàn giao và feedback
+
+| Yêu cầu của nhóm trưởng | Nội dung đã cung cấp | Phạm vi / giới hạn |
+|---|---|---|
+| 1. Số bốn cách chia nhất quán với holdout; giải thích số luồng | Bảng 1–3 dùng canonical `thread_count=1`, khối bàn giao riêng; thí nghiệm mục 1.6 | Ghim luồng ngày 12/09 theo nghi ngờ; đối chứng bổ sung ngày 15/09, chỉ kết luận trong môi trường đã đo |
+| 2. Công khai kết quả holdout lịch sử và lần kiểm tra của teammate | Bảng A, sổ Git, ghi nhận prediction train Windows trong `1e-15` | Ba phiên bản truy xuất được, không phải tổng số lần thực thi; không có artifact Windows để kiểm lại; không tự chứng minh không cherry-pick |
+| 3. Sweep 20–80% của bốn cách chia và holdout | Bảng 3 có 28 dòng, Bảng 4 có 7 dòng | Giữ top 50% đã chốt, không chọn lại từ sweep holdout |
+| 4. Hai biểu đồ nhúng và HTML | Phần 2 có hai PNG và hai HTML | Cùng dữ liệu đường vốn, trục `close_time`, R cộng dồn từ 0 |
+| 5. Kiểm lặp đủ chuỗi, môi trường | Phần 4: Stage 2 và Stage 3–4; OS, Python và thư viện ở mục 1.1 | PASS trong phạm vi hai run trên cùng máy; không bảo đảm liên máy hoặc binary model giống byte |
+| 6. Tách khối bảng, chữ số, thời gian và bốn lệnh biên | Bảng 2 tách khối; mục 1.7 ghi thời gian, quy ước và 25,008 + 4 + 5,028 = 30,040 | Bốn lệnh biên không thuộc train hoặc chỉ số holdout; replay vẫn đi qua giai đoạn này |
+
+Yêu cầu chạy holdout một lần không được đáp ứng theo nghĩa chỉ có một lần thực thi: đã có chạy lại kỹ thuật và thí nghiệm bổ sung, được công khai ở trên. Các bảng và bằng chứng hiện tại không thay thế việc nhóm trưởng đánh giá giới hạn phương pháp này. Báo cáo giữ số liệu và quyết định triển khai, không chọn cách chia tốt nhất hay viết biện luận thay báo cáo chính.
 
 ## Phần 5 — Bảng file sinh ra
 
@@ -275,7 +294,7 @@ Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Py
 | [`equity-curve-holdout-top50.html`](../../stage4/equity-curve-holdout-top50.html) | 4 | Biểu đồ bậc thang baseline và top 50% trên holdout | artifact | 4,434,195 B |
 | [`equity-curve-holdout-top50.png`](../../stage4/equity-curve-holdout-top50.png) | 4 | Ảnh PNG biểu đồ bậc thang baseline và top 50% trên holdout | artifact | 81,443 B |
 | [`holdout_sweep_20_80.csv`](../../stage4/holdout_sweep_20_80.csv) | 4 | Bảng tài chính holdout theo bảy mức giữ lệnh | 7 dòng | 366 B |
-| [`implementation_decisions.md`](../../stage4/implementation_decisions.md) | 4 | Các quyết định triển khai Stage 4 | artifact | 2,566 B |
+| [`implementation_decisions.md`](../../stage4/implementation_decisions.md) | 4 | Các quyết định triển khai Stage 4 | artifact | 2,654 B |
 | [`stage4_manifest.json`](../../stage4/stage4_manifest.json) | 4 | Danh sách output, số điểm trên từng đường vốn và thiết lập xuất PNG | artifact | 856 B |
 | [`stage4_tables.md`](../../stage4/stage4_tables.md) | 4 | Bốn bảng kết quả ở định dạng Markdown | artifact | 5,838 B |
 | [`table1_classification_metrics.csv`](../../stage4/table1_classification_metrics.csv) | 4 | Bảng chỉ số phân loại: khối canonical, khối bàn giao và chênh lệch | 13 dòng | 750 B |
@@ -288,7 +307,7 @@ Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Py
 |---|---|
 | [`outputs/step4_thread1/`](../../../step4_thread1) | Cây canonical bốn split `thread_count=1`: `comparison_report.json`, `verification/reproducibility.json`, OOF, hai bảng backtest và `metrics_chunk2_5.csv` dùng cho Bảng 1–3. |
 | [`outputs/thread_count_sensitivity/thread_count_sensitivity.json`](../../../thread_count_sensitivity/thread_count_sensitivity.json) | Thí nghiệm `thread_count`: bốn cấu hình, deltas prediction, top-50 và `conclusion_facts` dùng cho mục 1.6. |
-| [`outputs/verification/holdout_run_history.json`](../../../verification/holdout_run_history.json) | Sổ ba lần mở holdout dựng từ git history: AUC/F1, top-50, sweep, pairwise deltas, xác minh teammate và khối tham chiếu bàn giao. |
+| [`outputs/verification/holdout_run_history.json`](../../../verification/holdout_run_history.json) | Ba phiên bản kết quả holdout lịch sử truy xuất từ Git: AUC/F1, top-50, sweep, pairwise deltas, xác minh teammate và khối tham chiếu bàn giao. |
 | [`outputs/holdout/repro/stage5_repro_report.json`](../stage5_repro_report.json) | Kết quả đối chiếu run1 vs run2 toàn chuỗi Stage 3–4: status, deltas số học và hash bảng/biểu đồ dùng cho Phần 4. |
 | [`outputs/step4_thread1/verification/reproducibility.json`](../../../step4_thread1/verification/reproducibility.json) | Manifest `verify_pipeline` của cây canonical: hai lượt train/backtest độc lập, hash output và phiên bản môi trường. |
 | [`outputs/holdout/repro/run2/`](.) | Báo cáo và artifact run 2 độc lập (`stage3`, `stage4`, `BAO_CAO_holdout_run2.md`) để đối chiếu run1. |

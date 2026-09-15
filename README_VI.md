@@ -10,10 +10,11 @@ Vấn đề trung tâm là **rò rỉ nhãn (label leakage)**. Nhãn triple-barr
 Chiến lược còn cố ý mở 1 lệnh gốc + 3 lệnh nhồi (4 lệnh cùng một gia đình
 `origin_bar`), nên anh em gần như chung số phận. Chia ngẫu nhiên sẽ tách anh em
 sang hai phía train/test và thổi phồng điểm. Đồ án so sánh 4 cách chia với mức
-độ chặt tăng dần, rồi đánh giá trên **giai đoạn holdout niêm phong**: không
-quyết định phát triển nào dùng tới holdout — không feature, hyperparameter,
-cách chia train/holdout hay luật top-k nào thay đổi giữa các lần mở — và cả ba
-lần mở đều được ghi trong
+độ chặt tăng dần, rồi đánh giá trên **giai đoạn holdout niêm phong**. Ba phiên
+bản kết quả lịch sử truy xuất được từ Git; các lần kiểm chứng kỹ thuật và thí
+nghiệm số luồng sau đó được công khai riêng. Sổ không xác nhận tổng số lần
+thực thi hoặc chứng minh không quyết định nào chịu ảnh hưởng từ việc xem
+holdout. Xem
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 
 > Bản tiếng Anh: [`README.md`](README.md). Đề bài bàn giao gốc nằm trong
@@ -108,7 +109,7 @@ tốc độ không ảnh hưởng kết quả; phép đo trên máy này xác nh
 nhưng không xác nhận ở bước train. Phạm vi: một máy, một build CatBoost, một
 dataset, một seed.
 
-Cả ba lần mở holdout niêm phong được dựng lại từ git history trong
+Ba phiên bản kết quả holdout lịch sử truy xuất được từ Git nằm trong
 [`outputs/verification/holdout_run_history.json`](outputs/verification/holdout_run_history.json)
 ([Markdown](outputs/verification/holdout_run_history.md)): `dc25cd3` Windows
 0.60502 / 0.40171, top-50 −23.83 R; `5f46e41` Linux đa luồng
@@ -333,9 +334,10 @@ sẽ nhắm vào thư mục bàn giao và ghi đè
 ## Quy trình holdout niêm phong
 
 Quy trình chạy holdout qua 4 giai đoạn, rồi đối chiếu hai lượt chạy ở phép
-kiểm thứ 5; mọi lần mở đều được ghi trong
+kiểm thứ 5. Ba phiên bản kết quả lịch sử được ghi trong
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
-Chạy tuần tự.
+Sổ không phải nhật ký đầy đủ mọi lần thực thi. Các lần kiểm chứng và thí
+nghiệm số luồng là những lần truy cập holdout bổ sung. Chạy các giai đoạn tuần tự.
 
 ```bash
 # Giai đoạn 1 — tái sinh toàn bộ lịch sử và tách holdout
@@ -395,8 +397,8 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | Môi trường đã kiểm | Python 3.12.14 · catboost 1.2.10 · scikit-learn 1.9.0 · pandas 3.0.5 · numpy 2.5.2 · plotly 7.0.0 |
 
 > `thread_count=1` là **tham số kỹ thuật thêm vào**, không thuộc danh sách
-> hyperparameter mô hình gốc: nó loại bỏ số luồng CPU như một nguồn sai lệch đã
-> biết. Thí nghiệm có kiểm soát commit ngày 2026-09-15 đo trên máy này: hai lần
+> hyperparameter mô hình gốc. Ngày 12/09 ghim một luồng theo nghi ngờ kỹ thuật
+> ban đầu; ngày 15/09 mới bổ sung thí nghiệm có kiểm soát. Phép đo trên máy này: hai lần
 > chạy cùng cấu hình `thread_count=1` giống hệt từng bit (`max|Δp| = 0`), còn
 > đổi `thread_count` lúc **train** sang `2` hoặc `-1` làm toàn bộ prediction
 > thay đổi (train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352) và đổi
@@ -427,17 +429,18 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   soát đã commit cho thấy `thread_count` **có** làm thay đổi kết quả train trên
   máy này (train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352; net R top
   50% holdout −36.55 so với −12.26 và +30.79 R cho `tc=1` / `tc=2` / mặc
-  định), trong khi chấm lại cùng model đã fit thì không đổi. **Số của
-  `thread_count=1` không được chọn có lợi (không cherry-pick):** chúng *xấu
-  hơn* bản đa luồng bàn giao (top 50% holdout −36.55 R so với +30.79 R), và
-  toàn bộ khối tham chiếu bàn giao vẫn được giữ. Tương đương liên máy **chưa
+  định), trong khi chấm lại cùng model đã fit thì không đổi. Bản
+  `thread_count=1` được giữ có net R top 50% thấp hơn bản Linux đa luồng
+  lịch sử (−36.55 R so với +30.79 R). Đây là dữ kiện hỗ trợ minh bạch, không
+  tự chứng minh không cherry-pick hoặc thay thế lịch sử quyết định. Giữ top
+  50% đã chốt; không chọn lại tỷ lệ theo sweep holdout. Tương đương liên máy **chưa
   được chứng minh**: teammate Windows báo prediction trùng trong `1e-15`
   (không byte-identical) và không có artifact đối chứng. Chuỗi đầy đủ run1-vs-
   run2 trên cùng máy (Stage 3–4) PASS, mọi delta 0.0 và biểu đồ giống hệt từng
   byte. Các artifact bước 4 bàn giao (`outputs/catboost_training/`,
   `outputs/backtest/`) được giữ nguyên từng byte và sinh trên máy gốc khi chưa
-  có `thread_count`, nên chạy lại bước 3–4 trên máy khác sẽ không tái tạo đúng
-  các file đó.
+  có `thread_count`; bản chạy lại trên Linux không tái tạo các file gốc từng
+  byte. Quan sát này không bảo đảm rằng mọi máy khác đều sẽ không tái lập được.
 
 ## Tài liệu
 
@@ -450,6 +453,13 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 | [`docs/handover_README.md`](docs/handover_README.md) | README bàn giao gốc |
 
 ## Changelog
+
+### 2026-09-15 — Hoàn thiện báo cáo cho Nhi và đối chiếu yêu cầu
+
+- Sửa báo cáo kết quả và script sinh: ba phiên bản lịch sử truy xuất từ Git, nghi ngờ ngày 12/09 và thí nghiệm ngày 15/09, giữ top 50%, phạm vi replay bốn lệnh biên.
+- Thêm bảng đối chiếu sáu feedback trong phần kiểm chứng. Bỏ khẳng định kết quả xấu hơn chứng minh không cherry-pick hoặc Git ghi đủ mọi lần truy cập holdout.
+- Sinh lại hai bản report và sổ lịch sử; số liệu và cấu hình model giữ nguyên. Chưa chứng minh tái lập liên máy.
+- Tài liệu chính gửi Nhi là [báo cáo kết quả](docs/BAO_CAO_KET_QUA_HOLDOUT.md); audit context chỉ là hồ sơ kiểm tra bổ sung.
 
 ### 2026-09-15 — Vòng feedback review: chạy lại canonical thread_count, thí nghiệm có kiểm soát, sổ lịch sử holdout, kiểm chứng toàn chuỗi
 
@@ -473,7 +483,7 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   phép đo trên máy này xác nhận ở bước prediction nhưng mâu thuẫn ở bước train.
   Phạm vi: một máy, một build CatBoost, một dataset, một seed.
 - **Dựng lại sổ lịch sử mở holdout** (`a3ff712`,
-  `outputs/verification/holdout_run_history.json` + `.md`): cả ba lần mở được
+  `outputs/verification/holdout_run_history.json` + `.md`): ba phiên bản kết quả lịch sử được
   dựng lại từ git kèm sweep 20–80% đầy đủ và delta pairwise — `dc25cd3`
   Windows 0.60502/0.40171, top-50 −23.83 R; `5f46e41` Linux đa luồng
   0.60232/0.40647, +30.79 R; `7748828` Linux `thread_count=1`
