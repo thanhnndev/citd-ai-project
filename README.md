@@ -12,7 +12,10 @@ pyramid legs (four orders per `origin_bar` family), so siblings are almost
 guaranteed to share the same outcome. A naive random split puts siblings on
 both sides of train/test and inflates the score. This project compares four
 splits of increasing strictness and then evaluates the model on a **sealed
-holdout period** that nobody touched during development.
+holdout period**: no development decision used it — no feature, hyperparameter,
+train/holdout split or top-k rule changed between openings — and every opening
+(three times) is documented in
+[`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 
 > Vietnamese guide: [`README_VI.md`](README_VI.md). The original handover task
 > specifications are in [`docs/`](docs/) (Vietnamese).
@@ -334,7 +337,9 @@ canonical flow.
 
 ## Sealed holdout workflow
 
-The holdout is opened once, in four stages, then compared by a fifth check.
+The workflow runs the holdout in four stages, then compares the two runs with a
+fifth check; every opening is logged in
+[`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 Run them in order.
 
 ```bash
@@ -510,6 +515,15 @@ These values are fixed by the handover spec and must not be changed
   command above was re-run **PASS** (two trainings + two backtests, canonical
   manifest refreshed); `holdout_stage5_repro_check.py` re-run **PASS**; the
   test suite is **13 passed**.
+- **Best-practice fixes from the source audit** (`docs/CODE_BEST_PRACTICE_AUDIT.md`):
+  `allow_writing_files=False` now lives in the single-source `MODEL_PARAMS` used
+  by Stage 2 and the thread-count experiment (no `catboost_info/` is created);
+  `matplotlib==3.11.2` is declared/pinned and its version recorded in the
+  Stage 2/Stage 5 evidence; Stage 4 PNGs use `metadata={"Software": None}` so
+  their bytes no longer depend on the matplotlib version, and Plotly uses the
+  documented `include_plotlyjs=True`. All evidence (Stage 2–5 and the canonical
+  `verify_pipeline` manifest) was regenerated with unchanged numbers and
+  byte-identical predictions; the audit doc now has a Resolution section.
 
 ### 2026-09-13 — Finalize holdout handoff and evidence scope
 
@@ -559,7 +573,11 @@ These values are fixed by the handover spec and must not be changed
   frozen branch values became the labelled reference block).
 - **Fixed** chart 1 (`equity-curve-chunk2-5-top50.html`): it now builds from the
   restored handed-over `backtest_scored_universe.csv`, so its 4 branch endpoints
-  match Table 2 exactly (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R).
+  match Table 2 exactly (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R)
+  (superseded on 2026-09-15: chart 1 is rebuilt from the canonical
+  `thread_count=1` scored universe
+  `outputs/step4_thread1/backtest/backtest_scored_universe.csv`, endpoints
+  +6,937.53 / +4,752.04 / +2,148.31 / +2,119.48 R).
 - **Corrected** the Stage-4 report's file table (real script names and sizes) and
   synced `outputs/holdout/stage4/implementation_decisions.md` with the report.
 - **Documented** the `thread_count=1` deviation from the frozen hyperparameter

@@ -45,6 +45,7 @@ version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "catboost" },
+    { name = "matplotlib" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
@@ -59,6 +60,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "catboost", specifier = "==1.2.10" },
+    { name = "matplotlib", specifier = "==3.11.2" },
     { name = "numpy", specifier = "==2.5.2" },
     { name = "pandas", specifier = "==3.0.5" },
     { name = "plotly", specifier = "==7.0.0" },

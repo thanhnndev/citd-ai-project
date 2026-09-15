@@ -40,7 +40,7 @@ Lý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; 
 | Tập train trước/sau purge + embargo | 25,008 / 25,008 dòng |
 | Tập holdout | 5,028 dòng; không bỏ dòng |
 | Feature đầu vào | 23 `FEATURES`; không đưa `META` vào `X` |
-| Hyperparameter và thiết lập kỹ thuật | `iterations=1000` · `learning_rate=0.05` · `depth=6` · `l2_leaf_reg=3.0` · `auto_class_weights=Balanced` · `eval_metric=AUC` · `random_seed=42` · `thread_count=1` |
+| Hyperparameter và thiết lập kỹ thuật | `iterations=1000` · `learning_rate=0.05` · `depth=6` · `l2_leaf_reg=3.0` · `auto_class_weights=Balanced` · `eval_metric=AUC` · `random_seed=42` · `thread_count=1` · `allow_writing_files=False` |
 
 Môi trường sinh artifact (từ `train_run1_report.json`):
 
@@ -53,6 +53,7 @@ Môi trường sinh artifact (từ `train_run1_report.json`):
 | pandas | `3.0.5` |
 | NumPy | `2.5.2` |
 | Plotly | `7.0.0` |
+| Matplotlib | `3.11.2` |
 
 ### 1.2. Bảng 1 — Chỉ số phân loại
 
@@ -172,7 +173,7 @@ Baseline (không lọc, khúc 2–5): 20,007 lệnh, +3,358.25 R, MaxDD 236.13 R
 
 Thí nghiệm có kiểm soát: cùng dữ liệu, feature, hyperparameter và `random_seed=42`, chỉ đổi `thread_count` (nguồn: `outputs/thread_count_sensitivity/thread_count_sensitivity.json`).
 
-| Cấu hình | `thread_count` | Train max|Δp| | Holdout max|Δp| | Holdout Pearson r | Holdout ROC-AUC | Holdout F1 | Top 50% net R | Top 50% trùng |
+| Cấu hình | `thread_count` | Train max\|Δp\| | Holdout max\|Δp\| | Holdout Pearson r | Holdout ROC-AUC | Holdout F1 | Top 50% net R | Top 50% trùng |
 |---|---|---|---|---|---|---|---|---|
 | tc1_a | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
 | tc1_b (lặp cùng cấu hình) | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
@@ -237,12 +238,12 @@ nội tuyến nên mở độc lập được.
 | Holdout không bị sửa khi train/chấm điểm | **PASS** — SHA-256 trước/sau giữ nguyên |
 | Replay baseline so với tradelist bàn giao | **PASS** — 5,028/5,028 lệnh; trường lệch: không có |
 | Lặp train trên cùng máy (Stage 2) | **PASS** — 25,008 predictions giống hệt; max abs diff = 0.0; `train_run1_report.json`/`train_run2_report.json` đã ghi `platform` (Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44) và `plotly` (7.0.0) |
-| Tái lập run1 vs run2 (Stage 3–4: chấm điểm holdout, backtest, bảng, biểu đồ) | **PASS** — max |Δprobability| = 0.0; ΔROC-AUC = 0.0; ΔF1 = 0.0; max Δmetric backtest = 0.0; bảng số giống hệt nhau; biểu đồ byte-identical: `equity-curve-chunk2-5-top50.html`, `equity-curve-chunk2-5-top50.png`, `equity-curve-holdout-top50.html`, `equity-curve-holdout-top50.png` |
+| Tái lập run1 vs run2 (Stage 3–4: chấm điểm holdout, backtest, bảng, biểu đồ) | **PASS** — max \|Δprobability\| = 0.0; ΔROC-AUC = 0.0; ΔF1 = 0.0; max Δmetric backtest = 0.0; bảng số giống hệt nhau; biểu đồ byte-identical: `equity-curve-chunk2-5-top50.html`, `equity-curve-chunk2-5-top50.png`, `equity-curve-holdout-top50.html`, `equity-curve-holdout-top50.png` |
 | `verify_pipeline` trên cây canonical `thread_count=1` | **PASS** — manifest `outputs/step4_thread1/verification/reproducibility.json`; phạm vi: `outputs/step4_thread1/catboost_training` + `outputs/step4_thread1/backtest`; hai thư mục bàn giao đóng băng không bị ghi đè và không tái lập byte trên Linux |
-| File model `.cbm` | **GHI NHẬN** — SHA-256 hai file khác nhau (`09ac7b617fb4…` vs `3b6db9834ad7…`); binary model không phải tiêu chí PASS |
+| File model `.cbm` | **GHI NHẬN** — SHA-256 hai file khác nhau (`90a6c1797a27…` vs `00dc6f07ef47…`); binary model không phải tiêu chí PASS |
 | Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo prediction trùng trong `1e-15` (không byte-identical, không ghi metric hay artifact đối chứng); không thể tái tạo từ git. Thí nghiệm `thread_count` có kiểm soát (mục 1.6) cho thấy `thread_count` làm thay đổi prediction khi train trên máy này, nên không thể quy toàn bộ sai lệch liên máy cho `thread_count`, cũng không loại trừ nó. |
 
-Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Python 3.12.14; CatBoost 1.2.10; scikit-learn 1.9.0; pandas 3.0.5; NumPy 2.5.2; Plotly 7.0.0.
+Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Python 3.12.14; CatBoost 1.2.10; scikit-learn 1.9.0; pandas 3.0.5; NumPy 2.5.2; Plotly 7.0.0; Matplotlib 3.11.2.
 
 ## Phần 5 — Bảng file sinh ra
 
@@ -251,13 +252,13 @@ Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Py
 | [`dataset_catboost_full_regenerated.csv`](../outputs/holdout/stage1/dataset_catboost_full_regenerated.csv) | 1 | Dataset tái sinh trên toàn bộ lịch sử để kiểm tra và tách holdout | 30,040 dòng | 9,800,880 B |
 | [`dataset_catboost_holdout.csv`](../outputs/holdout/stage1/dataset_catboost_holdout.csv) | 1 | Dataset holdout từ mốc 2025-02-08 15:30:00 | 5,028 dòng | 1,648,262 B |
 | [`stage1_validation_report.json`](../outputs/holdout/stage1/stage1_validation_report.json) | 1 | Số liệu kiểm khóa cũ và đối chiếu 23 feature | artifact | 888 B |
-| [`catboost_final_holdout_run1.cbm`](../outputs/holdout/stage2/catboost_final_holdout_run1.cbm) | 2 | Model CatBoost cuối dùng để chấm holdout | artifact | 1,129,392 B |
-| [`catboost_final_holdout_run2.cbm`](../outputs/holdout/stage2/catboost_final_holdout_run2.cbm) | 2 | Model train độc lập lần hai để kiểm lặp | artifact | 1,129,392 B |
+| [`catboost_final_holdout_run1.cbm`](../outputs/holdout/stage2/catboost_final_holdout_run1.cbm) | 2 | Model CatBoost cuối dùng để chấm holdout | artifact | 1,129,416 B |
+| [`catboost_final_holdout_run2.cbm`](../outputs/holdout/stage2/catboost_final_holdout_run2.cbm) | 2 | Model train độc lập lần hai để kiểm lặp | artifact | 1,129,416 B |
 | [`stage2_reproducibility_report.json`](../outputs/holdout/stage2/stage2_reproducibility_report.json) | 2 | So sánh hai lượt train trên cùng máy | artifact | 722 B |
 | [`train_predictions_run1.npy`](../outputs/holdout/stage2/train_predictions_run1.npy) | 2 | Prediction trên tập train của lượt 1 | 25,008 giá trị | 200,192 B |
 | [`train_predictions_run2.npy`](../outputs/holdout/stage2/train_predictions_run2.npy) | 2 | Prediction trên tập train của lượt 2 | 25,008 giá trị | 200,192 B |
-| [`train_run1_report.json`](../outputs/holdout/stage2/train_run1_report.json) | 2 | Cấu hình, phiên bản, hash và kiểm biên của lượt train 1 | artifact | 1,949 B |
-| [`train_run2_report.json`](../outputs/holdout/stage2/train_run2_report.json) | 2 | Cấu hình, phiên bản, hash và kiểm biên của lượt train 2 | artifact | 1,949 B |
+| [`train_run1_report.json`](../outputs/holdout/stage2/train_run1_report.json) | 2 | Cấu hình, phiên bản, hash và kiểm biên của lượt train 1 | artifact | 2,011 B |
+| [`train_run2_report.json`](../outputs/holdout/stage2/train_run2_report.json) | 2 | Cấu hình, phiên bản, hash và kiểm biên của lượt train 2 | artifact | 2,011 B |
 | [`holdout_fixed_trade_universe_scored.csv`](../outputs/holdout/stage3/holdout_fixed_trade_universe_scored.csv) | 3 | Vũ trụ lệnh baseline holdout cố định kèm điểm | 5,028 dòng | 2,263,531 B |
 | [`holdout_scored.csv`](../outputs/holdout/stage3/holdout_scored.csv) | 3 | 5,028 dòng holdout kèm xác suất CatBoost | 5,028 dòng | 1,661,606 B |
 | [`holdout_trades_top20.csv`](../outputs/holdout/stage3/holdout_trades_top20.csv) | 3 | Danh sách lệnh holdout được giữ ở mức top 20% | 1,006 dòng | 454,493 B |
@@ -270,9 +271,9 @@ Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Py
 | [`stage3_backtest_summary.csv`](../outputs/holdout/stage3/stage3_backtest_summary.csv) | 3 | Metrics baseline và sweep top 20–80% | 8 dòng | 654 B |
 | [`stage3_report.json`](../outputs/holdout/stage3/stage3_report.json) | 3 | Kết quả phân loại, replay baseline và backtest holdout | artifact | 3,288 B |
 | [`equity-curve-chunk2-5-top50.html`](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.html) | 4 | Biểu đồ bậc thang baseline và 4 nhánh trên khúc 2–5 | artifact | 5,406,759 B |
-| [`equity-curve-chunk2-5-top50.png`](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.png) | 4 | Ảnh PNG biểu đồ bậc thang baseline và 4 nhánh trên khúc 2–5 | artifact | 94,055 B |
+| [`equity-curve-chunk2-5-top50.png`](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.png) | 4 | Ảnh PNG biểu đồ bậc thang baseline và 4 nhánh trên khúc 2–5 | artifact | 93,985 B |
 | [`equity-curve-holdout-top50.html`](../outputs/holdout/stage4/equity-curve-holdout-top50.html) | 4 | Biểu đồ bậc thang baseline và top 50% trên holdout | artifact | 4,434,195 B |
-| [`equity-curve-holdout-top50.png`](../outputs/holdout/stage4/equity-curve-holdout-top50.png) | 4 | Ảnh PNG biểu đồ bậc thang baseline và top 50% trên holdout | artifact | 81,513 B |
+| [`equity-curve-holdout-top50.png`](../outputs/holdout/stage4/equity-curve-holdout-top50.png) | 4 | Ảnh PNG biểu đồ bậc thang baseline và top 50% trên holdout | artifact | 81,443 B |
 | [`holdout_sweep_20_80.csv`](../outputs/holdout/stage4/holdout_sweep_20_80.csv) | 4 | Bảng tài chính holdout theo bảy mức giữ lệnh | 7 dòng | 366 B |
 | [`implementation_decisions.md`](../outputs/holdout/stage4/implementation_decisions.md) | 4 | Các quyết định triển khai Stage 4 | artifact | 2,566 B |
 | [`stage4_manifest.json`](../outputs/holdout/stage4/stage4_manifest.json) | 4 | Danh sách output, số điểm trên từng đường vốn và thiết lập xuất PNG | artifact | 856 B |

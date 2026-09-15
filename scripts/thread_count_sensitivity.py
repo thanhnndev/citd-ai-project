@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from citd_ml import paths
 from citd_ml.features.build_features import FEATURES
+from citd_ml.training.train_catboost import MODEL_PARAMS
 
 
 TRAIN_DATASET = paths.DATASET_CSV
@@ -60,16 +61,9 @@ EMBARGO_START_BAR = paths.EMBARGO_START_BAR
 BASELINE = "tc1_a"
 KEEP_PCT = 50
 
-# The frozen CatBoost configuration; only thread_count is varied.
-BASE_PARAMS = {
-    "iterations": 1000,
-    "learning_rate": 0.05,
-    "depth": 6,
-    "l2_leaf_reg": 3.0,
-    "auto_class_weights": "Balanced",
-    "eval_metric": "AUC",
-    "random_seed": 42,
-}
+# The frozen CatBoost configuration comes from the single source of truth in
+# src/citd_ml/training/train_catboost.py; only thread_count is varied.
+FIXED_PARAMS = {key: value for key, value in MODEL_PARAMS.items() if key != "thread_count"}
 
 CONFIGS = (
     ("tc1_a", 1),        # baseline, matches the pinned pipeline
@@ -77,6 +71,11 @@ CONFIGS = (
     ("tc2", 2),
     ("tc_default", -1),  # library default: all cores
 )
+
+
+def params_for(thread_count: int) -> dict:
+    """Full CatBoost parameters for one configuration (MODEL_PARAMS + thread_count)."""
+    return {**MODEL_PARAMS, "thread_count": thread_count}
 
 
 def delta(pred: np.ndarray, base: np.ndarray) -> dict:
@@ -369,7 +368,7 @@ def main() -> int:
     baseline_model = None
     for name, thread_count in CONFIGS:
         started = time.perf_counter()
-        model = CatBoostClassifier(**BASE_PARAMS, thread_count=thread_count)
+        model = CatBoostClassifier(**params_for(thread_count))
         model.fit(X_train, y_train, verbose=False)
         fit_seconds[name] = time.perf_counter() - started
         # Prediction mirrors scripts/holdout_stage2_train.py exactly.
@@ -382,7 +381,7 @@ def main() -> int:
     # Việc này tách "đổi thread_count làm đổi kết quả" khỏi "training vốn không lặp lại được".
     probe_predictions: dict[str, tuple[np.ndarray, np.ndarray]] = {}
     for name, thread_count in (("tc2_repeat", 2), ("tc_default_repeat", -1)):
-        model = CatBoostClassifier(**BASE_PARAMS, thread_count=thread_count)
+        model = CatBoostClassifier(**params_for(thread_count))
         model.fit(X_train, y_train, verbose=False)
         probe_predictions[name] = (
             model.predict_proba(X_train)[:, 1],
@@ -417,6 +416,7 @@ def main() -> int:
         configs_json.append({
             "name": name,
             "thread_count": thread_count,
+            "params": params_for(thread_count),
             "fit_seconds": round(fit_seconds[name], 3),
             "classification": classification,
             "top50": top50,
@@ -665,7 +665,7 @@ def main() -> int:
             "top_k_rule": "keep_count=ceil(rows*50/100); sort probability descending then row_id ascending",
             "keep_count": keep_count,
         },
-        "fixed_params": BASE_PARAMS,
+        "fixed_params": FIXED_PARAMS,
         "configurations": [{"name": name, "thread_count": thread_count} for name, thread_count in CONFIGS],
         "configs": configs_json,
         "deltas_vs_tc1_a": deltas,

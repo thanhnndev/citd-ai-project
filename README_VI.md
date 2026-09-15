@@ -10,8 +10,11 @@ Vấn đề trung tâm là **rò rỉ nhãn (label leakage)**. Nhãn triple-barr
 Chiến lược còn cố ý mở 1 lệnh gốc + 3 lệnh nhồi (4 lệnh cùng một gia đình
 `origin_bar`), nên anh em gần như chung số phận. Chia ngẫu nhiên sẽ tách anh em
 sang hai phía train/test và thổi phồng điểm. Đồ án so sánh 4 cách chia với mức
-độ chặt tăng dần, rồi đánh giá trên **giai đoạn holdout niêm phong** mà chưa ai
-đụng tới trong suốt quá trình phát triển.
+độ chặt tăng dần, rồi đánh giá trên **giai đoạn holdout niêm phong**: không
+quyết định phát triển nào dùng tới holdout — không feature, hyperparameter,
+cách chia train/holdout hay luật top-k nào thay đổi giữa các lần mở — và cả ba
+lần mở đều được ghi trong
+[`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 
 > Bản tiếng Anh: [`README.md`](README.md). Đề bài bàn giao gốc nằm trong
 > [`docs/`](docs/).
@@ -329,7 +332,9 @@ sẽ nhắm vào thư mục bàn giao và ghi đè
 
 ## Quy trình holdout niêm phong
 
-Holdout chỉ mở một lần, qua 4 giai đoạn, rồi được đối chiếu ở phép kiểm thứ 5.
+Quy trình chạy holdout qua 4 giai đoạn, rồi đối chiếu hai lượt chạy ở phép
+kiểm thứ 5; mọi lần mở đều được ghi trong
+[`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
 Chạy tuần tự.
 
 ```bash
@@ -499,6 +504,15 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   **PASS** (hai lượt train + hai lượt backtest, manifest canonical được làm
   mới); `holdout_stage5_repro_check.py` chạy lại **PASS**; bộ test
   **13 passed**.
+- **Sửa lỗi best-practice từ audit mã nguồn** (`docs/CODE_BEST_PRACTICE_AUDIT.md`):
+  `allow_writing_files=False` vào thẳng `MODEL_PARAMS` dùng chung cho Stage 2 và
+  thí nghiệm `thread_count` (không còn sinh `catboost_info/`);
+  `matplotlib==3.11.2` được khai báo/pin và ghi phiên bản vào evidence Stage
+  2/Stage 5; PNG Stage 4 dùng `metadata={"Software": None}` để byte không còn
+  phụ thuộc phiên bản matplotlib, và Plotly dùng `include_plotlyjs=True` đúng
+  tài liệu. Toàn bộ evidence Stage 2–5 cùng manifest `verify_pipeline` canonical
+  đã chạy lại với số liệu không đổi và prediction giống hệt từng byte; audit đã
+  có thêm mục Resolution.
 
 ### 2026-09-13 — Hoàn thiện bàn giao holdout và phạm vi bằng chứng
 
@@ -547,7 +561,11 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   trở thành khối tham chiếu có dán nhãn).
 - **Sửa** biểu đồ 1 (`equity-curve-chunk2-5-top50.html`): nay dựng từ file
   `backtest_scored_universe.csv` bàn giao đã khôi phục, nên 4 điểm cuối của
-  nhánh khớp Bảng 2 (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R).
+  nhánh khớp Bảng 2 (+6,998.3 / +4,724.3 / +2,207.3 / +2,253.7 R)
+  (thay thế ngày 2026-09-15: biểu đồ 1 dựng lại từ vũ trụ đã chấm điểm
+  canonical `thread_count=1`
+  `outputs/step4_thread1/backtest/backtest_scored_universe.csv`, endpoint
+  +6.937,53 / +4.752,04 / +2.148,31 / +2.119,48 R).
 - **Sửa** bảng file của báo cáo Stage 4 (đúng tên script và kích thước) và đồng
   bộ `outputs/holdout/stage4/implementation_decisions.md` với báo cáo.
 - **Ghi rõ** deviation `thread_count=1` so với danh sách hyperparameter đã chốt

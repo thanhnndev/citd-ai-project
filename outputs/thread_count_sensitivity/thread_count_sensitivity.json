@@ -17,7 +17,7 @@
     ]
   },
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/thread_count_sensitivity.py",
-  "generated_at_utc": "2026-09-15T09:48:26+00:00",
+  "generated_at_utc": "2026-09-15T13:45:45+00:00",
   "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
   "cpu_count": 24,
   "versions": {
@@ -75,7 +75,8 @@
     "l2_leaf_reg": 3.0,
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
-    "random_seed": 42
+    "random_seed": 42,
+    "allow_writing_files": false
   },
   "configurations": [
     {
@@ -99,7 +100,18 @@
     {
       "name": "tc1_a",
       "thread_count": 1,
-      "fit_seconds": 4.931,
+      "params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42,
+        "thread_count": 1,
+        "allow_writing_files": false
+      },
+      "fit_seconds": 4.92,
       "classification": {
         "roc_auc": 0.6045544538928682,
         "f1_at_0_5": 0.40220723482526055
@@ -118,7 +130,18 @@
     {
       "name": "tc1_b",
       "thread_count": 1,
-      "fit_seconds": 5.059,
+      "params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42,
+        "thread_count": 1,
+        "allow_writing_files": false
+      },
+      "fit_seconds": 4.822,
       "classification": {
         "roc_auc": 0.6045544538928682,
         "f1_at_0_5": 0.40220723482526055
@@ -137,7 +160,18 @@
     {
       "name": "tc2",
       "thread_count": 2,
-      "fit_seconds": 2.839,
+      "params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42,
+        "thread_count": 2,
+        "allow_writing_files": false
+      },
+      "fit_seconds": 2.801,
       "classification": {
         "roc_auc": 0.6041773010440312,
         "f1_at_0_5": 0.4068923821039903
@@ -156,7 +190,18 @@
     {
       "name": "tc_default",
       "thread_count": -1,
-      "fit_seconds": 3.279,
+      "params": {
+        "iterations": 1000,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "l2_leaf_reg": 3.0,
+        "auto_class_weights": "Balanced",
+        "eval_metric": "AUC",
+        "random_seed": 42,
+        "thread_count": -1,
+        "allow_writing_files": false
+      },
+      "fit_seconds": 3.861,
       "classification": {
         "roc_auc": 0.6023152558719406,
         "f1_at_0_5": 0.4064693317058285

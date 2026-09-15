@@ -141,7 +141,7 @@ def validate_evidence(evidence: dict[str, dict]) -> None:
         failures.append("stage3.holdout_rows_scored")
 
     versions = train.get("versions", {})
-    for name in ("platform", "plotly"):
+    for name in ("platform", "plotly", "matplotlib"):
         if not versions.get(name):
             failures.append(f"train.versions.{name}")
 

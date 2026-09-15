@@ -39,7 +39,7 @@
   ],
   "run_id": 1,
   "model_path": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/catboost_final_holdout_run1.cbm",
-  "model_sha256": "09ac7b617fb4d5bd9686cba6083ed547e03c6d7e3ffa044d353d042909156246",
+  "model_sha256": "90a6c1797a27fdfe86953c6bd79818e3a332ac339a8e6f857396528ce35aade4",
   "prediction_path": "/home/thanhnndev/develop/citd-ml-project/outputs/holdout/stage2/train_predictions_run1.npy",
   "prediction_sha256": "2b5d473c35036aa979a033ecdf4355b018c62362b70092d7055b1c6844785e8a",
   "holdout_sha256_after": "7be58aad56927e2060a66a99b947cad63b75597c26fc4964f68bfeb433914037",
@@ -51,7 +51,8 @@
     "pandas": "3.0.5",
     "numpy": "2.5.2",
     "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
-    "plotly": "7.0.0"
+    "plotly": "7.0.0",
+    "matplotlib": "3.11.2"
   },
   "params": {
     "iterations": 1000,
@@ -61,6 +62,7 @@
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
     "random_seed": 42,
-    "thread_count": 1
+    "thread_count": 1,
+    "allow_writing_files": false
   }
 }

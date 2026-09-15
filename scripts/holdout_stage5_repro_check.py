@@ -453,6 +453,7 @@ def main() -> int:
             "pandas": pd.__version__,
             "numpy": np.__version__,
             "plotly": version("plotly"),
+            "matplotlib": version("matplotlib"),
         },
         "run1": {"stage3": display_path(stage3_run1), "stage4": display_path(stage4_run1)},
         "run2": {"stage3": display_path(stage3_run2), "stage4": display_path(stage4_run2)},

@@ -23,6 +23,10 @@ MODEL_PARAMS = {
     # variation. This supports repeatability but does not, by itself, prove
     # byte-identical output across operating systems or CPU architectures.
     "thread_count": 1,
+    # CatBoost's `train_dir` defaults to the current working directory, so every
+    # fit writes catboost_info/ analysis/snapshot files. Disable these writes so
+    # the repository stays clean and training outputs stay deterministic.
+    "allow_writing_files": False,
 }
 
 METHOD_ORDER = [

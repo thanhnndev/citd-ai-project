@@ -2,7 +2,7 @@
   "status": "PASS",
   "scope_note": "two independent training runs, same machine, same code; does not establish cross-machine byte identity",
   "scope_note_vi": "Hai lần train độc lập trên cùng một máy, cùng mã nguồn; không chứng minh giống từng byte giữa các máy khác nhau.",
-  "generated_at_utc": "2026-09-15T10:18:47+00:00",
+  "generated_at_utc": "2026-09-15T14:12:31+00:00",
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/holdout_stage5_repro_check.py",
   "environment": {
     "platform": "Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44",
@@ -11,7 +11,8 @@
     "scikit_learn": "1.9.0",
     "pandas": "3.0.5",
     "numpy": "2.5.2",
-    "plotly": "7.0.0"
+    "plotly": "7.0.0",
+    "matplotlib": "3.11.2"
   },
   "run1": {
     "stage3": "outputs/holdout/stage3",
@@ -573,8 +574,8 @@
           "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.png",
           "run1_exists": true,
           "run2_exists": true,
-          "run1_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
-          "run2_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+          "run1_sha256": "2aface4ba44d33878c37a0152ba893631ec7eb014d333a201c1c1e4a3aba7cff",
+          "run2_sha256": "2aface4ba44d33878c37a0152ba893631ec7eb014d333a201c1c1e4a3aba7cff",
           "bytes_identical": true
         },
         "equity-curve-holdout-top50.png": {
@@ -582,8 +583,8 @@
           "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.png",
           "run1_exists": true,
           "run2_exists": true,
-          "run1_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
-          "run2_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+          "run1_sha256": "39023eb7203c7cc4ad5fa09a1978b9397ddf47da28435c39dd9b43bdc2517c90",
+          "run2_sha256": "39023eb7203c7cc4ad5fa09a1978b9397ddf47da28435c39dd9b43bdc2517c90",
           "bytes_identical": true
         }
       }
@@ -778,8 +779,8 @@
       "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-chunk2-5-top50.png",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
-      "run2_sha256": "1f6248c901092cf73c3184d8909b58088a71ce8880ddea08a5b890b3b9ff512c",
+      "run1_sha256": "2aface4ba44d33878c37a0152ba893631ec7eb014d333a201c1c1e4a3aba7cff",
+      "run2_sha256": "2aface4ba44d33878c37a0152ba893631ec7eb014d333a201c1c1e4a3aba7cff",
       "bytes_identical": true
     },
     "equity-curve-holdout-top50.png": {
@@ -787,8 +788,8 @@
       "run2_path": "outputs/holdout/repro/run2/stage4/equity-curve-holdout-top50.png",
       "run1_exists": true,
       "run2_exists": true,
-      "run1_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
-      "run2_sha256": "17650c4f186bee740a88fb42b2ab053377237b324a36424bb7c76f5cef9bc3af",
+      "run1_sha256": "39023eb7203c7cc4ad5fa09a1978b9397ddf47da28435c39dd9b43bdc2517c90",
+      "run2_sha256": "39023eb7203c7cc4ad5fa09a1978b9397ddf47da28435c39dd9b43bdc2517c90",
       "bytes_identical": true
     },
     "stage4_manifest.json": {

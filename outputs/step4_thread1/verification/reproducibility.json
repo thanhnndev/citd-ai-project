@@ -1,7 +1,7 @@
 {
   "status": "passed",
-  "started_utc": "2026-09-15T10:18:37.919413+00:00",
-  "completed_utc": "2026-09-15T10:22:36.382120+00:00",
+  "started_utc": "2026-09-15T13:49:08.057330+00:00",
+  "completed_utc": "2026-09-15T13:53:37.051906+00:00",
   "command": "/home/thanhnndev/develop/citd-ml-project/.venv/bin/python scripts/verify_pipeline.py --train-dir outputs/step4_thread1/catboost_training --backtest-dir outputs/step4_thread1/backtest --manifest outputs/step4_thread1/verification/reproducibility.json",
   "output_dirs": {
     "training": "outputs/step4_thread1/catboost_training",
@@ -23,7 +23,8 @@
     "auto_class_weights": "Balanced",
     "eval_metric": "AUC",
     "random_seed": 42,
-    "thread_count": 1
+    "thread_count": 1,
+    "allow_writing_files": false
   },
   "source_sha256": {
     "docs/BAN_GIAO_task_train_catboost.md": "284b1b9c1a2647c5da546d97bf46166a5d7f6c2b44275a8cc1f091864dee728f",
@@ -34,14 +35,14 @@
     "src/citd_ml/strategy/pyramid_strategy.py": "83ac176d2067f21df08b405ff4bdd97ea69e787d0133d9d5ebe22fa477ff75be",
     "src/citd_ml/training/pre_train.py": "22f70482f774aea16618fe5618e9f519071e2cc9977d57e97a8e45c38a54ed7b",
     "src/citd_ml/training/split_data.py": "dc7f10b62df15462748f067d29c2b9a07a687db30c0186061a8b90b04e9fdd6c",
-    "src/citd_ml/training/train_catboost.py": "6bb4b528b76d22195c69f2978107882a7c6cf67bd4660c9b4960e139b33d36eb",
+    "src/citd_ml/training/train_catboost.py": "b6bdcbf96092fe347ba6c22f29c686103585ef12c1d53246ebda5a0c829acefe",
     "src/citd_ml/backtest/backtest_pyramid_local.py": "bd1144b8d70ff23a08ae8cc1f52787f0c086390743cd8c9236dc6c97e2a3bf50",
     "src/citd_ml/verification/verify_pipeline.py": "73b82815078b0dfe4b5b8d18012812cffcee68f1f22bcfce74a61b34b0345cf1",
-    "scripts/holdout_stage2_train.py": "7dfd460721e98a60e798c518f5c6e3f216ba93e32a58acc8346c23c309c3fc7b",
+    "scripts/holdout_stage2_train.py": "831864a750e9e2fb6820627df2e414cc7219f7af77f0e48bef5110290e27c641",
     "scripts/holdout_stage3_backtest.py": "d227f87e0516b1c462660dca6d692fb76d035a7aa02eba5a497585da368f4456",
-    "scripts/holdout_stage4_report.py": "28d2ba541d0649d1e9b90a87585cf8aff0f8457ad6926064413b4fa5c5d45388",
-    "scripts/holdout_stage5_repro_check.py": "ccdb7cf781cf6e4065d76d8e7cb06b917e717c25f9439774bf02dc1f248f4ede",
-    "scripts/thread_count_sensitivity.py": "b918ce5a40af611767e0a3b29fe610d6be3ff0ad68bca0ab3392e788d7962491"
+    "scripts/holdout_stage4_report.py": "bff4a8eb94207dd615d27798282177ad587b1da373932bfda8c187f2d02e56d2",
+    "scripts/holdout_stage5_repro_check.py": "757c2d5e81d61538778dc331dc85ad7fbae0f39d46bfb6d38f4f334f1b658a8f",
+    "scripts/thread_count_sensitivity.py": "b8978165bb158826a54000c1fa8ab08e1cf6c72e167de9c55c7468e5a32ec118"
   },
   "training": {
     "runs": 2,

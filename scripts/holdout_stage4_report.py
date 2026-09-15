@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import sys
 
 import matplotlib
@@ -255,6 +256,18 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     return "| " + " | ".join(headers) + " |\n|" + "|".join(["---"] * len(headers)) + "|\n" + "\n".join("| " + " | ".join(r) + " |" for r in rows) + "\n"
 
 
+RUN_DIR_PATTERN = re.compile(r"run[\s_-]*(\d+)$", re.IGNORECASE)
+
+
+def run_label_from_stage3(stage3_dir: Path) -> str:
+    """Nhãn lượt chạy suy từ đường dẫn Stage 3 (``…/repro/run2/stage3`` → ``run 2``)."""
+    for part in reversed(stage3_dir.parts):
+        match = RUN_DIR_PATTERN.search(part)
+        if match:
+            return f"run {match.group(1)}"
+    return "run 1"
+
+
 def relative_link(path: Path, report_dir: Path, label: Path | str | None = None) -> str:
     try:
         target = str(path.relative_to(paths.PROJECT_ROOT))
@@ -285,7 +298,7 @@ def write_chart(path: Path, title: str, curves: list[tuple[str, pd.DataFrame]]) 
     fig.update_layout(title=title, xaxis_title="close_time", yaxis_title="R cộng dồn", hovermode="x unified", template="plotly_white", legend_title_text="Chuỗi", margin={"l": 72, "r": 28, "t": 72, "b": 72})
     html = pio.to_html(
         fig,
-        include_plotlyjs="inline",
+        include_plotlyjs=True,
         full_html=True,
         config={"responsive": True, "displaylogo": False},
         div_id=path.stem,
@@ -305,7 +318,9 @@ def write_png(path: Path, title: str, curves: list[tuple[str, pd.DataFrame]]) ->
     axes.legend(loc="upper left", fontsize=8, framealpha=0.9)
     figure.autofmt_xdate()
     figure.tight_layout()
-    figure.savefig(path, format="png", dpi=110)
+    # metadata={"Software": None} bỏ tag phiên bản matplotlib khỏi PNG, để byte
+    # ảnh không phụ thuộc phiên bản thư viện.
+    figure.savefig(path, format="png", dpi=110, metadata={"Software": None})
     plt.close(figure)
 
 
@@ -579,7 +594,7 @@ def sensitivity_section(sensitivity: dict, sensitivity_path: Path) -> str:
             ]
         )
     table = markdown_table(
-        ["Cấu hình", "`thread_count`", "Train max|Δp|", "Holdout max|Δp|", "Holdout Pearson r", "Holdout ROC-AUC", "Holdout F1", "Top 50% net R", "Top 50% trùng"],
+        ["Cấu hình", "`thread_count`", "Train max\\|Δp\\|", "Holdout max\\|Δp\\|", "Holdout Pearson r", "Holdout ROC-AUC", "Holdout F1", "Top 50% net R", "Top 50% trùng"],
         rows,
     )
     return (
@@ -670,7 +685,7 @@ def verification_section(evidence: dict, canonical_verification_path: Path) -> s
     backtest_deltas = stage5_items["stage3_backtest_summary"]["numeric_columns"]
     max_backtest_delta = max(entry["max_abs_diff"] for entry in backtest_deltas.values())
     stage5_text = (
-        f"**{stage5['status']}** — max |Δprobability| = "
+        f"**{stage5['status']}** — max \\|Δprobability\\| = "
         f"{stage5_items['holdout_scored_probabilities']['max_abs_diff']:.1f}; "
         f"ΔROC-AUC = {classification_deltas['roc_auc']['abs_diff']:.1f}; "
         f"ΔF1 = {classification_deltas['f1_at_0_5']['abs_diff']:.1f}; "
@@ -716,7 +731,8 @@ def verification_section(evidence: dict, canonical_verification_path: Path) -> s
     footer = (
         f"\nMôi trường sinh artifact: OS {versions['platform']}; Python {versions['python']}; "
         f"CatBoost {versions['catboost']}; scikit-learn {versions['scikit_learn']}; "
-        f"pandas {versions['pandas']}; NumPy {versions['numpy']}; Plotly {versions['plotly']}.\n"
+        f"pandas {versions['pandas']}; NumPy {versions['numpy']}; Plotly {versions['plotly']}; "
+        f"Matplotlib {versions['matplotlib']}.\n"
     )
     return markdown_table(["Phép kiểm", "Kết quả"], rows) + footer
 
@@ -767,7 +783,7 @@ def ledger_section(run_history: dict, stage3_dir: Path, canonical_dir: Path) -> 
         + "đối chứng được commit, nên chỉ là thông tin tham khảo.\n"
         + f"\nArtifact canonical của báo cáo: lần 3 — commit `{canonical['commit_short']}`, "
         + f"`thread_count={canonical['thread_count']}`. Các bảng holdout lấy từ "
-        + f"`{stage3_dir.relative_to(paths.PROJECT_ROOT)}` (run 1) và bảng bốn cách chia canonical lấy từ cây "
+        + f"`{stage3_dir.relative_to(paths.PROJECT_ROOT)}` ({run_label_from_stage3(stage3_dir)}) và bảng bốn cách chia canonical lấy từ cây "
         + f"`{canonical_dir.relative_to(paths.PROJECT_ROOT)}`; "
         + f"hai thư mục bàn giao đóng băng `{paths.CATBOOST_TRAINING_DIR.relative_to(paths.PROJECT_ROOT)}` và "
         + f"`{paths.BACKTEST_DIR.relative_to(paths.PROJECT_ROOT)}` chỉ còn là khối tham chiếu.\n"
@@ -837,6 +853,7 @@ def build_report(
             ["pandas", f"`{versions['pandas']}`"],
             ["NumPy", f"`{versions['numpy']}`"],
             ["Plotly", f"`{versions['plotly']}`"],
+            ["Matplotlib", f"`{versions['matplotlib']}`"],
         ],
     )
     report_dir = report_path.parent

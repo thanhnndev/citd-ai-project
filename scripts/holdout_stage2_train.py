@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from citd_ml import paths
 from citd_ml.features.build_features import FEATURES
+from citd_ml.training.train_catboost import MODEL_PARAMS
 
 
 HERE = paths.HOLDOUT_STAGE2_DIR
@@ -27,19 +28,8 @@ TRAIN_DATASET = paths.DATASET_CSV
 HOLDOUT_DATASET = paths.HOLDOUT_STAGE1_DIR / "dataset_catboost_holdout.csv"
 HOLDOUT_START = pd.Timestamp(paths.HOLDOUT_START)
 EMBARGO_START_BAR = paths.EMBARGO_START_BAR
-PARAMS = {
-    "iterations": 1000,
-    "learning_rate": 0.05,
-    "depth": 6,
-    "l2_leaf_reg": 3.0,
-    "auto_class_weights": "Balanced",
-    "eval_metric": "AUC",
-    "random_seed": 42,
-    # Pinned to 1 to remove CPU thread-count as a known source of numerical
-    # variation. Exact equality is verified per environment; cross-machine
-    # equivalence needs its own comparison artifact.
-    "thread_count": 1,
-}
+# Single source of truth: the canonical MODEL_PARAMS from train_catboost.py.
+PARAMS = dict(MODEL_PARAMS)
 
 
 def sha256(path: Path) -> str:
@@ -110,10 +100,11 @@ def run_training(run_id: int) -> int:
             "scikit_learn": sklearn.__version__,
             "pandas": pd.__version__,
             "numpy": np.__version__,
-            # Bổ sung theo góp ý review: ghi rõ hệ điều hành và phiên bản plotly
-            # (plotly là thư viện dựng biểu đồ của Stage 4, trước đây chưa ghi).
+            # Bổ sung theo góp ý review: ghi rõ hệ điều hành và phiên bản các
+            # thư viện dựng biểu đồ của Stage 4 (plotly, matplotlib).
             "platform": platform.platform(),
             "plotly": version("plotly"),
+            "matplotlib": version("matplotlib"),
         },
         "params": PARAMS,
     })
