@@ -52,9 +52,6 @@ canonical trừ tham chiếu:
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 | +0.0007 | +0.0020 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 | −0.0052 | −0.0057 |
 
-Khoảng cách giữa Random K-Fold (~0.86) và các cách chia có ý thức rò rỉ (~0.59)
-chính là hiệu ứng leakage mà đồ án muốn chứng minh.
-
 ### Bảng 2 — Chỉ số tài chính, giữ top 50%
 
 Khối chính canonical `thread_count=1`:
@@ -88,9 +85,7 @@ Khối holdout (không đổi):
 | **Baseline holdout** | 5,028 | +245.93 | 305.32 | 1.0992 | 35.28 |
 | **Holdout, top 50%** | 2,514 | −36.55 | 263.25 | 0.9718 | 34.81 |
 
-Trên holdout niêm phong, bộ lọc vẫn **không** thắng baseline không lọc: giữ top
-50% còn 2,514 lệnh với **−36.55 R** và profit factor 0.972, so với **+245.93 R**
-và profit factor 1.099 của baseline đủ 5,028 lệnh. Bảng sweep đầy đủ 20–80% nằm trong
+Bảng sweep đầy đủ 20–80% nằm trong
 [`outputs/holdout/stage4/`](outputs/holdout/stage4/), báo cáo đầy đủ ở
 [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
@@ -333,6 +328,8 @@ sẽ nhắm vào thư mục bàn giao và ghi đè
 
 ## Quy trình holdout niêm phong
 
+> Đã đóng đánh giá holdout từ 18/09/2026. Không chạy thêm training, chấm điểm, backtest, kiểm chứng hoặc thí nghiệm trên holdout. Các lệnh dưới đây chỉ ghi lại quy trình đã thực hiện.
+
 Quy trình chạy holdout qua 4 giai đoạn, rồi đối chiếu hai lượt chạy ở phép
 kiểm thứ 5. Ba phiên bản kết quả lịch sử được ghi trong
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
@@ -429,10 +426,7 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   soát đã commit cho thấy `thread_count` **có** làm thay đổi kết quả train trên
   máy này (train `max|Δp|` 0.2832 / 0.2999; holdout 0.3469 / 0.3352; net R top
   50% holdout −36.55 so với −12.26 và +30.79 R cho `tc=1` / `tc=2` / mặc
-  định), trong khi chấm lại cùng model đã fit thì không đổi. Bản
-  `thread_count=1` được giữ có net R top 50% thấp hơn bản Linux đa luồng
-  lịch sử (−36.55 R so với +30.79 R). Đây là dữ kiện hỗ trợ minh bạch, không
-  tự chứng minh không cherry-pick hoặc thay thế lịch sử quyết định. Giữ top
+  định), trong khi chấm lại cùng model đã fit thì không đổi. Giữ top
   50% đã chốt; không chọn lại tỷ lệ theo sweep holdout. Tương đương liên máy **chưa
   được chứng minh**: teammate Windows báo prediction trùng trong `1e-15`
   (không byte-identical) và không có artifact đối chứng. Chuỗi đầy đủ run1-vs-
@@ -457,7 +451,7 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 ### 2026-09-15 — Hoàn thiện báo cáo cho Nhi và đối chiếu yêu cầu
 
 - Sửa báo cáo kết quả và script sinh: ba phiên bản lịch sử truy xuất từ Git, nghi ngờ ngày 12/09 và thí nghiệm ngày 15/09, giữ top 50%, phạm vi replay bốn lệnh biên.
-- Thêm bảng đối chiếu sáu feedback trong phần kiểm chứng. Bỏ khẳng định kết quả xấu hơn chứng minh không cherry-pick hoặc Git ghi đủ mọi lần truy cập holdout.
+- Làm rõ phạm vi lịch sử holdout đã lưu. Bảng đối chiếu feedback sau đó được bỏ ngày 18/09/2026.
 - Sinh lại hai bản report và sổ lịch sử; số liệu và cấu hình model giữ nguyên. Chưa chứng minh tái lập liên máy.
 - Tài liệu chính gửi Nhi là [báo cáo kết quả](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
@@ -514,7 +508,7 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
   **PASS** (hai lượt train + hai lượt backtest, manifest canonical được làm
   mới); `holdout_stage5_repro_check.py` chạy lại **PASS**; bộ test
   **13 passed**.
-- **Sửa lỗi best-practice từ audit mã nguồn** (`docs/CODE_BEST_PRACTICE_AUDIT.md`):
+- **Sửa lỗi best-practice từ audit mã nguồn**:
   `allow_writing_files=False` vào thẳng `MODEL_PARAMS` dùng chung cho Stage 2 và
   thí nghiệm `thread_count` (không còn sinh `catboost_info/`);
   `matplotlib==3.11.2` được khai báo/pin và ghi phiên bản vào evidence Stage

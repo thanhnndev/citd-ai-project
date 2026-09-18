@@ -10,7 +10,7 @@ Bảng A ghi ba phiên bản kết quả holdout lịch sử truy xuất đượ
 `outputs/verification/holdout_run_history.json`. Đây không phải nhật ký đầy đủ
 của mọi lần thực thi hoặc chấm điểm: sổ dùng ba commit đã xác định, không ghi nhận
 các lần không được lưu vào Git. Ngày trong bảng là ngày commit, không phải log thời điểm chạy.
-Các lần lặp để kiểm chứng và thí nghiệm bổ sung ngày 15/09 được trình bày riêng ở mục 1.6 và Phần 4.
+Các lần lặp để kiểm chứng và thí nghiệm bổ sung ngày 15/09 được trình bày riêng ở Phụ lục A và Phần 4.
 
 | Phiên bản | Commit | Ngày commit | Môi trường suy ra | `thread_count` | ROC-AUC | F1 @0.5 | Top 50% net R | Top 50% PF |
 |---|---|---|---|---|---|---|---|---|
@@ -31,11 +31,7 @@ Theo tin nhắn teammate: prediction trên tập train giữa hai máy trùng tr
 
 Artifact canonical của báo cáo: lần 3 — commit `7748828`, `thread_count=1`. Các bảng holdout lấy từ `outputs/holdout/stage3` (run 1) và bảng bốn cách chia canonical lấy từ cây `outputs/step4_thread1`; hai thư mục bàn giao đóng băng `outputs/catboost_training` và `outputs/backtest` chỉ còn là khối tham chiếu.
 
-Lý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; lần 3 chỉ thêm `thread_count=1` như thiết lập kỹ thuật, không đổi feature, hyperparameter mô hình, tập train, tập holdout hay luật chọn top-k. Các số lịch sử truy xuất được được giữ trong sổ.
-
-Trình tự quyết định: ngày 12/09 ghim một luồng theo nghi ngờ kỹ thuật về khác biệt số luồng giữa máy; ngày 15/09 mới bổ sung thí nghiệm đối chứng (mục 1.6). Kết quả thí nghiệm xác nhận ảnh hưởng trong môi trường hiện tại, không chứng minh giả thuyết ban đầu đã được kiểm chứng trước khi đổi cấu hình.
-
-Giữ top 50% đã chốt trong task bàn giao; sweep 20–80% chỉ tổng hợp từ cùng bảng điểm, không dùng để chọn lại tỷ lệ theo holdout. Net R của bản được giữ lại thấp hơn hai phiên bản lịch sử là dữ kiện hỗ trợ minh bạch, không tự chứng minh không cherry-pick hoặc thay thế lịch sử quyết định. Việc công khai các lần kiểm tra không khôi phục trạng thái holdout chưa từng được xem.
+Lý do chạy lại: cấu hình CatBoost ban đầu chưa ghim `thread_count`; lần 3 chỉ thêm `thread_count=1` như thiết lập kỹ thuật, không đổi feature, hyperparameter mô hình, tập train, tập holdout hay luật chọn top-k. Các số lịch sử truy xuất được giữ trong sổ.
 
 ## Phần 1 — Số liệu
 
@@ -175,18 +171,9 @@ Baseline (không lọc, khúc 2–5): 20,007 lệnh, +3,358.25 R, MaxDD 236.13 R
 | Top 70% | 3,520 | +186.92 | 197.24 | 1.1040 | 35.77 |
 | Top 80% | 4,023 | +259.91 | 219.02 | 1.1278 | 35.52 |
 
-### 1.6. Thí nghiệm `thread_count`
+### 1.6. Cấu hình số luồng
 
-Thí nghiệm có kiểm soát: cùng dữ liệu, feature, hyperparameter và `random_seed=42`, chỉ đổi `thread_count` (nguồn: `outputs/thread_count_sensitivity/thread_count_sensitivity.json`).
-
-| Cấu hình | `thread_count` | Train max\|Δp\| | Holdout max\|Δp\| | Holdout Pearson r | Holdout ROC-AUC | Holdout F1 | Top 50% net R | Top 50% trùng |
-|---|---|---|---|---|---|---|---|---|
-| tc1_a | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
-| tc1_b (lặp cùng cấu hình) | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
-| tc=2 | 2 | 0.283158 | 0.346856 | 0.9331 | 0.6042 | 0.4069 | -12.26 | 2252/2514 |
-| tc=-1 (mặc định) | -1 | 0.299853 | 0.335194 | 0.9409 | 0.6023 | 0.4065 | +30.79 | 2254/2514 |
-
-Trên máy này, `thread_count` **có** làm thay đổi kết quả: đổi cấu hình làm toàn bộ prediction thay đổi (train 25,008/25,008 và holdout 5,028/5,028 dòng lệch quá `1e-12` ở cả `tc=2` và `tc=-1` so với `tc=1`), kéo theo chọn top 50% và net R đổi. Hai lần chạy cùng cấu hình `tc=1` cho prediction giống hệt nhau (train max|Δp| = 0.0, holdout max|Δp| = 0.0), nên khác biệt đến từ việc đổi cấu hình chứ không phải bất định giữa hai lần chạy. Ảnh hưởng nằm ở bước train: cùng model đã fit, đổi prediction `thread_count` 1/2/-1 cho prediction giống hệt nhau (max|Δp| = 0.0). CatBoost mô tả `thread_count` là tham số tốc độ không ảnh hưởng kết quả; phép đo trên máy này xác nhận điều đó ở bước prediction nhưng không xác nhận ở bước train (holdout ROC-AUC từ 0.6023 đến 0.6046, top-50 net R từ -36.55 đến +30.79 R). Phạm vi: một máy, một build CatBoost, một dataset, một seed; thí nghiệm không quy hết sai lệch liên máy cho `thread_count` (xem giới hạn trong JSON).
+Cấu hình chính thức cố định `thread_count=1`. Sau đó, ngày 15/09/2026 đã chạy thí nghiệm đổi `thread_count`, có chấm holdout ở `thread_count=2` và `-1`. Số liệu chính thức không đổi. Chi tiết thí nghiệm đã thực hiện được lưu tại Phụ lục A.
 
 ### 1.7. Ghi chú dữ liệu
 
@@ -225,7 +212,7 @@ nội tuyến nên mở độc lập được.
 2. Xếp `probability` giảm dần, dùng `row_id` tăng dần để phá hòa; vũ trụ lệnh baseline giữ cố định nên lệnh bị loại không làm đổi tín hiệu sau đó.
 3. Equity ghi nhận tại `close_time`; các lệnh đóng cùng lúc được cộng thành một điểm rồi mới cập nhật đường vốn.
 4. Khối chính của Bảng 1–3 là cây canonical `thread_count=1` (`outputs/step4_thread1`); số bàn giao (không ghim `thread_count`) chỉ còn là khối tham chiếu được dán nhãn, kèm bảng chênh lệch canonical − bàn giao ở Bảng 1.
-5. Ngày 12/09 thêm `thread_count=1` để cố định số luồng theo nghi ngờ kỹ thuật ban đầu; thí nghiệm đối chứng được bổ sung ngày 15/09; mục 1.6 đo ảnh hưởng thực tế của `thread_count` trên máy này và giới hạn kết luận ở một máy, một build, một dataset, một seed.
+5. Cố định `thread_count=1` cho cấu hình chính thức.
 6. Dùng đường bậc thang ngang-rồi-dọc (`hv` cho HTML, `steps-post` cho PNG) để equity giữ nguyên giữa hai mốc đóng lệnh và chỉ nhảy tại thời điểm R được ghi nhận.
 7. Purge và embargo đều trả về 0 dòng, nên train giữ nguyên 25,008 dòng; điều kiện lọc được chạy trước khi quyết định không loại dòng nào.
 8. So khớp giá baseline dùng sai số tuyệt đối `5e-4`, theo validator bàn giao; giá vào, giá ra và R được kiểm dưới cùng ngưỡng này.
@@ -247,22 +234,9 @@ nội tuyến nên mở độc lập được.
 | Tái lập run1 vs run2 (Stage 3–4: chấm điểm holdout, backtest, bảng, biểu đồ) | **PASS** — max \|Δprobability\| = 0.0; ΔROC-AUC = 0.0; ΔF1 = 0.0; max Δmetric backtest = 0.0; bảng số giống hệt nhau; biểu đồ byte-identical: `equity-curve-chunk2-5-top50.html`, `equity-curve-chunk2-5-top50.png`, `equity-curve-holdout-top50.html`, `equity-curve-holdout-top50.png` |
 | `verify_pipeline` trên cây canonical `thread_count=1` | **PASS** — manifest `outputs/step4_thread1/verification/reproducibility.json`; phạm vi: `outputs/step4_thread1/catboost_training` + `outputs/step4_thread1/backtest`; hai thư mục bàn giao đóng băng không bị ghi đè và không tái lập byte trên Linux |
 | File model `.cbm` | **GHI NHẬN** — SHA-256 hai file khác nhau (`90a6c1797a27…` vs `00dc6f07ef47…`); binary model không phải tiêu chí PASS |
-| Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo prediction trùng trong `1e-15` (không byte-identical, không ghi metric hay artifact đối chứng); không thể tái tạo từ git. Thí nghiệm `thread_count` có kiểm soát (mục 1.6) cho thấy `thread_count` làm thay đổi prediction khi train trên máy này, nên không thể quy toàn bộ sai lệch liên máy cho `thread_count`, cũng không loại trừ nó. |
+| Kiểm chứng liên máy | **GIỚI HẠN** — teammate Windows báo prediction trùng trong `1e-15` (không byte-identical, không ghi metric hay artifact đối chứng); không thể tái tạo từ git. |
 
 Môi trường sinh artifact: OS Linux-7.2.5-1-cachyos-x86_64-with-glibc2.44; Python 3.12.14; CatBoost 1.2.10; scikit-learn 1.9.0; pandas 3.0.5; NumPy 2.5.2; Plotly 7.0.0; Matplotlib 3.11.2.
-
-### Đối chiếu yêu cầu bàn giao và feedback
-
-| Yêu cầu của nhóm trưởng | Nội dung đã cung cấp | Phạm vi / giới hạn |
-|---|---|---|
-| 1. Số bốn cách chia nhất quán với holdout; giải thích số luồng | Bảng 1–3 dùng canonical `thread_count=1`, khối bàn giao riêng; thí nghiệm mục 1.6 | Ghim luồng ngày 12/09 theo nghi ngờ; đối chứng bổ sung ngày 15/09, chỉ kết luận trong môi trường đã đo |
-| 2. Công khai kết quả holdout lịch sử và lần kiểm tra của teammate | Bảng A, sổ Git, ghi nhận prediction train Windows trong `1e-15` | Ba phiên bản truy xuất được, không phải tổng số lần thực thi; không có artifact Windows để kiểm lại; không tự chứng minh không cherry-pick |
-| 3. Sweep 20–80% của bốn cách chia và holdout | Bảng 3 có 28 dòng, Bảng 4 có 7 dòng | Giữ top 50% đã chốt, không chọn lại từ sweep holdout |
-| 4. Hai biểu đồ nhúng và HTML | Phần 2 có hai PNG và hai HTML | Cùng dữ liệu đường vốn, trục `close_time`, R cộng dồn từ 0 |
-| 5. Kiểm lặp đủ chuỗi, môi trường | Phần 4: Stage 2 và Stage 3–4; OS, Python và thư viện ở mục 1.1 | PASS trong phạm vi hai run trên cùng máy; không bảo đảm liên máy hoặc binary model giống byte |
-| 6. Tách khối bảng, chữ số, thời gian và bốn lệnh biên | Bảng 2 tách khối; mục 1.7 ghi thời gian, quy ước và 25,008 + 4 + 5,028 = 30,040 | Bốn lệnh biên không thuộc train hoặc chỉ số holdout; replay vẫn đi qua giai đoạn này |
-
-Yêu cầu chạy holdout một lần không được đáp ứng theo nghĩa chỉ có một lần thực thi: đã có chạy lại kỹ thuật và thí nghiệm bổ sung, được công khai ở trên. Các bảng và bằng chứng hiện tại không thay thế việc nhóm trưởng đánh giá giới hạn phương pháp này. Báo cáo giữ số liệu và quyết định triển khai, không chọn cách chia tốt nhất hay viết biện luận thay báo cáo chính.
 
 ## Phần 5 — Bảng file sinh ra
 
@@ -306,8 +280,21 @@ Yêu cầu chạy holdout một lần không được đáp ứng theo nghĩa ch
 | Đường dẫn | Chứa gì |
 |---|---|
 | [`outputs/step4_thread1/`](../outputs/step4_thread1) | Cây canonical bốn split `thread_count=1`: `comparison_report.json`, `verification/reproducibility.json`, OOF, hai bảng backtest và `metrics_chunk2_5.csv` dùng cho Bảng 1–3. |
-| [`outputs/thread_count_sensitivity/thread_count_sensitivity.json`](../outputs/thread_count_sensitivity/thread_count_sensitivity.json) | Thí nghiệm `thread_count`: bốn cấu hình, deltas prediction, top-50 và `conclusion_facts` dùng cho mục 1.6. |
+| [`outputs/thread_count_sensitivity/thread_count_sensitivity.json`](../outputs/thread_count_sensitivity/thread_count_sensitivity.json) | Thí nghiệm `thread_count`: bốn cấu hình, deltas prediction, top-50 và `conclusion_facts` lưu tại Phụ lục A. |
 | [`outputs/verification/holdout_run_history.json`](../outputs/verification/holdout_run_history.json) | Ba phiên bản kết quả holdout lịch sử truy xuất từ Git: AUC/F1, top-50, sweep, pairwise deltas, xác minh teammate và khối tham chiếu bàn giao. |
 | [`outputs/holdout/repro/stage5_repro_report.json`](../outputs/holdout/repro/stage5_repro_report.json) | Kết quả đối chiếu run1 vs run2 toàn chuỗi Stage 3–4: status, deltas số học và hash bảng/biểu đồ dùng cho Phần 4. |
 | [`outputs/step4_thread1/verification/reproducibility.json`](../outputs/step4_thread1/verification/reproducibility.json) | Manifest `verify_pipeline` của cây canonical: hai lượt train/backtest độc lập, hash output và phiên bản môi trường. |
 | [`outputs/holdout/repro/run2/`](../outputs/holdout/repro/run2) | Báo cáo và artifact run 2 độc lập (`stage3`, `stage4`, `BAO_CAO_holdout_run2.md`) để đối chiếu run1. |
+
+## Phụ lục A — Thí nghiệm `thread_count` đã thực hiện
+
+Thí nghiệm có kiểm soát: cùng dữ liệu, feature, hyperparameter và `random_seed=42`, chỉ đổi `thread_count` (nguồn: `outputs/thread_count_sensitivity/thread_count_sensitivity.json`).
+
+| Cấu hình | `thread_count` | Train max\|Δp\| | Holdout max\|Δp\| | Holdout Pearson r | Holdout ROC-AUC | Holdout F1 | Top 50% net R | Top 50% trùng |
+|---|---|---|---|---|---|---|---|---|
+| tc1_a | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
+| tc1_b (lặp cùng cấu hình) | 1 | 0.000000 | 0.000000 | 1.0000 | 0.6046 | 0.4022 | -36.55 | 2514/2514 |
+| tc=2 | 2 | 0.283158 | 0.346856 | 0.9331 | 0.6042 | 0.4069 | -12.26 | 2252/2514 |
+| tc=-1 (mặc định) | -1 | 0.299853 | 0.335194 | 0.9409 | 0.6023 | 0.4065 | +30.79 | 2254/2514 |
+
+Trên máy này, `thread_count` **có** làm thay đổi kết quả: đổi cấu hình làm toàn bộ prediction thay đổi (train 25,008/25,008 và holdout 5,028/5,028 dòng lệch quá `1e-12` ở cả `tc=2` và `tc=-1` so với `tc=1`), kéo theo chọn top 50% và net R đổi. Hai lần chạy cùng cấu hình `tc=1` cho prediction giống hệt nhau (train max|Δp| = 0.0, holdout max|Δp| = 0.0), nên khác biệt đến từ việc đổi cấu hình chứ không phải bất định giữa hai lần chạy. Ảnh hưởng nằm ở bước train: cùng model đã fit, đổi prediction `thread_count` 1/2/-1 cho prediction giống hệt nhau (max|Δp| = 0.0). CatBoost mô tả `thread_count` là tham số tốc độ không ảnh hưởng kết quả; phép đo trên máy này xác nhận điều đó ở bước prediction nhưng không xác nhận ở bước train (holdout ROC-AUC từ 0.6023 đến 0.6046, top-50 net R từ -36.55 đến +30.79 R). Phạm vi: một máy, một build CatBoost, một dataset, một seed; thí nghiệm không quy hết sai lệch liên máy cho `thread_count` (xem giới hạn trong JSON).

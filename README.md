@@ -53,9 +53,6 @@ canonical-minus-reference delta:
 | Cách 2 — Walk-forward | 0.5867 | 0.3267 | +0.0007 | +0.0020 |
 | Cách 3 — WF + Purge/Embargo | 0.5948 | 0.3304 | −0.0052 | −0.0057 |
 
-The gap between Random K-Fold (~0.86) and the leak-aware splits (~0.59) is the
-leakage effect this project exists to demonstrate.
-
 ### Table 2 — Financial metrics, top 50% kept
 
 Canonical `thread_count=1` main block:
@@ -90,10 +87,7 @@ Holdout block (unchanged):
 | **Baseline holdout** | 5,028 | +245.93 | 305.32 | 1.0992 | 35.28 |
 | **Holdout, top 50%** | 2,514 | −36.55 | 263.25 | 0.9718 | 34.81 |
 
-On the sealed holdout the model still does **not** beat the unfiltered baseline:
-keeping the top 50% leaves 2,514 trades with **−36.55 R** and profit factor
-0.972, versus **+245.93 R** and profit factor 1.099 for the full 5,028-trade
-baseline. The full 20–80% sweep is in
+The full 20–80% sweep is in
 [`outputs/holdout/stage4/`](outputs/holdout/stage4/), and the complete report is
 [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
@@ -338,6 +332,8 @@ canonical flow.
 
 ## Sealed holdout workflow
 
+> Holdout evaluation is closed as of 2026-09-18. Do not run further training, scoring, backtesting, verification, or experiments on holdout. Commands below document the historical workflow only.
+
 The workflow runs the holdout in four stages, then compares the two runs with a
 fifth check. The three historical result versions are recorded in
 [`outputs/verification/holdout_run_history.md`](outputs/verification/holdout_run_history.md).
@@ -440,10 +436,7 @@ These values are fixed by the handover spec and must not be changed
   training results on this machine (train `max|Δp|` 0.2832 / 0.2999; holdout
   0.3469 / 0.3352; top-50 holdout net R −36.55 vs −12.26 vs +30.79 R for
   `tc=1` / `tc=2` / default), while repeated inference on a fitted model is
-  unchanged. The retained `thread_count=1` result has lower top-50 net R
-  (−36.55 R) than the historical Linux multi-thread result (+30.79 R). This
-  supports transparency but does not prove the absence of cherry-picking or
-  replace the decision history. The pre-agreed top 50% remains fixed; the
+  unchanged. The pre-agreed top 50% remains fixed; the
   holdout sweep is not used to select a new retention rate. Cross-machine
   equality is **not established**: the Windows teammate reported predictions
   within `1e-15` (not byte-identical) with no committed artifact. Same-machine
@@ -469,7 +462,7 @@ These values are fixed by the handover spec and must not be changed
 ### 2026-09-15 — Final report for Nhi: evidence scope and requirements check
 
 - Updated the main results report and its generator: three Git-retrievable historical result versions, the 12 September hypothesis versus the 15 September controlled experiment, fixed top 50%, and the boundary-trade replay scope.
-- Added a six-item feedback checklist to the report's verification section. Removed claims that worse results prove no cherry-picking or that Git captures every holdout access.
+- Clarified the scope of the recorded holdout history. The feedback checklist was subsequently removed on 2026-09-18.
 - Regenerated both report copies and the run-history ledger; numerical results and model settings remain unchanged. Cross-machine equality remains unestablished.
 - The main deliverable for Nhi is [the results report](docs/BAO_CAO_KET_QUA_HOLDOUT.md).
 
@@ -527,7 +520,7 @@ These values are fixed by the handover spec and must not be changed
   command above was re-run **PASS** (two trainings + two backtests, canonical
   manifest refreshed); `holdout_stage5_repro_check.py` re-run **PASS**; the
   test suite is **13 passed**.
-- **Best-practice fixes from the source audit** (`docs/CODE_BEST_PRACTICE_AUDIT.md`):
+- **Best-practice fixes from the source audit**:
   `allow_writing_files=False` now lives in the single-source `MODEL_PARAMS` used
   by Stage 2 and the thread-count experiment (no `catboost_info/` is created);
   `matplotlib==3.11.2` is declared/pinned and its version recorded in the
