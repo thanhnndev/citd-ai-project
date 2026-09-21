@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CITD AI LAB — Meta-Labeling 2-Stage Trading & Data Leakage Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">C</div>
+      <h1 class="brand-title">CITD AI LAB - Meta-Labeling 2-Stage Trading & Data Leakage Demo</h1>
+    </div>
+
+    <div class="header-right">
+      <!-- View mode switch -->
+      <div class="nav-pills">
+        <button class="nav-pill active" id="btn-view-terminal" data-view="terminal">Terminal Chính</button>
+        <button class="nav-pill" id="btn-view-leakage" data-view="leakage">Đối Soát Rò Rỉ Dữ Liệu</button>
+        <button class="nav-pill" id="btn-view-analogy" data-view="analogy">Mô Phỏng Đời Thực</button>
+      </div>
+      
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="status-text">Model: CatBoost Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEW 1: EXACT MOCKUP DASHBOARD TERMINAL -->
+  <main class="dashboard-grid" id="view-terminal">
+    <!-- TOP ROW -->
+    <div class="top-row">
+      <!-- Top Left: Candlestick Chart Card -->
+      <section class="card chart-card">
+        <div class="card-header">
+          <div class="symbol-info">
+            <span class="symbol-name">BTC/USD , M15</span>
+            <span class="symbol-price" id="currentPriceDisplay">$62,850.00</span>
+          </div>
+          <div class="signal-selector-row" id="signalPillContainer">
+            <!-- Dynamically populated signal buttons -->
+          </div>
+        </div>
+
+        <!-- Candlestick + Target Lines Canvas -->
+        <div class="candlestick-wrapper">
+          <canvas id="candlestickCanvas"></canvas>
+          <div class="chart-badges">
+            <span class="badge-tp">─── Take Profit (+2 ATR)</span>
+            <span class="badge-sl">─── Stop Loss (-1 ATR)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Right: AI Decision Panel -->
+      <section class="card decision-card">
+        <div class="card-header">
+          <span class="card-title">AI Decision Panel</span>
+          <span class="more-icon">⋮</span>
+        </div>
+
+        <div class="decision-body">
+          <!-- Circular Win Probability Gauge -->
+          <div class="gauge-box">
+            <div class="circular-progress">
+              <svg viewBox="0 0 160 160">
+                <circle class="circle-bg" cx="80" cy="80" r="68"></circle>
+                <circle class="circle-glow" id="circleFill" cx="80" cy="80" r="68"></circle>
+              </svg>
+              <div class="gauge-center">
+                <span class="gauge-label">P(Win):</span>
+                <span class="gauge-pct" id="gaugePct">64%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Big PASS/SKIP Badge -->
+          <div class="verdict-banner pass" id="verdictBanner">
+            PASS (EXECUTE)
+          </div>
+
+          <!-- Feature Importance Bars -->
+          <div class="feature-importance-list">
+            <span class="feature-list-title">Feature Importance (Top 5):</span>
+            <div id="featureBarsContainer">
+              <!-- Dynamically populated feature bars -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <!-- Bottom Left: Equity Curve with Slider -->
+      <section class="card equity-card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">Equity Curve</span>
+            <span class="card-subtitle">Interactive comparison</span>
+          </div>
+          <div class="slider-control">
+            <span class="slider-label" id="sliderLabel">Filter Threshold: Top 50%</span>
+            <input type="range" id="filterSlider" min="20" max="100" step="10" value="50" class="neon-slider">
+          </div>
+        </div>
+
+        <div class="equity-chart-wrapper">
+          <canvas id="equityCanvas"></canvas>
+        </div>
+      </section>
+
+      <!-- Bottom Right: 4 KPI Cards in 2x2 Grid -->
+      <section class="kpi-grid">
+        <div class="kpi-tile">
+          <span class="tile-title">Win Rate</span>
+          <span class="tile-value" id="kpiWinRate">34.99%</span>
+          <span class="tile-sub pos">+3.28%</span>
+        </div>
+        <div class="kpi-tile highlight-green">
+          <span class="tile-title">Net Profit</span>
+          <span class="tile-value" id="kpiNetProfit">+126.5 R</span>
+          <span class="tile-sub pos">+32.9%</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="tile-title">Profit Factor</span>
+          <span class="tile-value" id="kpiProfitFactor">1.40</span>
+          <span class="tile-sub pos">+8.5%</span>
+        </div>
+        <div class="kpi-tile highlight-red">
+          <span class="tile-title">Max Drawdown</span>
+          <span class="tile-value" id="kpiDrawdown">-40%</span>
+          <span class="tile-sub neg">reduction</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- VIEW 2: DATA LEAKAGE CONTRAST LAB -->
+  <main class="sub-view" id="view-leakage" style="display:none;">
+    <div class="leakage-wrapper">
+      <div class="card roc-card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">Đối Soát Đường Cong ROC Qua 4 Phương Pháp Chia Dữ Liệu</span>
+            <span class="card-subtitle">Lột trần sự ảo tưởng của Random K-Fold (AUC 0.858) so với thực tế Purged Walk-Forward (AUC 0.589)</span>
+          </div>
+        </div>
+        <div style="height: 480px; position: relative;">
+          <canvas id="rocCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="card reliability-card">
+        <div class="card-header">
+          <span class="card-title">Độ Tin Cậy Phương Pháp Chia</span>
+        </div>
+        <div class="splits-list" id="splitsListContainer"></div>
+        <div class="leakage-warning">
+          <strong>⚠ Cảnh Báo Khoa Học:</strong> Chia ngẫu nhiên (Random K-Fold) trên chuỗi thời gian làm rò rỉ dữ liệu tương lai sang tập huấn luyện (Lookahead bias), sinh ra ảo tưởng mô hình "siêu lợi nhuận" nhưng chắc chắn sẽ cháy tài khoản khi đem vào vận hành thực tế.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- VIEW 3: CROSS-DOMAIN REAL-WORLD ANALOGY -->
+  <main class="sub-view" id="view-analogy" style="display:none;">
+    <div class="analogy-container">
+      <div class="card intro-card">
+        <span class="card-title">Khả Năng Chuyển Giao Thực Tiễn Của Kiến Trúc Meta-Labeling 2 Tầng</span>
+        <p class="card-subtitle" style="margin-top:6px;">
+          Ý nghĩa lớn nhất của đồ án không dừng lại ở bài toán tài chính, mà chứng minh tính đúng đắn của <strong>nguyên lý thẩm định 2 tầng</strong> cho mọi hệ thống AI chuỗi thời gian trong đời sống:
+        </p>
+      </div>
+
+      <div class="analogy-grid-3">
+        <div class="card domain-item">
+          <div class="domain-header">
+            <span class="domain-emoji">🏥</span>
+            <span class="domain-name" style="color:#60A5FA;">Y Tế & Chẩn Đoán Ung Thư</span>
+          </div>
+          <div class="domain-box">
+            <strong>Tầng 1 (Sàng lọc):</strong> Xét nghiệm máu / X-quang sơ cấp phát hiện tổn thương nghi ngờ (ưu tiên Recall cao, chấp nhận báo động giả).
+          </div>
+          <div class="domain-box" style="border-left:3px solid #10B981;">
+            <strong>Tầng 2 (Meta-Model):</strong> Thẩm định bối cảnh hồ sơ bệnh án trước khi quyết định sinh thiết / phẫu thuật $\rightarrow$ <em>Tránh mổ nhầm người lành</em>.
+          </div>
+          <div class="domain-footer">🎯 Cứu sinh mạng & giảm chi phí phẫu thuật không cần thiết.</div>
+        </div>
+
+        <div class="card domain-item">
+          <div class="domain-header">
+            <span class="domain-emoji">⚡</span>
+            <span class="domain-name" style="color:#34D399;">Lưới Điện & Năng Lượng</span>
+          </div>
+          <div class="domain-box">
+            <strong>Tầng 1 (Cảnh báo phụ tải):</strong> Cảm biến IoT phát hiện nhiệt độ biến áp tăng vọt trong giờ cao điểm.
+          </div>
+          <div class="domain-box" style="border-left:3px solid #3B82F6;">
+            <strong>Tầng 2 (Meta-Model):</strong> Phân tích xu hướng thời tiết và tải toàn mạng trước khi kích hoạt máy phát bù tốn kém $\rightarrow$ <em>Tránh mất điện oan</em>.
+          </div>
+          <div class="domain-footer">🎯 Bảo vệ hạ tầng lưới điện quốc gia khỏi quá tải.</div>
+        </div>
+
+        <div class="card domain-item">
+          <div class="domain-header">
+            <span class="domain-emoji">🛡️</span>
+            <span class="domain-name" style="color:#FBBF24;">An Ninh Mạng (IDS / SIEM)</span>
+          </div>
+          <div class="domain-box">
+            <strong>Tầng 1 (Quét lưu lượng):</strong> Hệ thống phát hiện bất thường trong hàng triệu request mỗi phút (tỷ lệ báo động giả 95%).
+          </div>
+          <div class="domain-box" style="border-left:3px solid #F59E0B;">
+            <strong>Tầng 2 (Meta-Model):</strong> Thẩm định ngữ cảnh hành vi người dùng $\rightarrow$ <em>Chỉ khóa IP kẻ tấn công thực sự, không chặn nhầm khách hàng VIP</em>.
+          </div>
+          <div class="domain-footer">🎯 Lọc bỏ 68% - 95% báo động giả giúp giảm tải cho đội SOC.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
