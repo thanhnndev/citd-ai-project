@@ -7,6 +7,9 @@ __pycache__/
 build/
 dist/
 
+# --------------------------------------- frontend & node
+node_modules/
+
 # --------------------------------------------------- virtual environments
 # uv creates .venv/ automatically; never commit it.
 .venv/
@@ -23,6 +26,9 @@ catboost_info/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+.chart-data-*/
+.slide-build/
+slides/.presentation-revision/
 
 # ---------------------------------------------------------------- OS/editor
 .DS_Store
