@@ -102,6 +102,10 @@ def label_one_entry(
 ):
     """Apply the six Triple Barrier rules, returning label, bars, touch time, and horizon status.
 
+    The six rules are specified in ``docs/thong_so_triple_barrier.png``; the
+    ``Rule N`` comments below refer to that numbering. Rule 5 (no barrier touched
+    in this M15 bar -> continue to the next one) is the loop itself.
+
     ``bars_to_label`` is one-based: a decision in the entry M15 bar is 1 and
     vertical expiry after all permitted bars is 50.
     """

@@ -509,7 +509,7 @@ def render_markdown(ledger: dict) -> str:
         ])
     lines.append(markdown_table(["Phương pháp", "Số lệnh", "Net profit (R)", "MaxDD (R)", "Profit factor", "Win rate %"], rows))
     lines.append("")
-    lines.append(f"Các dòng khác của `backtest_retention_sweep.csv` (20–80%) nằm nguyên trong file JSON.")
+    lines.append("Các dòng khác của `backtest_retention_sweep.csv` (20–80%) nằm nguyên trong file JSON.")
     lines.append("")
     lines.append("## 5. Nguồn dữ liệu (provenance)")
     lines.append("")

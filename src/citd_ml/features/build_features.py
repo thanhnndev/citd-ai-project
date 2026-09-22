@@ -4,7 +4,7 @@ Design rules enforced here:
   * Every feature is computed from raw M15 OHLCV at the entry bar of THAT
     position, using only bars that closed before it (index entry_bar-1) plus
     the entry bar's own open. No frozen strategy indicator is reused.
-  * Labels come from label_triple_barrier_moi.py unchanged, for all 4 legs.
+  * Labels come from citd_ml.labeling.triple_barrier unchanged, for all 4 legs.
   * Nothing that encodes the absolute price level or the calendar position of
     the sample is emitted as a feature (see EXCLUDED below).
   * label_end_time is emitted so Cach 3 can purge/embargo correctly.
@@ -60,7 +60,7 @@ FEATURES = [
 META = ["entry_time", "label_end_time", "origin_bar", "entry_bar", "entry_price",
         "leg", "entry_vs_base_R"]
 
-# Deliberately EXCLUDED, see bao_cao_feature.md:
+# Deliberately EXCLUDED, see docs/bao_cao_feature.md §3 for the full reasoning:
 #   atr90_pct        - Spearman 1.000 with breakeven_R (identical feature)
 #   entry_price      - near-perfect family fingerprint (sibling corr 0.9999)
 #   upper_barrier / lower_barrier / atr_frozen (raw) - same problem
@@ -130,6 +130,11 @@ def build_features(m15, pos, strat_mod):
         return pd.Series(a).shift(k).to_numpy()
 
     ei = pos["entry_bar"].to_numpy()
+    if ei.size and ei.min() < 1:
+        # p = ei - 1 would wrap to the last bar of the series and leak the
+        # future into the row. PyramidStrategy.warmup keeps entry_bar >= 200,
+        # so this only fires if that invariant is ever broken.
+        raise ValueError("entry_bar must be >= 1 so the previous bar exists")
     p = ei - 1                      # last fully-closed bar before entry
     entry_price = pos["entry_price"].to_numpy()
     atr_frozen = pos["atr_frozen"].to_numpy()

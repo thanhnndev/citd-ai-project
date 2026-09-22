@@ -169,7 +169,7 @@ citd-ml-project/
 │       ├── stage4/            bảng, quyết định, biểu đồ HTML
 │       └── repro/             báo cáo stage5 run1-vs-run2 + cây run2 độc lập
 │
-├── docs/                      đề bài bàn giao + báo cáo kết quả
+├── docs/                      cơ sở chọn tham số + đề bài bàn giao + báo cáo kết quả
 └── tests/                     test layout/hằng số nhẹ
 ```
 
@@ -243,8 +243,11 @@ data/raw/BTCUSD_m1_2018_to_now.csv
 ```
 
 Toàn bộ `data/processed/` và `outputs/` **đã được commit**, nên có thể xem mọi
-kết quả và chạy lại phần train/backtest mà không cần file thô. File thô chỉ cần
-khi muốn sinh lại dataset từ đầu.
+kết quả và chạy lại phần **train** mà không cần file thô. File thô cần khi muốn
+sinh lại dataset từ đầu *và* khi chạy bất kỳ backtest nào, vì mọi backtest đều
+replay chiến lược trên lịch sử M1: `scripts/run_backtest.py`,
+`scripts/verify_pipeline.py` và `scripts/holdout_stage3_backtest.py` đều đọc
+`data/raw/BTCUSD_m1_2018_to_now.csv`.
 
 ---
 
@@ -438,15 +441,91 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 
 ## Tài liệu
 
+**Cơ sở chọn tham số — vì sao mỗi hằng số mang giá trị đó:**
+
 | File | Nội dung |
 |---|---|
+| [`docs/tom_tat_idea_goc.md`](docs/tom_tat_idea_goc.md) | Đề cương gốc: đồ án đo cái gì và đo bằng cách nào |
+| [`docs/bao_cao_hyperparameter_triple_barrier.md`](docs/bao_cao_hyperparameter_triple_barrier.md) | Vì sao SL = 0.6%, ngưỡng trên = 3.8 × ATR(90), chặn thời gian H = 50 bar, số leg k = 3 |
+| [`docs/thong_so_triple_barrier.png`](docs/thong_so_triple_barrier.png) | Sáu quy tắc gán nhãn, đúng như cài trong `labeling/triple_barrier.py` |
+| [`docs/bao_cao_feature.md`](docs/bao_cao_feature.md) | Vì sao chọn 23 feature này, vì sao loại các cột kia, và cấu hình CatBoost |
+
+**Kết quả và quy trình:**
+
+| File | Nội dung |
+|---|---|
+| [`docs/BAO_CAO_KET_QUA_STEP4.md`](docs/BAO_CAO_KET_QUA_STEP4.md) | Báo cáo bước 4: kết quả bốn cách chia trên 80% đầu, kết luận leakage, cảnh báo shadow strategy |
 | [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md) | Báo cáo kết quả holdout (số liệu, biểu đồ, kiểm chứng) |
 | [`docs/BAN_GIAO_task_holdout.md`](docs/BAN_GIAO_task_holdout.md) | Đề bài holdout gốc |
 | [`docs/BAN_GIAO_task_train_catboost.md`](docs/BAN_GIAO_task_train_catboost.md) | Đề bài train gốc |
 | [`docs/quy_trinh_lam_viec.md`](docs/quy_trinh_lam_viec.md) | Quy trình làm việc |
 | [`docs/handover_README.md`](docs/handover_README.md) | README bàn giao gốc |
+| [`deliverables/Huong_dan_su_dung.md`](deliverables/Huong_dan_su_dung.md) | Hướng dẫn sử dụng bài nộp (môi trường, dữ liệu, pipeline, xem kết quả ở đâu) |
+
+## Bài nộp (deliverables)
+
+| Đường dẫn | Nội dung |
+|---|---|
+| [`deliverables/Scientific_report_Nhom11.docx`](deliverables/Scientific_report_Nhom11.docx) / [`.pdf`](deliverables/Scientific_report_Nhom11.pdf) | Báo cáo scientific của Nhóm 11 |
+| [`deliverables/Demo/`](deliverables/Demo/) | Biểu đồ kết quả xem nhanh (`*.png` + `*.html` tương tác); giống từng byte với các file tương ứng trong `outputs/holdout/stage4/` và `docs/thong_so_triple_barrier.png` |
+| [`deliverables/Huong_dan_su_dung.md`](deliverables/Huong_dan_su_dung.md) | Cách đóng gói bài nộp, cài đặt và chạy (tiếng Việt) |
 
 ## Changelog
+
+### 2026-09-22 — Tích hợp bài nhóm trưởng gửi (báo cáo + mã nguồn đã dọn)
+
+- **Thêm báo cáo scientific và bộ demo** từ file zip của nhóm trưởng:
+  `deliverables/Scientific_report_Nhom11.docx` / `.pdf`,
+  `deliverables/Demo/` và hướng dẫn sử dụng
+  `deliverables/Huong_dan_su_dung.md`. Các biểu đồ demo giống từng byte với
+  biểu đồ đã commit trong `outputs/holdout/stage4/` và
+  `docs/thong_so_triple_barrier.png`.
+- **Đưa các tài liệu cơ sở chọn tham số vào `docs/`**
+  (`docs/tom_tat_idea_goc.md`, `docs/bao_cao_hyperparameter_triple_barrier.md`,
+  `docs/bao_cao_feature.md`, `docs/thong_so_triple_barrier.png`,
+  `docs/BAO_CAO_KET_QUA_STEP4.md`) — nội dung từng file xem ở mục 2026-09-20 bên dưới.
+- **Áp dụng bản dọn mã nguồn của nhóm trưởng (không đổi hành vi):**
+  `EMBARGO_BARS = paths.VERTICAL_BARS` trong `training/split_data.py`, chốt
+  `entry_bar >= 1` trong `features/build_features.py`, thông báo
+  `FileNotFoundError` rõ hơn trong `verification/verify_pipeline.py`, chuẩn hoá
+  dấu `/` cho test trên Windows trong `tests/test_package.py`, và bỏ tiền tố `f`
+  thừa trong `scripts/holdout_run_history.py` / `scripts/holdout_stage4_report.py`.
+  Bảng provenance ở mục 2026-09-20 ghi rõ vì sao bảy file này không làm lệch số.
+- Báo cáo technical do các thành viên còn lại viết riêng; repo này giữ báo cáo
+  scientific, mã nguồn và bằng chứng.
+
+### 2026-09-20 — Bổ sung tài liệu cơ sở chọn tham số; sửa mã nguồn không đổi hành vi
+
+- **Bổ sung các tài liệu giải thích mọi hằng số đã đóng băng** (xem [Tài liệu](#tài-liệu)):
+  `docs/bao_cao_hyperparameter_triple_barrier.md` (SL 0.6%, 3.8 × ATR(90), H = 50, k = 3),
+  `docs/thong_so_triple_barrier.png` (sáu quy tắc gán nhãn mà các comment `Rule N` trong
+  `labeling/triple_barrier.py` trỏ tới), `docs/bao_cao_feature.md` (23 feature, danh sách
+  loại trừ, cấu hình CatBoost — đây chính là file mà `features/build_features.py` tham
+  chiếu), `docs/tom_tat_idea_goc.md` (đề cương gốc) và `docs/BAO_CAO_KET_QUA_STEP4.md`
+  (diễn giải bước 4 và kết luận leakage). Số liệu trong các tài liệu này đã được đối
+  chiếu với artifact đã commit trước khi đưa vào; mỗi file có header ghi rõ đã kiểm
+  những gì và chỗ nào đã lỗi thời.
+- Sửa lỗi test chỉ fail trên Windows: `tests/test_package.py` so link Markdown bằng
+  `os.sep`, trong khi script sinh báo cáo luôn ghi `/`.
+- Sửa lại hai README: backtest **có** cần file M1 thô, chỉ train mới không cần.
+
+- **Ghi chú provenance — bốn file mã nguồn được sửa sau lần chạy canonical.**
+  `outputs/step4_thread1/` được sinh trên Linux (xem `platform` trong
+  `verification/reproducibility.json` của nó), nên `source_sha256` của nó không còn khớp
+  bốn file sau:
+
+  | File | Thay đổi | Vì sao không thể làm lệch số |
+  |---|---|---|
+  | `training/split_data.py` | hardcode `- 50` → `EMBARGO_BARS = paths.VERTICAL_BARS` | `VERTICAL_BARS` bằng 50; chạy lại `split_data.py` cho fold giống hệt (train 4980/10000/14996/20004, removed 21/3/8/2) |
+  | `features/build_features.py` | docstring + chặn `entry_bar < 1` | `PyramidStrategy.warmup` giữ `entry_bar >= 200` nên guard không bao giờ kích hoạt; **đã kiểm: sinh lại dataset cho file giống hệt từng byte bản đã commit** (SHA256 `d97d5acb…`) |
+  | `verification/verify_pipeline.py` | thông báo `FileNotFoundError` rõ hơn | chỉ nằm ở nhánh báo lỗi |
+  | `scripts/holdout_stage4_report.py` | bỏ tiền tố `f` thừa trên chuỗi không có placeholder | không đổi hành vi |
+
+  Mọi file tham gia tính ra con số — `pyramid_strategy.py`, `pre_train.py`,
+  `train_catboost.py`, `backtest_pyramid_local.py`, `dataset_catboost.csv`,
+  `tradelist_pyramid_local.csv` — vẫn khớp manifest. Manifest **không** được sinh lại:
+  chạy `verify_pipeline.py` trên hệ điều hành khác sẽ đem kết quả Windows so với CSV
+  sinh trên Linux, điều mà chính bằng chứng của dự án nói là không kỳ vọng giống từng byte.
 
 ### 2026-09-15 — Hoàn thiện báo cáo cho Nhi và đối chiếu yêu cầu
 

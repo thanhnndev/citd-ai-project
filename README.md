@@ -171,7 +171,7 @@ citd-ml-project/
 │       ├── stage4/            tables, decisions, HTML equity curves
 │       └── repro/             stage5 run1-vs-run2 report + independent run2 tree
 │
-├── docs/                      handover tasks + final report (Vietnamese)
+├── docs/                      design rationale + task specs + reports (Vietnamese)
 └── tests/                     lightweight layout/constant tests
 ```
 
@@ -246,8 +246,11 @@ data/raw/BTCUSD_m1_2018_to_now.csv
 ```
 
 Everything under `data/processed/` and `outputs/` **is** committed, so you can
-inspect every result and re-run training/backtesting without the raw file. The
-raw file is only needed to rebuild the dataset from scratch.
+inspect every result and re-run **training** without the raw file. The raw file
+is needed to rebuild the dataset from scratch *and* to run any backtest, because
+every backtest replays the strategy over M1 history: `scripts/run_backtest.py`,
+`scripts/verify_pipeline.py` and `scripts/holdout_stage3_backtest.py` all read
+`data/raw/BTCUSD_m1_2018_to_now.csv`.
 
 ---
 
@@ -449,15 +452,94 @@ These values are fixed by the handover spec and must not be changed
 
 ## Documentation
 
+**Design decisions — why every constant has the value it has:**
+
 | File | Contents |
 |---|---|
+| [`docs/tom_tat_idea_goc.md`](docs/tom_tat_idea_goc.md) | Original project proposal: what the split-bias experiment is meant to measure |
+| [`docs/bao_cao_hyperparameter_triple_barrier.md`](docs/bao_cao_hyperparameter_triple_barrier.md) | Why SL = 0.6%, upper barrier = 3.8 × ATR(90), horizon H = 50 bars, pyramid k = 3 |
+| [`docs/thong_so_triple_barrier.png`](docs/thong_so_triple_barrier.png) | The six labelling rules, as implemented in `labeling/triple_barrier.py` |
+| [`docs/bao_cao_feature.md`](docs/bao_cao_feature.md) | Why these 23 features, why the excluded columns are excluded, and the CatBoost config |
+
+**Results and process:**
+
+| File | Contents |
+|---|---|
+| [`docs/BAO_CAO_KET_QUA_STEP4.md`](docs/BAO_CAO_KET_QUA_STEP4.md) | Step-4 report: four-split results on the first 80%, leakage conclusions, shadow-strategy caveat |
 | [`docs/BAO_CAO_KET_QUA_HOLDOUT.md`](docs/BAO_CAO_KET_QUA_HOLDOUT.md) | Final holdout report (numbers, charts, verification) |
 | [`docs/BAN_GIAO_task_holdout.md`](docs/BAN_GIAO_task_holdout.md) | Original holdout task spec |
 | [`docs/BAN_GIAO_task_train_catboost.md`](docs/BAN_GIAO_task_train_catboost.md) | Original training task spec |
 | [`docs/quy_trinh_lam_viec.md`](docs/quy_trinh_lam_viec.md) | Project working process |
 | [`docs/handover_README.md`](docs/handover_README.md) | Original handover README |
+| [`deliverables/Huong_dan_su_dung.md`](deliverables/Huong_dan_su_dung.md) | Submission usage guide (environment, data, pipeline, where to read results) |
+
+## Submission deliverables
+
+| Path | Contents |
+|---|---|
+| [`deliverables/Scientific_report_Nhom11.docx`](deliverables/Scientific_report_Nhom11.docx) / [`.pdf`](deliverables/Scientific_report_Nhom11.pdf) | Group 11 scientific report |
+| [`deliverables/Demo/`](deliverables/Demo/) | Result charts for quick viewing (`*.png` + interactive `*.html`); byte-identical to the matching files in `outputs/holdout/stage4/` and `docs/thong_so_triple_barrier.png` |
+| [`deliverables/Huong_dan_su_dung.md`](deliverables/Huong_dan_su_dung.md) | Submission packaging, setup and run instructions (Vietnamese) |
 
 ## Changelog
+
+### 2026-09-22 — Integrate team-leader submission (report bundle + cleaned source)
+
+- **Added the scientific report and demo bundle** from the team leader's zip:
+  `deliverables/Scientific_report_Nhom11.docx` / `.pdf`,
+  `deliverables/Demo/` and the submission usage guide
+  `deliverables/Huong_dan_su_dung.md`. The demo charts are byte-identical to
+  the already-committed `outputs/holdout/stage4/` charts and
+  `docs/thong_so_triple_barrier.png`.
+- **Placed the design-rationale documents** (`docs/tom_tat_idea_goc.md`,
+  `docs/bao_cao_hyperparameter_triple_barrier.md`, `docs/bao_cao_feature.md`,
+  `docs/thong_so_triple_barrier.png`, `docs/BAO_CAO_KET_QUA_STEP4.md`) — see the
+  2026-09-20 entry below for what each one covers.
+- **Applied the leader's non-functional source cleanup:** `EMBARGO_BARS =
+  paths.VERTICAL_BARS` in `training/split_data.py`, the `entry_bar >= 1` guard in
+  `features/build_features.py`, the clearer `FileNotFoundError` in
+  `verification/verify_pipeline.py`, the Windows-safe link separator in
+  `tests/test_package.py`, and the redundant-`f`-prefix removals in
+  `scripts/holdout_run_history.py` and `scripts/holdout_stage4_report.py`. All
+  seven files are behaviour-neutral for the committed numbers; the provenance
+  table in the 2026-09-20 entry records why.
+- The technical report is written separately by the other members; this
+  repository holds the scientific report, the code and the evidence.
+
+### 2026-09-20 — Design-rationale docs added; non-functional source edits
+
+- **Added the documents that explain every frozen constant** (see
+  [Documentation](#documentation)): `docs/bao_cao_hyperparameter_triple_barrier.md`
+  (SL 0.6%, 3.8 × ATR(90), H = 50, k = 3), `docs/thong_so_triple_barrier.png` (the six
+  labelling rules the `Rule N` comments in `labeling/triple_barrier.py` refer to),
+  `docs/bao_cao_feature.md` (the 23 features, the exclusion list, the CatBoost config —
+  this is the file `features/build_features.py` points to), `docs/tom_tat_idea_goc.md`
+  (original proposal) and `docs/BAO_CAO_KET_QUA_STEP4.md` (step-4 interpretation and
+  leakage conclusions). Their numbers were checked against the committed artifacts
+  before they were added; each carries a header stating what was verified and what is
+  outdated.
+- Fixed a Windows-only test failure: `tests/test_package.py` compared Markdown links
+  using `os.sep`, while the report generator always writes `/`.
+- Corrected both READMEs: the backtest **does** need the raw M1 CSV, only training does not.
+
+- **Provenance note — four source files were edited after the canonical run.**
+  `outputs/step4_thread1/` was produced on Linux (see `platform` in its
+  `verification/reproducibility.json`), so its `source_sha256` no longer matches these
+  four files:
+
+  | File | Change | Why it cannot move a number |
+  |---|---|---|
+  | `training/split_data.py` | hardcoded `- 50` → `EMBARGO_BARS = paths.VERTICAL_BARS` | `VERTICAL_BARS` is 50; re-running `split_data.py` gives identical folds (train 4980/10000/14996/20004, removed 21/3/8/2) |
+  | `features/build_features.py` | docstring + a guard rejecting `entry_bar < 1` | `PyramidStrategy.warmup` keeps `entry_bar >= 200`, so the guard never fires; **checked: regenerating the dataset produces a file byte-identical to the committed one** (SHA256 `d97d5acb…`) |
+  | `verification/verify_pipeline.py` | clearer `FileNotFoundError` message | error path only |
+  | `scripts/holdout_stage4_report.py` | removed redundant `f` prefixes on literals with no placeholders | no behaviour change |
+
+  Every file that feeds a computed number — `pyramid_strategy.py`, `pre_train.py`,
+  `train_catboost.py`, `backtest_pyramid_local.py`, `dataset_catboost.csv`,
+  `tradelist_pyramid_local.csv` — still matches the manifest. The manifest was **not**
+  regenerated: re-running `verify_pipeline.py` on a different OS would compare Windows
+  output against Linux-produced CSVs, which this project's own evidence says is not
+  expected to match byte for byte.
 
 ### 2026-09-15 — Final report for Nhi: evidence scope and requirements check
 

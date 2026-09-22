@@ -41,6 +41,16 @@ SOURCE_FILES = (
 
 
 def file_hash(path: Path) -> str:
+    if not path.is_file():
+        # RAW_M1_CSV (~209 MB) không được commit, nên đây là nguyên nhân thiếu
+        # file phổ biến nhất khi chạy trên bản clone mới.
+        hint = (
+            " Xem data/raw/README.md: file M1 thô không được commit, phải đặt lại"
+            " đúng đường dẫn trước khi chạy verify_pipeline."
+            if path == paths.RAW_M1_CSV
+            else ""
+        )
+        raise FileNotFoundError(f"Thiếu file cần hash cho manifest: {path}.{hint}")
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 

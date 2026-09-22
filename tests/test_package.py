@@ -118,7 +118,11 @@ def test_report_embeds_png_charts() -> None:
     report = (paths.DOCS_DIR / "BAO_CAO_KET_QUA_HOLDOUT.md").read_text(encoding="utf-8")
     for filename in PNG_CHARTS:
         assert (paths.HOLDOUT_STAGE4_DIR / filename).is_file()
-        relative = os.path.relpath(paths.HOLDOUT_STAGE4_DIR / filename, paths.DOCS_DIR)
+        # holdout_stage4_report.py writes Markdown links with "/" on every OS,
+        # so normalise the separator before comparing (os.sep is "\" on Windows).
+        relative = os.path.relpath(
+            paths.HOLDOUT_STAGE4_DIR / filename, paths.DOCS_DIR
+        ).replace(os.sep, "/")
         assert "![Biểu đồ" in report
         assert f"]({relative})" in report
 

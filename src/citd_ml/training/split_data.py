@@ -3,11 +3,16 @@
 import numpy as np
 from sklearn.model_selection import GroupKFold, KFold
 
+from citd_ml import paths
 from citd_ml.training.pre_train import prepare_dataset
 
 
 Fold = tuple[np.ndarray, np.ndarray]
 FoldList = list[Fold]
+
+# Embargo dài đúng bằng chân dọc của triple barrier: một lệnh vào trong
+# VERTICAL_BARS bar cuối trước test vẫn còn nhãn phụ thuộc vùng test.
+EMBARGO_BARS = paths.VERTICAL_BARS
 
 
 def make_random_kfold(X) -> FoldList:
@@ -62,7 +67,7 @@ def make_purged_walk_forward(walk_folds: FoldList, meta) -> FoldList:
 
         purge_ok = train_meta["label_end_time"] < test_start_time
 
-        embargo_ok = train_meta["entry_bar"] < test_start_bar - 50
+        embargo_ok = train_meta["entry_bar"] < test_start_bar - EMBARGO_BARS
 
         keep = purge_ok & embargo_ok
         clean_train_idx = train_idx[keep.to_numpy()]
@@ -186,7 +191,7 @@ def validate_purged_folds(
         original_train_meta = meta.iloc[walk_train]
         expected_keep = (
             (original_train_meta["label_end_time"] < test_start_time)
-            & (original_train_meta["entry_bar"] < test_start_bar - 50)
+            & (original_train_meta["entry_bar"] < test_start_bar - EMBARGO_BARS)
         )
         if not np.array_equal(train_idx, walk_train[expected_keep.to_numpy()]):
             raise ValueError(
@@ -197,7 +202,7 @@ def validate_purged_folds(
             raise ValueError(
                 f"Purged walk-forward fold {fold_number}: còn label tràn sang test"
             )
-        if (train_meta["entry_bar"] >= test_start_bar - 50).any():
+        if (train_meta["entry_bar"] >= test_start_bar - EMBARGO_BARS).any():
             raise ValueError(
                 f"Purged walk-forward fold {fold_number}: còn vi phạm embargo"
             )
