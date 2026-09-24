@@ -441,6 +441,8 @@ Các giá trị này do đề bài bàn giao chốt, **không được đổi**
 
 ## Tài liệu
 
+[Báo cáo kỹ thuật cho nhóm](docs/TECHNICAL_REPORT_NHOM11.md) bám bố cục và thuật ngữ của báo cáo khoa học nhóm trưởng, kèm nguồn số liệu và giới hạn kiểm chứng để các thành viên viết báo cáo thống nhất.
+
 **Cơ sở chọn tham số — vì sao mỗi hằng số mang giá trị đó:**
 
 | File | Nội dung |

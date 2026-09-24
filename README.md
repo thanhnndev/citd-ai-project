@@ -452,6 +452,8 @@ These values are fixed by the handover spec and must not be changed
 
 ## Documentation
 
+The [technical report for the team](docs/TECHNICAL_REPORT_NHOM11.md) follows the structure and terminology of the team leader's scientific report and maps each result to repository evidence.
+
 **Design decisions — why every constant has the value it has:**
 
 | File | Contents |
