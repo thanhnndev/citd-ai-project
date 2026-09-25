@@ -124,6 +124,7 @@ citd-ml-project/
 ├── README.md                  ← this file (English)
 ├── README_VI.md               ← Vietnamese guide
 ├── LICENSE                    MIT
+├── Do_An_Meta_Labeling_BTCUSD.ipynb   course notebook (kernel `citd-ml`)
 ├── pyproject.toml             package metadata + pinned dependencies (uv)
 ├── requirements.txt           same pins for plain pip
 ├── .gitignore .gitattributes
@@ -156,7 +157,8 @@ citd-ml-project/
 │   ├── holdout_stage2_train.py
 │   ├── holdout_stage3_backtest.py
 │   ├── holdout_stage4_report.py
-│   └── holdout_stage5_repro_check.py run1-vs-run2 chain comparison
+│   ├── holdout_stage5_repro_check.py run1-vs-run2 chain comparison
+│   └── register_notebook_kernel.py  register the `citd-ml` Jupyter kernel
 │
 ├── outputs/                   committed results/evidence
 │   ├── catboost_training/     handed-over 4 OOF tables + fold metrics (frozen reference)
@@ -200,8 +202,8 @@ uv run pytest
 ```
 
 `uv sync --extra dev` reads `pyproject.toml`, creates `.venv/`, installs
-`pytest` from the `dev` extra, and uses the committed `uv.lock` so every clone
-gets identical versions.
+`pytest`, `jupyterlab` and `ipykernel` from the `dev` extra, and uses the
+committed `uv.lock` so every clone gets identical versions.
 
 To add a new dependency:
 
@@ -228,6 +230,34 @@ python scripts/train_models.py
 ```bash
 uv run python -c "import catboost, sklearn, pandas, numpy, plotly; print('ok')"
 uv run pytest
+```
+
+### Notebook kernel
+
+[`Do_An_Meta_Labeling_BTCUSD.ipynb`](Do_An_Meta_Labeling_BTCUSD.ipynb) is bound to
+a project-local kernel named **`citd-ml`** that points at this repository's `.venv`.
+Register it once after `uv sync --extra dev`:
+
+```bash
+uv run python scripts/register_notebook_kernel.py
+uv run jupyter lab Do_An_Meta_Labeling_BTCUSD.ipynb
+```
+
+The kernelspec is written to `.venv/share/jupyter/kernels/citd-ml/` (inside the
+gitignored `.venv/`), so it never leaks into other projects on the machine. The
+notebook's first code cell prints the interpreter path, the resolved library
+versions and the running kernel, and aborts if it is not executing inside
+`.venv/` — so a wrong kernel is reported immediately instead of failing later
+with an `ImportError`.
+
+The notebook reads only `data/processed/` and committed files under `outputs/`.
+It does **not** need the ~209 MB `data/raw/BTCUSD_m1_2018_to_now.csv`.
+
+To check the notebook end-to-end without a browser:
+
+```bash
+uv run jupyter nbconvert --to notebook --execute \
+    --output-dir=/tmp/nb-check Do_An_Meta_Labeling_BTCUSD.ipynb
 ```
 
 ---

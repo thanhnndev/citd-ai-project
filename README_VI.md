@@ -122,6 +122,7 @@ citd-ml-project/
 ├── README.md                  ← bản tiếng Anh
 ├── README_VI.md               ← file này
 ├── LICENSE                    MIT
+├── Do_An_Meta_Labeling_BTCUSD.ipynb   notebook đồ án (kernel `citd-ml`)
 ├── pyproject.toml             metadata + phiên bản thư viện (uv)
 ├── requirements.txt           phiên bản tương tự cho pip thuần
 ├── .gitignore .gitattributes
@@ -154,7 +155,8 @@ citd-ml-project/
 │   ├── holdout_stage2_train.py
 │   ├── holdout_stage3_backtest.py
 │   ├── holdout_stage4_report.py
-│   └── holdout_stage5_repro_check.py đối chiếu chuỗi run1 vs run2
+│   ├── holdout_stage5_repro_check.py đối chiếu chuỗi run1 vs run2
+│   └── register_notebook_kernel.py  đăng ký kernel Jupyter `citd-ml`
 │
 ├── outputs/                   kết quả/bằng chứng đã commit
 │   ├── catboost_training/     4 bảng OOF + metric từng fold bàn giao (tham chiếu đóng băng)
@@ -197,9 +199,9 @@ uv run python scripts/train_models.py
 uv run pytest
 ```
 
-`uv sync --extra dev` đọc `pyproject.toml`, tạo `.venv/`, cài thêm `pytest` từ
-nhóm `dev` và dùng file lock `uv.lock` đã commit để mọi bản clone có đúng phiên
-bản.
+`uv sync --extra dev` đọc `pyproject.toml`, tạo `.venv/`, cài thêm `pytest`,
+`jupyterlab` và `ipykernel` từ nhóm `dev` và dùng file lock `uv.lock` đã commit để
+mọi bản clone có đúng phiên bản.
 
 Thêm thư viện mới:
 
@@ -226,6 +228,33 @@ python scripts/train_models.py
 ```bash
 uv run python -c "import catboost, sklearn, pandas, numpy, plotly; print('ok')"
 uv run pytest
+```
+
+### Kernel cho notebook
+
+[`Do_An_Meta_Labeling_BTCUSD.ipynb`](Do_An_Meta_Labeling_BTCUSD.ipynb) được gắn với
+kernel cục bộ của dự án tên **`citd-ml`**, trỏ đúng vào `.venv` này. Chạy một lần
+sau `uv sync --extra dev`:
+
+```bash
+uv run python scripts/register_notebook_kernel.py
+uv run jupyter lab Do_An_Meta_Labeling_BTCUSD.ipynb
+```
+
+Kernelspec được ghi vào `.venv/share/jupyter/kernels/citd-ml/` (nằm trong `.venv/`
+đã bị gitignore) nên không ảnh hưởng tới dự án khác trên cùng máy. Ô code đầu
+tiên của notebook in ra đường dẫn interpreter, phiên bản thư viện và kernel đang
+chạy, đồng thời **dừng lại ngay** nếu đang chạy ngoài `.venv/` — nhờ vậy chọn
+sai kernel sẽ báo lỗi ngay từ đầu thay vì hỏng ở giữa notebook.
+
+Notebook chỉ đọc `data/processed/` và các tệp đã commit trong `outputs/`, nên
+**không** cần file thô `data/raw/BTCUSD_m1_2018_to_now.csv` (~209 MB).
+
+Kiểm tra notebook chạy trọn vẹn mà không cần mở trình duyệt:
+
+```bash
+uv run jupyter nbconvert --to notebook --execute \
+    --output-dir=/tmp/nb-check Do_An_Meta_Labeling_BTCUSD.ipynb
 ```
 
 ---

@@ -256,3 +256,46 @@ def test_report_generation_fails_closed_on_invalid_evidence() -> None:
     invalid["canonical_verification"]["status"] = "failed"
     with pytest.raises(ValueError, match="canonical_verification.status"):
         validate_evidence(invalid)
+
+
+# ---------------------------------------------------------------- notebook
+NOTEBOOK = paths.PROJECT_ROOT / "Do_An_Meta_Labeling_BTCUSD.ipynb"
+NOTEBOOK_KERNEL_NAME = "citd-ml"
+NOTEBOOK_KERNEL_SCRIPT = paths.SCRIPTS_DIR / "register_notebook_kernel.py"
+
+
+def test_notebook_is_bound_to_the_project_kernel() -> None:
+    """Notebook phải khai báo kernel `citd-ml`, không phải kernel `python3` mặc định.
+
+    Kernel mặc định trỏ về interpreter khác sẽ thiếu catboost và hỏng ngay ô đầu.
+    """
+    if not NOTEBOOK.is_file():
+        pytest.skip("Notebook không có trong repo")
+
+    notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
+    kernelspec = notebook["metadata"]["kernelspec"]
+    assert kernelspec["name"] == NOTEBOOK_KERNEL_NAME
+    assert kernelspec["language"] == "python"
+    assert NOTEBOOK_KERNEL_SCRIPT.is_file(), (
+        f"Thiếu {NOTEBOOK_KERNEL_SCRIPT.name} để đăng ký lại kernel {NOTEBOOK_KERNEL_NAME}"
+    )
+
+
+def test_notebook_reads_no_raw_m1_file_and_is_committed_clean() -> None:
+    """Notebook chỉ đọc data/processed + outputs, và được commit không kèm output."""
+    if not NOTEBOOK.is_file():
+        pytest.skip("Notebook không có trong repo")
+
+    notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
+    source = "\n".join(
+        "".join(cell["source"]) if isinstance(cell["source"], list) else cell["source"]
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+    assert "BTCUSD_m1_2018_to_now.csv" not in source, (
+        "Notebook không được phụ thuộc file thô ~209 MB"
+    )
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            assert cell["outputs"] == []
+            assert cell["execution_count"] is None
