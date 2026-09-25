@@ -1,217 +1,312 @@
 import {
-  fetchHealth,
-  fetchMarketSample,
-  predictSignal,
   fetchBacktestSummary,
   fetchEquityCurve,
+  fetchFeatureImportances,
+  fetchHealth,
+  fetchMarketSample,
   fetchSplitsComparison,
-  fetchFeatureImportances
 } from './api.js';
+import { DEMO_META } from './demo-data.js';
+import { CandlestickRenderer, EquityCurveChart, RocChart } from './charts.js';
 
-import {
-  CandlestickRenderer,
-  EquityCurveChart,
-  RocChart
-} from './charts.js';
+const state = {
+  candlestickRenderer: null,
+  equityChart: null,
+  rocChart: null,
+  marketSignals: [],
+  backtestSummary: [],
+  featureImportances: [],
+  leakageReady: false,
+  activeView: 'terminal',
+};
 
-// Global instances
-let candlestickRenderer = null;
-let equityChart = null;
-let rocChart = null;
-let backtestSummaryData = [];
-let marketSignals = [];
+const numberFormatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
 
-// Navigation View Switcher (Terminal, Leakage, Analogy)
-function initViewSwitcher() {
-  const pills = document.querySelectorAll('.nav-pill');
-  const views = {
-    terminal: document.getElementById('view-terminal'),
-    leakage: document.getElementById('view-leakage'),
-    analogy: document.getElementById('view-analogy')
-  };
-
-  pills.forEach((pill) => {
-    pill.addEventListener('click', () => {
-      pills.forEach((p) => p.classList.remove('active'));
-      pill.classList.add('active');
-
-      const target = pill.getAttribute('data-view');
-      Object.entries(views).forEach(([k, el]) => {
-        if (el) el.style.display = (k === target) ? 'flex' : 'none';
-      });
-
-      window.dispatchEvent(new Event('resize'));
-    });
-  });
+function setText(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
 }
 
-// Update AI Decision Panel for selected signal
+function signed(value, digits = 2) {
+  const safeValue = Number(value) || 0;
+  return `${safeValue >= 0 ? '+' : ''}${safeValue.toLocaleString('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })}`;
+}
+
+function colorForProfit(value) {
+  const element = document.getElementById('kpiNetProfit');
+  if (element) element.className = value >= 0 ? 'positive' : 'negative';
+}
+
+function featureValue(feature, value) {
+  if (feature === 'vol200') return `${(Number(value) * 100).toFixed(2)}%`;
+  if (feature === 'hour') return Number(value).toFixed(0);
+  return Number(value).toFixed(2);
+}
+
 function updateDecisionPanel(signal) {
-  const gaugePct = document.getElementById('gaugePct');
-  const circleFill = document.getElementById('circleFill');
-  const verdictBanner = document.getElementById('verdictBanner');
-  const currentPriceDisplay = document.getElementById('currentPriceDisplay');
-  const featureBarsContainer = document.getElementById('featureBarsContainer');
+  const probabilityPct = Math.round(signal.probability * 100);
+  const gaugePerimeter = 2 * Math.PI * 74;
+  const gaugeFill = document.getElementById('circleFill');
+  const verdict = document.getElementById('verdictBanner');
 
-  const pct = Math.round(signal.probability * 100);
-  gaugePct.innerText = `${pct}%`;
-  currentPriceDisplay.innerText = `$${signal.price.toFixed(2)}`;
+  setText('gaugePct', `${probabilityPct}%`);
+  setText('currentPriceDisplay', `$${numberFormatter.format(signal.price)}`);
+  setText('selectedRowId', `#${signal.id}`);
+  setText('selectedTime', signal.time);
+  setText('selectedBars', String(signal.barsHeld));
+  setText('selectedResult', signal.actualResult);
 
-  // SVG dashoffset calculation: 2 * PI * 68 = 427.25
-  const perimeter = 427.25;
-  const offset = perimeter - (perimeter * pct) / 100;
-  circleFill.style.strokeDashoffset = offset;
+  const result = document.getElementById('selectedResult');
+  if (result) result.className = signal.r >= 0 ? 'positive' : 'negative';
 
-  if (signal.decision === 'PASS') {
-    circleFill.style.stroke = 'var(--accent-green)';
-    verdictBanner.className = 'verdict-banner pass';
-    verdictBanner.innerText = 'PASS (EXECUTE)';
-  } else {
-    circleFill.style.stroke = 'var(--accent-red)';
-    verdictBanner.className = 'verdict-banner skip';
-    verdictBanner.innerText = 'SKIP (REJECT)';
+  if (gaugeFill) {
+    gaugeFill.style.strokeDashoffset = String(gaugePerimeter * (1 - signal.probability));
+    gaugeFill.style.stroke = signal.decision === 'PASS' ? 'var(--green)' : 'var(--red)';
   }
 
-  // Render Top 5 Feature Bars
-  featureBarsContainer.innerHTML = '';
-  const feats = signal.features || {};
-  const featureEntries = [
-    { name: 'breakeven_R', val: feats.breakeven_R ?? 1.5, weight: 9.3 },
-    { name: 'vol200', val: feats.vol200 ?? 0.008, weight: 8.8 },
-    { name: 'dist_ema200', val: feats.dist_ema200_atr ?? 1.2, weight: 6.0 },
-    { name: 'atr_ratio', val: 1.15, weight: 5.8 },
-    { name: 'rsi14', val: feats.rsi14 ?? 52.4, weight: 5.2 }
-  ];
+  if (verdict) {
+    verdict.className = `verdict ${signal.decision === 'PASS' ? 'pass' : 'skip'}`;
+    verdict.textContent = signal.decision === 'PASS' ? 'PASS · GIỮ ỨNG VIÊN' : 'SKIP · BỎ ỨNG VIÊN';
+  }
 
-  featureEntries.forEach((f) => {
+  const featureContainer = document.getElementById('featureBarsContainer');
+  if (!featureContainer) return;
+
+  featureContainer.replaceChildren();
+  state.featureImportances.forEach((importance) => {
+    const value = signal.features[importance.feature];
     const row = document.createElement('div');
-    row.className = 'feature-bar-row';
-    const fillWidth = Math.min(100, Math.max(15, f.weight * 9.5));
-    row.innerHTML = `
-      <span style="color:var(--text-muted);">${f.name}</span>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <div class="feature-bar-track">
-          <div class="feature-bar-fill" style="width:${fillWidth}%;"></div>
-        </div>
-        <strong style="color:var(--text-white); min-width:32px; text-align:right;">${f.val}</strong>
-      </div>
-    `;
-    featureBarsContainer.appendChild(row);
+    row.className = 'feature-row';
+
+    const label = document.createElement('span');
+    label.className = 'feature-label';
+    label.textContent = importance.label;
+    label.title = `${importance.feature} · ${importance.importance_pct.toFixed(2)}% importance`;
+
+    const track = document.createElement('span');
+    track.className = 'feature-track';
+    track.setAttribute('aria-hidden', 'true');
+    const fill = document.createElement('span');
+    fill.className = 'feature-fill';
+    fill.style.display = 'block';
+    fill.style.width = `${Math.min(100, (importance.importance_pct / 10) * 100)}%`;
+    track.appendChild(fill);
+
+    const valueElement = document.createElement('span');
+    valueElement.className = 'feature-value';
+    valueElement.textContent = featureValue(importance.feature, value);
+
+    row.append(label, track, valueElement);
+    featureContainer.appendChild(row);
   });
 }
 
-// Populate Signal Buttons
 function populateSignalButtons(signals) {
   const container = document.getElementById('signalPillContainer');
-  container.innerHTML = '';
+  if (!container) return;
 
-  signals.forEach((s, idx) => {
-    const btn = document.createElement('button');
-    btn.className = `signal-btn ${idx === 0 ? 'active' : ''}`;
-    btn.innerText = `#${idx + 1} (${s.decision})`;
-    btn.style.color = s.decision === 'PASS' ? 'var(--accent-green)' : 'var(--accent-red)';
+  container.replaceChildren();
+  signals.forEach((signal, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `signal-btn ${signal.decision === 'PASS' ? 'pass' : 'skip'} ${index === 0 ? 'active' : ''}`;
+    button.textContent = `#${signal.id}`;
+    button.setAttribute('aria-label', `Lệnh ${signal.id}, xác suất ${(signal.probability * 100).toFixed(1)}%, ${signal.decision}`);
+    button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
 
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.signal-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      candlestickRenderer.setSelectedSignal(s);
-      updateDecisionPanel(s);
+    button.addEventListener('click', () => {
+      container.querySelectorAll('.signal-btn').forEach((item) => {
+        item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
+      });
+      button.classList.add('active');
+      button.setAttribute('aria-pressed', 'true');
+      state.candlestickRenderer.setSelectedSignal(signal);
+      updateDecisionPanel(signal);
     });
 
-    container.appendChild(btn);
+    container.appendChild(button);
   });
 }
 
-// Initialize Terminal View (Candlestick & Top K% Slider)
+function renderRetentionTable(activePct) {
+  const body = document.getElementById('retentionTableBody');
+  if (!body) return;
+
+  body.replaceChildren();
+  const rows = [...state.backtestSummary].sort((a, b) => {
+    if (a.keep_pct === 100) return -1;
+    if (b.keep_pct === 100) return 1;
+    return a.keep_pct - b.keep_pct;
+  });
+
+  rows.forEach((row) => {
+    const tr = document.createElement('tr');
+    if (row.keep_pct === activePct) tr.className = 'is-active';
+    const cells = [
+      row.filter,
+      numberFormatter.format(row.trades),
+      `${signed(row.net_profit_R)} R`,
+      `${numberFormatter.format(row.max_dd_R)} R`,
+      row.profit_factor.toFixed(4),
+      `${row.win_rate_pct.toFixed(2)}%`,
+    ];
+    cells.forEach((value, index) => {
+      const td = document.createElement('td');
+      td.textContent = value;
+      if (index === 2) td.className = row.net_profit_R >= 0 ? 'positive' : 'negative';
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+async function updateRetention(pct) {
+  const activePct = Number(pct);
+  const row = state.backtestSummary.find((item) => item.keep_pct === activePct);
+  if (!row) return;
+
+  setText('retentionValue', `${activePct}%`);
+  setText('kpiNetProfit', `${signed(row.net_profit_R)} R`);
+  colorForProfit(row.net_profit_R);
+  setText('kpiTrades', `${numberFormatter.format(row.trades)} / 5.028 lệnh`);
+  setText('kpiWinRate', `${row.win_rate_pct.toFixed(2)}%`);
+  setText('kpiProfitFactor', row.profit_factor.toFixed(4));
+  setText('kpiDrawdown', `${numberFormatter.format(row.max_dd_R)} R`);
+
+  const equity = await fetchEquityCurve(activePct);
+  state.equityChart.render(equity);
+  renderRetentionTable(activePct);
+}
+
 async function initTerminal() {
-  candlestickRenderer = new CandlestickRenderer('candlestickCanvas');
-  equityChart = new EquityCurveChart('equityCanvas');
+  state.candlestickRenderer = new CandlestickRenderer('candlestickCanvas');
+  state.equityChart = new EquityCurveChart('equityCanvas');
+
+  const [marketData, summaries, importances] = await Promise.all([
+    fetchMarketSample(24),
+    fetchBacktestSummary(),
+    fetchFeatureImportances(),
+  ]);
+
+  state.marketSignals = marketData.signals;
+  state.backtestSummary = summaries;
+  state.featureImportances = importances;
+
+  state.candlestickRenderer.setData(marketData.candles, marketData.signals);
+  populateSignalButtons(state.marketSignals);
+  if (state.marketSignals.length) updateDecisionPanel(state.marketSignals[0]);
+
   const slider = document.getElementById('filterSlider');
-  const sliderLabel = document.getElementById('sliderLabel');
-
-  try {
-    // 1. Load Market & Signals
-    const marketData = await fetchMarketSample(140);
-    marketSignals = marketData.signals;
-    candlestickRenderer.setData(marketData.candles, marketData.signals);
-
-    if (marketSignals.length > 0) {
-      populateSignalButtons(marketSignals);
-      updateDecisionPanel(marketSignals[0]);
-    }
-
-    // 2. Load Backtest Summary & Equity Curve
-    backtestSummaryData = await fetchBacktestSummary();
-
-    const updateSlider = async (pct) => {
-      sliderLabel.innerText = `Filter Threshold: Top ${pct}%`;
-      const eqData = await fetchEquityCurve(pct);
-      equityChart.render(eqData);
-
-      const row = backtestSummaryData.find((r) => r.keep_pct === parseInt(pct)) || backtestSummaryData[0];
-      if (row) {
-        document.getElementById('kpiWinRate').innerText = `${row.win_rate_pct.toFixed(2)}%`;
-        document.getElementById('kpiNetProfit').innerText = `+${row.net_profit_R.toFixed(1)} R`;
-        document.getElementById('kpiProfitFactor').innerText = `${row.profit_factor.toFixed(2)}`;
-        document.getElementById('kpiDrawdown').innerText = `-${row.max_dd_R.toFixed(1)} R`;
-      }
-    };
-
-    slider.addEventListener('input', (e) => {
-      updateSlider(e.target.value);
-    });
-
-    // Default Top 50%
-    updateSlider(50);
-
-  } catch (err) {
-    console.error('Error loading terminal data:', err);
-  }
+  slider?.addEventListener('input', (event) => updateRetention(event.currentTarget.value));
+  await updateRetention(slider?.value || 50);
 }
 
-// Initialize Data Leakage Lab
+function renderSplitTable(splits) {
+  const body = document.getElementById('splitsTableBody');
+  if (!body) return;
+
+  body.replaceChildren();
+  splits.forEach((split) => {
+    const tr = document.createElement('tr');
+    const cells = [
+      split.name,
+      split.roc_auc.toFixed(4),
+      split.f1.toFixed(4),
+      `${signed(split.net_profit_r)} R`,
+      split.profit_factor.toFixed(4),
+      split.note,
+    ];
+    cells.forEach((value, index) => {
+      const td = document.createElement('td');
+      td.textContent = value;
+      if (index === 0) td.className = 'method-cell';
+      if (index === 3) td.className = split.net_profit_r >= 0 ? 'positive' : 'negative';
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
 async function initLeakageLab() {
-  rocChart = new RocChart('rocCanvas');
-  const container = document.getElementById('splitsListContainer');
+  if (state.leakageReady) return;
+  state.leakageReady = true;
 
-  try {
-    const data = await fetchSplitsComparison();
-    rocChart.render(data.roc_curves);
-
-    container.innerHTML = '';
-    data.splits.forEach((s) => {
-      const entry = document.createElement('div');
-      entry.className = 'split-entry';
-      entry.innerHTML = `
-        <div>
-          <div style="font-weight:700; font-size:12px; color:${s.color};">${s.name}</div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
-            AUC: <strong>${s.roc_auc.toFixed(4)}</strong> | Net: <strong>+${s.net_profit_r} R</strong>
-          </div>
-        </div>
-        <span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:4px; background:${s.color}22; color:${s.color};">${s.reliability}</span>
-      `;
-      container.appendChild(entry);
-    });
-  } catch (err) {
-    console.error('Error loading leakage lab:', err);
-  }
+  state.rocChart = new RocChart('rocCanvas');
+  const data = await fetchSplitsComparison();
+  state.rocChart.render(data.roc_curves);
+  renderSplitTable(data.splits);
 }
 
-// Check Backend Health
-async function checkHealth() {
-  const statusText = document.getElementById('status-text');
-  try {
-    const h = await fetchHealth();
-    statusText.innerText = `Model: CatBoost Online (${h.holdout_samples} samples)`;
-  } catch (e) {
-    statusText.innerText = 'Model: Offline';
-  }
+function renderSourceList() {
+  const list = document.getElementById('sourceList');
+  if (!list) return;
+
+  list.replaceChildren();
+  DEMO_META.sources.forEach((source) => {
+    const li = document.createElement('li');
+    li.textContent = source;
+    list.appendChild(li);
+  });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function checkDataMode() {
+  const status = await fetchHealth();
+  const title = status.status === 'offline_demo' ? 'OFFLINE DEMO' : 'STATIC DATA';
+  document.querySelectorAll('.offline-status strong').forEach((element) => {
+    element.textContent = title;
+  });
+}
+
+function switchView(target) {
+  const validTarget = ['terminal', 'leakage', 'scope'].includes(target) ? target : 'terminal';
+  state.activeView = validTarget;
+
+  document.querySelectorAll('[data-view-panel]').forEach((panel) => {
+    const active = panel.dataset.viewPanel === validTarget;
+    panel.hidden = !active;
+    panel.classList.toggle('active', active);
+  });
+
+  document.querySelectorAll('.nav-pill').forEach((button) => {
+    const active = button.dataset.view === validTarget;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+
+  if (validTarget === 'leakage') initLeakageLab();
+  if (validTarget === 'terminal') requestAnimationFrame(() => state.equityChart?.resize());
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initViewSwitcher() {
+  document.querySelectorAll('.nav-pill').forEach((button) => {
+    button.addEventListener('click', () => switchView(button.dataset.view));
+  });
+
+  document.querySelectorAll('[data-view]:not(.nav-pill)').forEach((button) => {
+    button.addEventListener('click', () => switchView(button.dataset.view));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   initViewSwitcher();
-  checkHealth();
-  initTerminal();
-  initLeakageLab();
+  renderSourceList();
+  checkDataMode();
+
+  try {
+    await initTerminal();
+  } catch (error) {
+    console.error('Không thể khởi tạo dữ liệu demo tĩnh:', error);
+    const main = document.querySelector('.page-shell');
+    if (main) {
+      const warning = document.createElement('div');
+      warning.className = 'noscript-warning';
+      warning.textContent = 'Không thể khởi tạo frontend demo. Kiểm tra lại bundle trong src/.';
+      main.prepend(warning);
+    }
+  }
 });

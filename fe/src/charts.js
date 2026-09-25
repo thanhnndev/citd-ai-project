@@ -1,13 +1,38 @@
 import { Chart, registerables } from 'chart.js';
+
 Chart.register(...registerables);
 
-/**
- * Authentic Japanese Candlestick & Triple-Barrier Canvas Renderer
- */
+const COLORS = {
+  accent: '#2f5c6d',
+  accentSoft: 'rgba(47, 92, 109, 0.12)',
+  green: '#2f7355',
+  red: '#a64b49',
+  text: '#25292b',
+  muted: '#697271',
+  line: '#9aa4a1',
+  lineStrong: '#5b6867',
+  grid: 'rgba(99, 110, 107, 0.16)',
+  volumeUp: 'rgba(47, 92, 109, 0.15)',
+  volumeDown: 'rgba(105, 114, 113, 0.14)',
+  surface: '#fffefa',
+  tooltipBorder: '#d6d5ce',
+};
+
+const MONO = 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace';
+
+Chart.defaults.color = COLORS.muted;
+Chart.defaults.borderColor = COLORS.grid;
+Chart.defaults.font.family = MONO;
+
+function formatPrice(value) {
+  return `$${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}`;
+}
+
+/** Canvas renderer for the browser-friendly, trade-event OHLC illustration. */
 export class CandlestickRenderer {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas?.getContext('2d');
     this.candles = [];
     this.signals = [];
     this.selectedSignal = null;
@@ -15,25 +40,31 @@ export class CandlestickRenderer {
   }
 
   setupResize() {
+    if (!this.canvas) return;
+
     const resize = () => {
-      if (!this.canvas) return;
       const rect = this.canvas.getBoundingClientRect();
-      this.canvas.width = rect.width * (window.devicePixelRatio || 1);
-      this.canvas.height = rect.height * (window.devicePixelRatio || 1);
-      this.ctx.resetTransform();
-      this.ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-      this.render();
+      const ratio = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.round(rect.width));
+      const height = Math.max(1, Math.round(rect.height));
+      this.canvas.width = width * ratio;
+      this.canvas.height = height * ratio;
+      this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      this.render(width, height);
     };
+
+    if ('ResizeObserver' in window) {
+      this.resizeObserver = new ResizeObserver(resize);
+      this.resizeObserver.observe(this.canvas);
+    }
     window.addEventListener('resize', resize);
-    setTimeout(resize, 40);
+    requestAnimationFrame(resize);
   }
 
   setData(candles, signals) {
-    this.candles = candles;
-    this.signals = signals;
-    if (signals.length > 0 && !this.selectedSignal) {
-      this.selectedSignal = signals[0];
-    }
+    this.candles = Array.isArray(candles) ? candles : [];
+    this.signals = Array.isArray(signals) ? signals : [];
+    if (this.signals.length && !this.selectedSignal) this.selectedSignal = this.signals[0];
     this.render();
   }
 
@@ -42,162 +73,167 @@ export class CandlestickRenderer {
     this.render();
   }
 
-  render() {
+  render(forcedWidth, forcedHeight) {
+    if (!this.ctx || !this.candles.length) return;
+
+    const width = forcedWidth || this.canvas.getBoundingClientRect().width;
+    const height = forcedHeight || this.canvas.getBoundingClientRect().height;
+    if (!width || !height) return;
+
     const ctx = this.ctx;
-    if (!this.canvas) return;
-    const rect = this.canvas.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
     ctx.clearRect(0, 0, width, height);
-    if (!this.candles || this.candles.length === 0) return;
+    ctx.fillStyle = COLORS.surface;
+    ctx.fillRect(0, 0, width, height);
 
-    // Price scaling
-    let minP = Infinity;
-    let maxP = -Infinity;
-    let maxVol = 0;
-    for (const c of this.candles) {
-      if (c.low < minP) minP = c.low;
-      if (c.high > maxP) maxP = c.high;
-      if (c.volume > maxVol) maxVol = c.volume;
+    let minPrice = Math.min(...this.candles.map((candle) => candle.low));
+    let maxPrice = Math.max(...this.candles.map((candle) => candle.high));
+    const selected = this.selectedSignal;
+    if (selected) {
+      minPrice = Math.min(minPrice, selected.sl);
+      maxPrice = Math.max(maxPrice, selected.tp);
     }
 
-    const pad = (maxP - minP) * 0.18;
-    minP -= pad;
-    maxP += pad;
+    const rawRange = Math.max(1, maxPrice - minPrice);
+    minPrice -= rawRange * 0.12;
+    maxPrice += rawRange * 0.12;
 
-    const chartBottom = height - 50; // Space for volume bars
-    const priceToY = (p) => chartBottom - ((p - minP) / (maxP - minP)) * (chartBottom - 30);
-    const indexToX = (i) => 25 + (i / (this.candles.length - 1)) * (width - 90);
+    const plotLeft = 24;
+    const plotRight = width - 68;
+    const plotTop = 28;
+    const volumeBottom = height - 30;
+    const priceBottom = height - 54;
+    const plotHeight = Math.max(1, priceBottom - plotTop);
+    const priceToY = (price) => priceBottom - ((price - minPrice) / (maxPrice - minPrice)) * plotHeight;
+    const indexToX = (index) => plotLeft + (index / Math.max(1, this.candles.length - 1)) * (plotRight - plotLeft);
 
-    // Subtle horizontal price gridlines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 6; i++) {
-      const p = minP + (i / 6) * (maxP - minP);
-      const y = priceToY(p);
+    // Horizontal grid and right-hand price labels.
+    ctx.font = `10px ${MONO}`;
+    ctx.textAlign = 'left';
+    for (let index = 0; index <= 5; index += 1) {
+      const price = minPrice + (index / 5) * (maxPrice - minPrice);
+      const y = priceToY(price);
       ctx.beginPath();
-      ctx.moveTo(20, y);
-      ctx.lineTo(width - 70, y);
+      ctx.strokeStyle = COLORS.grid;
+      ctx.lineWidth = 1;
+      ctx.moveTo(plotLeft, y);
+      ctx.lineTo(plotRight, y);
       ctx.stroke();
-
-      // Price labels on right
-      ctx.fillStyle = '#64748B';
-      ctx.font = '10px Inter, sans-serif';
-      ctx.fillText(p.toFixed(0), width - 62, y + 3);
+      ctx.fillStyle = COLORS.muted;
+      ctx.fillText(formatPrice(price), plotRight + 8, y + 3);
     }
 
-    const candleW = Math.max(3, ((width - 90) / this.candles.length) * 0.72);
+    const candleWidth = Math.max(3, Math.min(14, ((plotRight - plotLeft) / this.candles.length) * 0.68));
+    const maxVolume = Math.max(...this.candles.map((candle) => candle.volume || 0), 1);
 
-    // Draw Volume Bars at bottom
-    this.candles.forEach((c, i) => {
-      const x = indexToX(i);
-      const vH = (c.volume / (maxVol || 1)) * 38;
-      const isUp = c.close >= c.open;
-      ctx.fillStyle = isUp ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)';
-      ctx.fillRect(x - candleW / 2, height - vH - 6, candleW, vH);
+    // Volume is part of the illustration, not a market volume series.
+    this.candles.forEach((candle, index) => {
+      const x = indexToX(index);
+      const volumeHeight = ((candle.volume || 0) / maxVolume) * 24;
+      ctx.fillStyle = candle.close >= candle.open ? COLORS.volumeUp : COLORS.volumeDown;
+      ctx.fillRect(x - candleWidth / 2, volumeBottom - volumeHeight, candleWidth, volumeHeight);
     });
 
-    // Draw Candlesticks (Wick + Body)
-    this.candles.forEach((c, i) => {
-      const x = indexToX(i);
-      const openY = priceToY(c.open);
-      const closeY = priceToY(c.close);
-      const highY = priceToY(c.high);
-      const lowY = priceToY(c.low);
-      const isUp = c.close >= c.open;
-      const col = isUp ? '#38BDF8' : '#64748B'; // Aesthetic slate/cyan candles matching mockup
+    this.candles.forEach((candle, index) => {
+      const x = indexToX(index);
+      const openY = priceToY(candle.open);
+      const closeY = priceToY(candle.close);
+      const highY = priceToY(candle.high);
+      const lowY = priceToY(candle.low);
+      const isUp = candle.close >= candle.open;
+      const color = isUp ? COLORS.accent : COLORS.muted;
 
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1.2;
-
-      // Upper & Lower Wick
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x, highY);
       ctx.lineTo(x, lowY);
       ctx.stroke();
 
-      // Body
       const bodyY = Math.min(openY, closeY);
-      const bodyH = Math.max(2, Math.abs(closeY - openY));
-      ctx.fillStyle = isUp ? '#1E293B' : col; // Hollow style for bullish, filled for bearish
-      ctx.fillRect(x - candleW / 2, bodyY, candleW, bodyH);
-      ctx.strokeRect(x - candleW / 2, bodyY, candleW, bodyH);
+      const bodyHeight = Math.max(2, Math.abs(closeY - openY));
+      ctx.fillStyle = isUp ? COLORS.accentSoft : 'rgba(105, 114, 113, 0.12)';
+      ctx.fillRect(x - candleWidth / 2, bodyY, candleWidth, bodyHeight);
+      ctx.strokeStyle = color;
+      ctx.strokeRect(x - candleWidth / 2, bodyY, candleWidth, bodyHeight);
     });
 
-    // Draw Triple-Barrier for Selected Signal
-    if (this.selectedSignal) {
-      const s = this.selectedSignal;
-      const sX = indexToX(s.index);
-      const tpY = priceToY(s.tp);
-      const slY = priceToY(s.sl);
-      const endX = Math.min(width - 70, indexToX(s.index + s.max_bars));
+    this.drawSignals(indexToX, priceToY, plotRight, plotTop, priceBottom);
+    if (selected) this.drawSelectedSignal(selected, indexToX, priceToY, plotRight, plotTop, priceBottom);
 
-      // Upper Barrier (Take Profit +2 ATR - Green dashed line)
-      ctx.save();
-      ctx.setLineDash([6, 5]);
-      ctx.strokeStyle = '#10B981';
-      ctx.lineWidth = 2;
+    ctx.fillStyle = COLORS.muted;
+    ctx.font = `9px ${MONO}`;
+    ctx.textAlign = 'left';
+    ctx.fillText('Illustrative trade-event candles', plotLeft, height - 10);
+  }
+
+  drawSignals(indexToX, priceToY, plotRight, plotTop, priceBottom) {
+    const ctx = this.ctx;
+    this.signals.forEach((signal) => {
+      const x = indexToX(signal.index);
+      const y = priceToY(signal.price);
+      const color = signal.decision === 'PASS' ? COLORS.green : COLORS.red;
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(sX, tpY);
-      ctx.lineTo(endX, tpY);
-      ctx.stroke();
-
-      ctx.fillStyle = '#10B981';
-      ctx.font = 'bold 11px Inter';
-      ctx.fillText(`Take Profit: $${s.tp.toFixed(0)}`, endX - 120, tpY - 6);
-
-      // Lower Barrier (Stop Loss -1 ATR - Red dashed line)
-      ctx.strokeStyle = '#EF4444';
-      ctx.beginPath();
-      ctx.moveTo(sX, slY);
-      ctx.lineTo(endX, slY);
-      ctx.stroke();
-
-      ctx.fillStyle = '#EF4444';
-      ctx.fillText(`Stop Loss: $${s.sl.toFixed(0)}`, endX - 110, slY + 14);
-
-      // Vertical Time Barrier (24 bars)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(endX, tpY);
-      ctx.lineTo(endX, slY);
-      ctx.stroke();
-      ctx.restore();
-
-      // Glow effect around selected entry signal
-      ctx.save();
-      ctx.shadowColor = s.decision === 'PASS' ? '#10B981' : '#EF4444';
-      ctx.shadowBlur = 12;
-      ctx.strokeStyle = s.decision === 'PASS' ? '#10B981' : '#EF4444';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(sX, priceToY(s.price), 8, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Draw Entry Signal Dots (Green for Pass, Red/Orange for Skip)
-    this.signals.forEach((s) => {
-      const x = indexToX(s.index);
-      const y = priceToY(s.price);
-
-      ctx.save();
-      ctx.fillStyle = s.decision === 'PASS' ? '#10B981' : '#EF4444';
-      ctx.shadowColor = s.decision === 'PASS' ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     });
+
+    if (this.signals.length) {
+      ctx.fillStyle = COLORS.muted;
+      ctx.font = `9px ${MONO}`;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${this.signals.length} scored trades`, plotRight, plotTop - 9);
+    }
+  }
+
+  drawSelectedSignal(signal, indexToX, priceToY, plotRight, plotTop, priceBottom) {
+    const ctx = this.ctx;
+    const startX = indexToX(signal.index);
+    const endX = Math.min(plotRight, indexToX(signal.index + signal.max_bars));
+    const tpY = priceToY(signal.tp);
+    const slY = priceToY(signal.sl);
+    const entryY = priceToY(signal.price);
+
+    ctx.save();
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = COLORS.green;
+    ctx.beginPath();
+    ctx.moveTo(startX, tpY);
+    ctx.lineTo(endX, tpY);
+    ctx.stroke();
+    ctx.strokeStyle = COLORS.red;
+    ctx.beginPath();
+    ctx.moveTo(startX, slY);
+    ctx.lineTo(endX, slY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = COLORS.line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(endX, tpY);
+    ctx.lineTo(endX, slY);
+    ctx.stroke();
+    ctx.restore();
+
+    const color = signal.decision === 'PASS' ? COLORS.green : COLORS.red;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(startX, entryY, 7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.font = `9px ${MONO}`;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = COLORS.green;
+    ctx.fillText(`TP ${formatPrice(signal.tp)}`, endX - 6, tpY - 5);
+    ctx.fillStyle = COLORS.red;
+    ctx.fillText(`SL ${formatPrice(signal.sl)}`, endX - 6, slY + 13);
   }
 }
 
-/**
- * Chart.js Equity Curve Manager with Glowing Neon Line
- */
 export class EquityCurveChart {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -205,14 +241,8 @@ export class EquityCurveChart {
   }
 
   render(data) {
-    if (this.chart) {
-      this.chart.destroy();
-    }
-
-    const ctx = this.canvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-    gradient.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
-    gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    if (!this.canvas) return;
+    this.destroy();
 
     this.chart = new Chart(this.canvas, {
       type: 'line',
@@ -220,86 +250,110 @@ export class EquityCurveChart {
         labels: data.times,
         datasets: [
           {
-            label: `CatBoost Filtered (Top ${data.keep_pct}%)`,
+            label: `Top ${data.keep_pct}% · minh họa`,
             data: data.filtered,
-            borderColor: '#38BDF8',
-            backgroundColor: gradient,
-            fill: true,
-            borderWidth: 2.2,
+            borderColor: COLORS.accent,
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            fill: false,
             pointRadius: 0,
-            tension: 0.25
+            stepped: 'after',
+            tension: 0,
           },
           {
-            label: 'Baseline (Chiến lược gốc)',
+            label: 'Baseline · minh họa',
             data: data.baseline,
-            borderColor: '#64748B',
-            borderWidth: 1.4,
+            borderColor: COLORS.lineStrong,
+            borderWidth: 1.3,
+            borderDash: [5, 5],
             pointRadius: 0,
-            tension: 0.15,
-            borderDash: [4, 4]
-          }
-        ]
+            stepped: 'after',
+            tension: 0,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 400 },
+        animation: { duration: 260 },
+        interaction: { intersect: false, mode: 'index' },
         plugins: {
           legend: {
             position: 'top',
-            labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 }, boxWidth: 10 }
+            align: 'end',
+            labels: {
+              color: COLORS.text,
+              boxWidth: 18,
+              font: { size: 10, family: MONO },
+            },
           },
           tooltip: {
-            backgroundColor: '#10192D',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: COLORS.surface,
+            borderColor: COLORS.tooltipBorder,
             borderWidth: 1,
-            titleColor: '#FFF',
-            bodyColor: '#38BDF8'
-          }
+            titleColor: COLORS.text,
+            bodyColor: COLORS.accent,
+            padding: 10,
+            callbacks: {
+              label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)} R`,
+            },
+          },
         },
         scales: {
           x: { display: false },
           y: {
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#64748B', font: { size: 10 }, callback: (v) => `${v} R` }
-          }
-        }
-      }
+            grid: { color: COLORS.grid },
+            ticks: {
+              color: COLORS.muted,
+              font: { size: 9, family: MONO },
+              callback: (value) => `${value} R`,
+            },
+          },
+        },
+      },
     });
+  }
+
+  resize() {
+    this.chart?.resize();
+  }
+
+  destroy() {
+    this.chart?.destroy();
+    this.chart = null;
   }
 }
 
-/**
- * Chart.js ROC Curves Manager
- */
 export class RocChart {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.chart = null;
   }
 
-  render(rocData) {
-    if (this.chart) {
-      this.chart.destroy();
-    }
+  render(curves) {
+    if (!this.canvas) return;
+    this.chart?.destroy();
 
-    const datasets = rocData.map((d) => ({
-      label: `${d.name} (AUC = ${d.auc.toFixed(3)})`,
-      data: d.points.map((p) => ({ x: p.fpr, y: p.tpr })),
-      borderColor: d.color,
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.2
-    }));
+    const datasets = curves.map((curve) => {
+      const isHoldout = curve.id === 'holdout';
+      return {
+        label: `${curve.name} · AUC ${curve.auc.toFixed(4)}`,
+        data: curve.points.map((point) => ({ x: point.fpr, y: point.tpr })),
+        borderColor: isHoldout ? COLORS.accent : COLORS.muted,
+        borderWidth: isHoldout ? 2.6 : 1.4,
+        borderDash: curve.id === 'random_kfold' ? [5, 4] : undefined,
+        pointRadius: 0,
+        tension: 0.12,
+      };
+    });
 
-    // Diagonal
     datasets.push({
-      label: 'Đoán ngẫu nhiên (AUC = 0.500)',
+      label: 'Random · AUC 0.500',
       data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
-      borderColor: '#64748B',
+      borderColor: COLORS.line,
       borderDash: [5, 5],
-      borderWidth: 1.5,
-      pointRadius: 0
+      borderWidth: 1,
+      pointRadius: 0,
     });
 
     this.chart = new Chart(this.canvas, {
@@ -308,27 +362,56 @@ export class RocChart {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: { duration: 280 },
+        interaction: { intersect: false, mode: 'nearest' },
         plugins: {
           legend: {
-            position: 'right',
-            labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 }, boxWidth: 10 }
-          }
+            position: 'bottom',
+            labels: {
+              color: COLORS.text,
+              boxWidth: 16,
+              font: { size: 9, family: MONO },
+              padding: 13,
+            },
+          },
+          tooltip: {
+            backgroundColor: COLORS.surface,
+            borderColor: COLORS.tooltipBorder,
+            borderWidth: 1,
+            titleColor: COLORS.text,
+            bodyColor: COLORS.accent,
+            padding: 10,
+          },
         },
         scales: {
           x: {
-            type: 'linear', min: 0, max: 1,
-            title: { display: true, text: 'False Positive Rate (Báo động giả)', color: '#94A3B8' },
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#94A3B8' }
+            type: 'linear',
+            min: 0,
+            max: 1,
+            title: {
+              display: true,
+              text: 'False positive rate',
+              color: COLORS.muted,
+              font: { size: 10, family: MONO },
+            },
+            grid: { color: COLORS.grid },
+            ticks: { color: COLORS.muted, font: { size: 9, family: MONO } },
           },
           y: {
-            min: 0, max: 1,
-            title: { display: true, text: 'True Positive Rate (Bắt đúng)', color: '#94A3B8' },
-            grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#94A3B8' }
-          }
-        }
-      }
+            type: 'linear',
+            min: 0,
+            max: 1,
+            title: {
+              display: true,
+              text: 'True positive rate',
+              color: COLORS.muted,
+              font: { size: 10, family: MONO },
+            },
+            grid: { color: COLORS.grid },
+            ticks: { color: COLORS.muted, font: { size: 9, family: MONO } },
+          },
+        },
+      },
     });
   }
 }

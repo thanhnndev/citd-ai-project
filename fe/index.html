@@ -1,230 +1,367 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CITD AI LAB — Meta-Labeling 2-Stage Trading & Data Leakage Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/style.css">
-</head>
-<body>
-  <!-- Header Bar -->
-  <header class="app-header">
-    <div class="brand-section">
-      <div class="brand-logo">C</div>
-      <h1 class="brand-title">CITD AI LAB - Meta-Labeling 2-Stage Trading & Data Leakage Demo</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Demo offline Vite cho dự án CITD ML: replay tín hiệu holdout, sweep top-k và đối chiếu rò rỉ thời gian."
+    />
+    <meta name="theme-color" content="#f6f5f0" />
+    <title>CITD ML — Offline Artifact Explorer</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="#terminal" aria-label="CITD ML demo">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span>
+          <strong>CITD ML</strong>
+          <small>Artifact explorer</small>
+        </span>
+      </a>
+
+      <nav class="view-nav" aria-label="Các màn hình demo" role="tablist">
+        <button class="nav-pill active" type="button" role="tab" aria-selected="true" data-view="terminal">
+          Tín hiệu holdout
+        </button>
+        <button class="nav-pill" type="button" role="tab" aria-selected="false" data-view="leakage">
+          Rò rỉ dữ liệu
+        </button>
+        <button class="nav-pill" type="button" role="tab" aria-selected="false" data-view="scope">
+          Phạm vi demo
+        </button>
+      </nav>
+
+      <div class="offline-status" title="Không có request /api hoặc dịch vụ ngoài">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>
+          <strong>OFFLINE DEMO</strong>
+          <small>Dữ liệu tĩnh trong bundle</small>
+        </span>
+      </div>
+    </header>
+
+    <div class="demo-notice" role="note">
+      <span class="notice-index">DEMO / 01</span>
+      <p>
+        Bản chạy độc lập, không gọi FastAPI và không suy luận CatBoost live. Các số chính được lấy từ artifact đã commit;
+        biểu đồ nến, đường vốn và ROC được ghi nhãn minh họa.
+      </p>
+      <button id="open-data-note" type="button" data-view="scope">Xem nguồn & giới hạn</button>
     </div>
 
-    <div class="header-right">
-      <!-- View mode switch -->
-      <div class="nav-pills">
-        <button class="nav-pill active" id="btn-view-terminal" data-view="terminal">Terminal Chính</button>
-        <button class="nav-pill" id="btn-view-leakage" data-view="leakage">Đối Soát Rò Rỉ Dữ Liệu</button>
-        <button class="nav-pill" id="btn-view-analogy" data-view="analogy">Mô Phỏng Đời Thực</button>
-      </div>
-      
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span id="status-text">Model: CatBoost Online</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- VIEW 1: EXACT MOCKUP DASHBOARD TERMINAL -->
-  <main class="dashboard-grid" id="view-terminal">
-    <!-- TOP ROW -->
-    <div class="top-row">
-      <!-- Top Left: Candlestick Chart Card -->
-      <section class="card chart-card">
-        <div class="card-header">
-          <div class="symbol-info">
-            <span class="symbol-name">BTC/USD , M15</span>
-            <span class="symbol-price" id="currentPriceDisplay">$62,850.00</span>
+    <main class="page-shell">
+      <section id="view-terminal" class="view active" data-view-panel="terminal" role="tabpanel">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">SEALED HOLDOUT / 5.028 TRADES</p>
+            <h1>Kiểm chứng bộ lọc, không mô phỏng lệnh live.</h1>
+            <p class="lede">
+              Pyramid tạo ứng viên; CatBoost chỉ chấm xác suất. Ở đây bạn có thể xem điểm đã lưu, biên minh họa và
+              tác động của top-k trên toàn bộ kỳ holdout.
+            </p>
           </div>
-          <div class="signal-selector-row" id="signalPillContainer">
-            <!-- Dynamically populated signal buttons -->
-          </div>
+          <dl class="run-meta">
+            <div><dt>Train</dt><dd>25.008 dòng</dd></div>
+            <div><dt>Feature</dt><dd>23</dd></div>
+            <div><dt>Reproducibility</dt><dd class="positive">PASS</dd></div>
+          </dl>
         </div>
 
-        <!-- Candlestick + Target Lines Canvas -->
-        <div class="candlestick-wrapper">
-          <canvas id="candlestickCanvas"></canvas>
-          <div class="chart-badges">
-            <span class="badge-tp">─── Take Profit (+2 ATR)</span>
-            <span class="badge-sl">─── Stop Loss (-1 ATR)</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Top Right: AI Decision Panel -->
-      <section class="card decision-card">
-        <div class="card-header">
-          <span class="card-title">AI Decision Panel</span>
-          <span class="more-icon">⋮</span>
-        </div>
-
-        <div class="decision-body">
-          <!-- Circular Win Probability Gauge -->
-          <div class="gauge-box">
-            <div class="circular-progress">
-              <svg viewBox="0 0 160 160">
-                <circle class="circle-bg" cx="80" cy="80" r="68"></circle>
-                <circle class="circle-glow" id="circleFill" cx="80" cy="80" r="68"></circle>
-              </svg>
-              <div class="gauge-center">
-                <span class="gauge-label">P(Win):</span>
-                <span class="gauge-pct" id="gaugePct">64%</span>
+        <div class="terminal-grid">
+          <section class="panel market-panel" aria-labelledby="market-title">
+            <header class="panel-header">
+              <div>
+                <p class="section-kicker">01 / SIGNAL REPLAY</p>
+                <h2 id="market-title">BTCUSD · 24 lệnh holdout đã chấm</h2>
               </div>
+              <div class="price-lockup">
+                <span id="currentPriceDisplay">—</span>
+                <small>entry price</small>
+              </div>
+            </header>
+
+            <div class="signal-strip-wrap">
+              <div id="signalPillContainer" class="signal-strip" aria-label="Chọn một lệnh holdout"></div>
+              <p class="micro-note">Chọn một lệnh để cập nhật xác suất, feature snapshot và kết quả thực tế.</p>
             </div>
-          </div>
 
-          <!-- Big PASS/SKIP Badge -->
-          <div class="verdict-banner pass" id="verdictBanner">
-            PASS (EXECUTE)
-          </div>
-
-          <!-- Feature Importance Bars -->
-          <div class="feature-importance-list">
-            <span class="feature-list-title">Feature Importance (Top 5):</span>
-            <div id="featureBarsContainer">
-              <!-- Dynamically populated feature bars -->
+            <div class="chart-frame market-chart-frame">
+              <canvas id="candlestickCanvas" aria-label="Biểu đồ nến minh họa từ các lệnh holdout"></canvas>
+              <div class="chart-legend chart-legend-top" aria-hidden="true">
+                <span class="legend-positive">Vùng TP minh họa</span>
+                <span class="legend-negative">Vùng SL minh họa</span>
+              </div>
+              <div class="chart-note">OHLC minh họa từ entry / exit — không phải nến M15 nguyên bản</div>
             </div>
-          </div>
-        </div>
-      </section>
-    </div>
 
-    <!-- BOTTOM ROW -->
-    <div class="bottom-row">
-      <!-- Bottom Left: Equity Curve with Slider -->
-      <section class="card equity-card">
-        <div class="card-header">
+            <div class="selected-record" aria-live="polite">
+              <span><small>ROW ID</small><strong id="selectedRowId">—</strong></span>
+              <span><small>ENTRY TIME</small><strong id="selectedTime">—</strong></span>
+              <span><small>BARS HELD</small><strong id="selectedBars">—</strong></span>
+              <span><small>ARTIFACT RESULT</small><strong id="selectedResult">—</strong></span>
+            </div>
+          </section>
+
+          <aside class="panel decision-panel" aria-labelledby="decision-title">
+            <header class="panel-header compact">
+              <div>
+                <p class="section-kicker">02 / PRECOMPUTED SCORE</p>
+                <h2 id="decision-title">Quyết định mô hình</h2>
+              </div>
+              <span class="threshold-chip">p ≥ 0.50</span>
+            </header>
+
+            <div class="probability-block">
+              <div class="gauge" aria-label="Xác suất thắng đã lưu">
+                <svg viewBox="0 0 180 180" aria-hidden="true">
+                  <circle class="gauge-track" cx="90" cy="90" r="74"></circle>
+                  <circle id="circleFill" class="gauge-value" cx="90" cy="90" r="74"></circle>
+                </svg>
+                <div class="gauge-copy">
+                  <small>P(Win) recorded</small>
+                  <strong id="gaugePct">—</strong>
+                </div>
+              </div>
+              <div id="verdictBanner" class="verdict neutral">CHỜ DỮ LIỆU</div>
+              <p class="decision-copy">
+                PASS/SKIP chỉ là nhãn của một ví dụ đã chấm sẵn tại ngưỡng 0,50; không phải tín hiệu đặt lệnh.
+              </p>
+            </div>
+
+            <div class="feature-snapshot">
+              <div class="subsection-title">
+                <span>Feature snapshot</span>
+                <small>global importance</small>
+              </div>
+              <div id="featureBarsContainer" class="feature-bars"></div>
+              <p class="micro-note">Feature importance là mức đóng góp toàn model, không phải lời giải thích nhân quả cho từng lệnh.</p>
+            </div>
+          </aside>
+        </div>
+
+        <div class="evidence-grid">
+          <section class="panel equity-panel" aria-labelledby="equity-title">
+            <header class="panel-header">
+              <div>
+                <p class="section-kicker">03 / HOLDOUT TOP-K</p>
+                <h2 id="equity-title">Ảnh hưởng của ngưỡng giữ lệnh</h2>
+              </div>
+              <div class="retention-control">
+                <label for="filterSlider">Giữ top <strong id="retentionValue">50%</strong></label>
+                <input id="filterSlider" type="range" min="20" max="80" step="10" value="50" />
+              </div>
+            </header>
+            <p class="chart-disclaimer">
+              Đường bên dưới là đường minh họa có điểm cuối khớp artifact; các KPI và bảng sweep bên phải là số canonical đã commit.
+            </p>
+            <div class="chart-frame equity-chart-frame">
+              <canvas id="equityCanvas" aria-label="Đường vốn minh họa"></canvas>
+            </div>
+          </section>
+
+          <section class="kpi-panel" aria-label="Kết quả holdout theo ngưỡng giữ">
+            <article class="kpi-card">
+              <span>Net profit</span>
+              <strong id="kpiNetProfit">—</strong>
+              <small id="kpiTrades">— trades</small>
+            </article>
+            <article class="kpi-card">
+              <span>Win rate</span>
+              <strong id="kpiWinRate">—</strong>
+              <small>artifact holdout</small>
+            </article>
+            <article class="kpi-card">
+              <span>Profit factor</span>
+              <strong id="kpiProfitFactor">—</strong>
+              <small>canonical run 1</small>
+            </article>
+            <article class="kpi-card">
+              <span>Max drawdown</span>
+              <strong id="kpiDrawdown">—</strong>
+              <small>đơn vị R</small>
+            </article>
+          </section>
+        </div>
+
+        <section class="panel table-panel" aria-labelledby="sweep-title">
+          <header class="panel-header">
+            <div>
+              <p class="section-kicker">CANONICAL HOLDOUT SWEEP</p>
+              <h2 id="sweep-title">Số thật từ Stage 3</h2>
+            </div>
+            <span class="source-chip">stage3_backtest_summary.csv</span>
+          </header>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Chiến lược</th>
+                  <th>Số lệnh</th>
+                  <th>Net P&amp;L</th>
+                  <th>Max DD</th>
+                  <th>PF</th>
+                  <th>Win rate</th>
+                </tr>
+              </thead>
+              <tbody id="retentionTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="view-leakage" class="view" data-view-panel="leakage" role="tabpanel" hidden>
+        <div class="page-heading">
           <div>
-            <span class="card-title">Equity Curve</span>
-            <span class="card-subtitle">Interactive comparison</span>
+            <p class="eyebrow">TEMPORAL VALIDATION / FOUR SPLITS</p>
+            <h1>Điều gì sập đổ khi quên thứ tự thời gian?</h1>
+            <p class="lede">
+              Random K-Fold cho AUC cao hơn, nhưng đánh giá trong dữ liệu chuỗi thời gian phải giữ quan hệ nhân quả và đồng thời tránh leakage.
+            </p>
           </div>
-          <div class="slider-control">
-            <span class="slider-label" id="sliderLabel">Filter Threshold: Top 50%</span>
-            <input type="range" id="filterSlider" min="20" max="100" step="10" value="50" class="neon-slider">
+          <div class="metric-lockup">
+            <strong>0.8582</strong>
+            <span>Random AUC</span>
+            <strong class="positive">0.6046</strong>
+            <span>Holdout AUC</span>
           </div>
         </div>
 
-        <div class="equity-chart-wrapper">
-          <canvas id="equityCanvas"></canvas>
+        <div class="leakage-grid">
+          <section class="panel roc-panel" aria-labelledby="roc-title">
+            <header class="panel-header">
+              <div>
+                <p class="section-kicker">ROC / SCHEMATIC</p>
+                <h2 id="roc-title">Đường cong minh họa theo AUC canonical</h2>
+              </div>
+              <span class="illustrative-chip">Đường nội suy</span>
+            </header>
+            <p class="chart-disclaimer">
+              AUC/F1 dưới đây là số đã commit. Đường ROC chỉ được dựng hình để so sánh trực quan, không phải mảng OOF gốc.
+            </p>
+            <div class="chart-frame roc-chart-frame">
+              <canvas id="rocCanvas" aria-label="Các đường ROC minh họa"></canvas>
+            </div>
+          </section>
+
+          <aside class="panel insight-panel">
+            <p class="section-kicker">INTERPRETATION</p>
+            <h2>Điều cần nói đúng</h2>
+            <ol class="insight-list">
+              <li><strong>Random K-Fold không đại diện tương lai.</strong> Nó có thể đưa các gia đình lệnh chồng lấn sang hai phía.</li>
+              <li><strong>Holdout là chuẩn kiểm định.</strong> ROC-AUC 0,6046; F1@0,5 = 0,4022 trên 5.028 dòng.</li>
+              <li><strong>AUC không tự chứng minh lợi nhuận.</strong> Top 50% vẫn là −36,55 R, thấp hơn baseline +245,93 R.</li>
+            </ol>
+            <div class="scientific-note">
+              <span>!</span>
+              <p>Không nên suy rộng thành “mọi cách chia sai” hoặc “model chắc chắn sinh lời/lỗ”. Các phát biểu trên chỉ áp dụng cho artifact và phạm vi backtest của dự án.</p>
+            </div>
+          </aside>
         </div>
+
+        <section class="panel table-panel" aria-labelledby="split-table-title">
+          <header class="panel-header">
+            <div>
+              <p class="section-kicker">table1_classification_metrics.csv</p>
+              <h2 id="split-table-title">Bốn cách chia và holdout</h2>
+            </div>
+            <span class="source-chip">thread_count = 1</span>
+          </header>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cách chia</th>
+                  <th>ROC-AUC</th>
+                  <th>F1 @ 0,5</th>
+                  <th>Net R</th>
+                  <th>PF</th>
+                  <th>Đánh giá</th>
+                </tr>
+              </thead>
+              <tbody id="splitsTableBody"></tbody>
+            </table>
+          </div>
+          <p class="table-note">Net R/PF của bốn nhánh là top 50% trên khúc 2–5; dòng Holdout là baseline 5.028 lệnh để tránh so sánh hai phạm vi khác nhau.</p>
+        </section>
       </section>
 
-      <!-- Bottom Right: 4 KPI Cards in 2x2 Grid -->
-      <section class="kpi-grid">
-        <div class="kpi-tile">
-          <span class="tile-title">Win Rate</span>
-          <span class="tile-value" id="kpiWinRate">34.99%</span>
-          <span class="tile-sub pos">+3.28%</span>
-        </div>
-        <div class="kpi-tile highlight-green">
-          <span class="tile-title">Net Profit</span>
-          <span class="tile-value" id="kpiNetProfit">+126.5 R</span>
-          <span class="tile-sub pos">+32.9%</span>
-        </div>
-        <div class="kpi-tile">
-          <span class="tile-title">Profit Factor</span>
-          <span class="tile-value" id="kpiProfitFactor">1.40</span>
-          <span class="tile-sub pos">+8.5%</span>
-        </div>
-        <div class="kpi-tile highlight-red">
-          <span class="tile-title">Max Drawdown</span>
-          <span class="tile-value" id="kpiDrawdown">-40%</span>
-          <span class="tile-sub neg">reduction</span>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- VIEW 2: DATA LEAKAGE CONTRAST LAB -->
-  <main class="sub-view" id="view-leakage" style="display:none;">
-    <div class="leakage-wrapper">
-      <div class="card roc-card">
-        <div class="card-header">
+      <section id="view-scope" class="view" data-view-panel="scope" role="tabpanel" hidden>
+        <div class="page-heading">
           <div>
-            <span class="card-title">Đối Soát Đường Cong ROC Qua 4 Phương Pháp Chia Dữ Liệu</span>
-            <span class="card-subtitle">Lột trần sự ảo tưởng của Random K-Fold (AUC 0.858) so với thực tế Purged Walk-Forward (AUC 0.589)</span>
+            <p class="eyebrow">PROVENANCE / LIMITS</p>
+            <h1>Phần nào là số thật, phần nào là minh họa?</h1>
+            <p class="lede">
+              Bản demo ưu tiên minh bạch dữ liệu hơn một dashboard trông “live”. Không có đường nào tới backend trong bản Vite này.
+            </p>
           </div>
-        </div>
-        <div style="height: 480px; position: relative;">
-          <canvas id="rocCanvas"></canvas>
-        </div>
-      </div>
-
-      <div class="card reliability-card">
-        <div class="card-header">
-          <span class="card-title">Độ Tin Cậy Phương Pháp Chia</span>
-        </div>
-        <div class="splits-list" id="splitsListContainer"></div>
-        <div class="leakage-warning">
-          <strong>⚠ Cảnh Báo Khoa Học:</strong> Chia ngẫu nhiên (Random K-Fold) trên chuỗi thời gian làm rò rỉ dữ liệu tương lai sang tập huấn luyện (Lookahead bias), sinh ra ảo tưởng mô hình "siêu lợi nhuận" nhưng chắc chắn sẽ cháy tài khoản khi đem vào vận hành thực tế.
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- VIEW 3: CROSS-DOMAIN REAL-WORLD ANALOGY -->
-  <main class="sub-view" id="view-analogy" style="display:none;">
-    <div class="analogy-container">
-      <div class="card intro-card">
-        <span class="card-title">Khả Năng Chuyển Giao Thực Tiễn Của Kiến Trúc Meta-Labeling 2 Tầng</span>
-        <p class="card-subtitle" style="margin-top:6px;">
-          Ý nghĩa lớn nhất của đồ án không dừng lại ở bài toán tài chính, mà chứng minh tính đúng đắn của <strong>nguyên lý thẩm định 2 tầng</strong> cho mọi hệ thống AI chuỗi thời gian trong đời sống:
-        </p>
-      </div>
-
-      <div class="analogy-grid-3">
-        <div class="card domain-item">
-          <div class="domain-header">
-            <span class="domain-emoji">🏥</span>
-            <span class="domain-name" style="color:#60A5FA;">Y Tế & Chẩn Đoán Ung Thư</span>
-          </div>
-          <div class="domain-box">
-            <strong>Tầng 1 (Sàng lọc):</strong> Xét nghiệm máu / X-quang sơ cấp phát hiện tổn thương nghi ngờ (ưu tiên Recall cao, chấp nhận báo động giả).
-          </div>
-          <div class="domain-box" style="border-left:3px solid #10B981;">
-            <strong>Tầng 2 (Meta-Model):</strong> Thẩm định bối cảnh hồ sơ bệnh án trước khi quyết định sinh thiết / phẫu thuật $\rightarrow$ <em>Tránh mổ nhầm người lành</em>.
-          </div>
-          <div class="domain-footer">🎯 Cứu sinh mạng & giảm chi phí phẫu thuật không cần thiết.</div>
         </div>
 
-        <div class="card domain-item">
-          <div class="domain-header">
-            <span class="domain-emoji">⚡</span>
-            <span class="domain-name" style="color:#34D399;">Lưới Điện & Năng Lượng</span>
-          </div>
-          <div class="domain-box">
-            <strong>Tầng 1 (Cảnh báo phụ tải):</strong> Cảm biến IoT phát hiện nhiệt độ biến áp tăng vọt trong giờ cao điểm.
-          </div>
-          <div class="domain-box" style="border-left:3px solid #3B82F6;">
-            <strong>Tầng 2 (Meta-Model):</strong> Phân tích xu hướng thời tiết và tải toàn mạng trước khi kích hoạt máy phát bù tốn kém $\rightarrow$ <em>Tránh mất điện oan</em>.
-          </div>
-          <div class="domain-footer">🎯 Bảo vệ hạ tầng lưới điện quốc gia khỏi quá tải.</div>
-        </div>
+        <div class="scope-grid">
+          <section class="scope-column">
+            <article class="panel scope-card verified">
+              <span class="scope-number">A</span>
+              <p class="section-kicker">ĐÃ COMMIT</p>
+              <h2>Số liệu canonical</h2>
+              <ul>
+                <li>Holdout 5.028 dòng; train 25.008 dòng; hợp đồng 23 feature.</li>
+                <li>AUC 0,6046; F1@0,5 0,4022.</li>
+                <li>Sweep baseline và top 20–80% trên toàn bộ holdout.</li>
+                <li>Xác suất, entry, exit, R và feature của 24 dòng holdout đầu.</li>
+                <li>Feature importance toàn model trong báo cáo kỹ thuật.</li>
+                <li>Stage 5 reproducibility PASS trên cùng máy.</li>
+              </ul>
+            </article>
+            <article class="panel scope-card illustrative">
+              <span class="scope-number">B</span>
+              <p class="section-kicker">MINH HỌA</p>
+              <h2>Lớp trực quan hóa</h2>
+              <ul>
+                <li>OHLC suy ra từ entry/exit, không phải dữ liệu nến M15 nguyên bản.</li>
+                <li>Đường vốn nội suy có endpoint khớp Net R canonical.</li>
+                <li>Đường ROC nội suy theo AUC canonical.</li>
+                <li>TP/SL vùng minh họa, không phải dynamic barrier live.</li>
+              </ul>
+            </article>
+          </section>
 
-        <div class="card domain-item">
-          <div class="domain-header">
-            <span class="domain-emoji">🛡️</span>
-            <span class="domain-name" style="color:#FBBF24;">An Ninh Mạng (IDS / SIEM)</span>
-          </div>
-          <div class="domain-box">
-            <strong>Tầng 1 (Quét lưu lượng):</strong> Hệ thống phát hiện bất thường trong hàng triệu request mỗi phút (tỷ lệ báo động giả 95%).
-          </div>
-          <div class="domain-box" style="border-left:3px solid #F59E0B;">
-            <strong>Tầng 2 (Meta-Model):</strong> Thẩm định ngữ cảnh hành vi người dùng $\rightarrow$ <em>Chỉ khóa IP kẻ tấn công thực sự, không chặn nhầm khách hàng VIP</em>.
-          </div>
-          <div class="domain-footer">🎯 Lọc bỏ 68% - 95% báo động giả giúp giảm tải cho đội SOC.</div>
+          <section class="scope-column">
+            <article class="panel scope-card unavailable">
+              <span class="scope-number">C</span>
+              <p class="section-kicker">KHÔNG CÓ TRONG DEMO</p>
+              <h2>Không mô phỏng</h2>
+              <ul>
+                <li>CatBoost inference cho feature vector mới.</li>
+                <li>Dữ liệu realtime hoặc nguồn giá ngoài.</li>
+                <li>Đặt lệnh, trạng thái tài khoản, phí, spread và slippage.</li>
+                <li>Cam kết top 50% sinh lời hoặc tương đương giữa các máy.</li>
+              </ul>
+            </article>
+            <article class="panel source-card">
+              <p class="section-kicker">SOURCE PATHS</p>
+              <h2>Artifact gốc trong repository</h2>
+              <ol id="sourceList"></ol>
+              <div class="backend-note">
+                <strong>Backend FastAPI vẫn tồn tại</strong>
+                <p>Các route /api/health, /market/sample, /predict, /features/importances, /backtest/* và /splits/comparison đã được khai báo trong be/. Bản demo này cố ý không proxy tới chúng.</p>
+              </div>
+            </article>
+          </section>
         </div>
-      </div>
-    </div>
-  </main>
+      </section>
+    </main>
 
-  <script type="module" src="/src/main.js"></script>
-</body>
+    <footer class="app-footer">
+      <span>CITD ML / Frontend demo</span>
+      <span>Static-first · deterministic · no backend dependency</span>
+    </footer>
+
+    <noscript>
+      <div class="noscript-warning">Bản demo cần JavaScript để dựng biểu đồ và chuyển màn hình.</div>
+    </noscript>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
