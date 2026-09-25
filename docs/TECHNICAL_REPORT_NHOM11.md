@@ -22,7 +22,7 @@ Nguồn giá là `data/raw/BTCUSD_m1_2018_to_now.csv`. File M1 khoảng 209 MB k
 
 | Tập | Ranh giới và quy mô | Vai trò |
 |---|---|---|
-| Train đóng băng | 25.008 lệnh, 31 cột; 6.252 họ, mỗi họ 4 leg | [`data/processed/dataset_catboost.csv`](../data/processed/dataset_catboost.csv) là đầu vào mặc định của code train |
+| Train đóng băng | 25.008 lệnh, 31 cột; 6.252 họ, mỗi họ 4 leg; `label=1` chiếm 26,16% | [`data/processed/dataset_catboost.csv`](../data/processed/dataset_catboost.csv) là đầu vào mặc định của code train |
 | Lệnh biên | 4 entry trước mốc nhưng `label_end_time` qua mốc | Không vào train hoặc holdout |
 | Holdout | 5.028 lệnh từ `2025-02-08 15:30:00`, bar M15 `199968` | Chấm bằng model cuối; không dùng để fit |
 | Toàn lịch sử tái sinh | 30.040 lệnh = 25.008 + 4 + 5.028 | Đầu vào đối chiếu ở Stage 1 |
@@ -42,11 +42,21 @@ Dataset có 23 cột `FEATURES`, một cột `label` và 7 cột `META`: `entry_
 
 Feature thị trường của mỗi leg đọc bar M15 đã đóng (`entry_bar - 1`); `gap_open_atr` còn đọc giá mở cửa bar entry, đã có lúc vào lệnh. `leg` và `entry_vs_base_R` được lưu để truy vết gia đình lệnh nhưng không train. Lý do chọn/loại cột ở [báo cáo feature](bao_cao_feature.md).
 
-Nhãn triple barrier khác kết quả tài chính. Lower là giá vào trừ 0,6%; upper là giá vào cộng `3,8 × ATR(90)` đóng băng trước entry; horizon là 50 bar M15. [`label_one_entry`](../src/citd_ml/labeling/triple_barrier.py) duyệt M1 theo thứ tự: lower chạm trước hoặc cả hai mốc chạm trong cùng nến M1 thì nhãn 0; upper chạm và không có lower chạm trong bar M15 đó thì nhãn 1; hết horizon chưa chạm thì nhãn 0. Horizon thiếu dữ liệu bị loại khi xuất dataset. Nhãn không áp dụng lệnh đóng thứ Sáu của chiến lược; sơ đồ quy tắc ở [`thong_so_triple_barrier.png`](thong_so_triple_barrier.png).
+CatBoost dự đoán xác suất `label=1`: giá chạm ngưỡng cần thiết để trailing stop *có thể* dời tới hòa vốn. Đây là nhãn thay thế, không phải cam kết lệnh thực tế đóng lời hoặc không lỗ. Lower là giá vào trừ 0,6%; upper là giá vào cộng `3,8 × ATR(90)` đóng băng trước entry; horizon là 50 bar M15. [`label_one_entry`](../src/citd_ml/labeling/triple_barrier.py) duyệt M1 theo thứ tự: lower chạm trước hoặc cả hai mốc chạm trong cùng nến M1 thì nhãn 0; upper chạm và không có lower chạm trong bar M15 đó thì nhãn 1; hết horizon chưa chạm thì nhãn 0. Horizon thiếu dữ liệu bị loại khi xuất dataset. Nhãn không áp dụng lệnh đóng thứ Sáu của chiến lược; sơ đồ quy tắc ở [`thong_so_triple_barrier.png`](thong_so_triple_barrier.png).
 
 ## 3. Code và điểm kiểm soát
 
 Các bảng dưới tập trung vào hàm nằm trên đường chạy chính. Hàm trả DataFrame/mảng chỉ tạo giá trị trong bộ nhớ; file chỉ xuất hiện tại entrypoint hoặc hàm ghi được nêu rõ.
+
+Các script dưới `scripts/` là entrypoint mỏng; xử lý nằm trong `src/citd_ml/`. Bảng này nối file chạy với hàm và artifact; lệnh cụ thể ở mục 6.
+
+| Script | Đầu vào → hàm gọi / điều kiện dừng | Đầu ra |
+|---|---|---|
+| [`build_dataset.py`](../scripts/build_dataset.py) | M1, `--holdout`, `--output` → `features.build_features.main()`; replay, gán nhãn, loại horizon thiếu | [`dataset_catboost.csv`](../data/processed/dataset_catboost.csv) mặc định; `--output` đổi đích |
+| [`verify_dataset.py`](../scripts/verify_dataset.py) | Dataset đóng băng → `features.verify_dataset.main()`; kiểm schema, nhãn, thời gian, feature và khóa tradelist nếu có | In PASS/FAIL, exit code 0/1; không ghi file |
+| [`train_models.py`](../scripts/train_models.py) | Dataset đóng băng → `training.train_catboost.main()`; kiểm fold trước khi fit | Sáu CSV metric/OOF trong [`catboost_training/`](../outputs/step4_thread1/catboost_training/) (`--output-dir` đổi đích) |
+| [`run_backtest.py`](../scripts/run_backtest.py) | M1 + bốn OOF → `backtest.backtest_pyramid_local.main()`; đối chiếu baseline rồi mới lọc top-k | Tám CSV trong [`backtest/`](../outputs/step4_thread1/backtest/) (`--oof-dir`, `--output-dir` đổi nguồn/đích) |
+| [`verify_pipeline.py`](../scripts/verify_pipeline.py) | Hai thư mục CSV đã lưu → `verification.verify_pipeline.main()`; chạy lại train/backtest hai lần, so frame và byte CSV | [`reproducibility.json`](../outputs/step4_thread1/verification/reproducibility.json) theo `--manifest`; không ghi đè CSV |
 
 ### 3.1. Từ M1 đến dataset
 
@@ -80,6 +90,8 @@ Các bảng dưới tập trung vào hàm nằm trên đường chạy chính. H
 | `_validate_oof_coverage` | Random/Grouped phải có xác suất cho mọi dòng; Walk-forward/Purged chỉ cho khúc 2–5 | PASS hoặc lỗi trước khi lưu |
 | `build_summary`, `save_outputs` | Kiểm số fold 5/5/4/4, tính mean metric, serialize CSV | `metrics_by_fold.csv`, `metrics_summary.csv`, bốn `oof_<method>.csv` |
 
+Random (Cách 1) chia theo dòng nên có thể đưa leg cùng họ sang cả train/test và đảo chiều thời gian. Grouped (Cách 1b) giữ cùng `origin_bar` ở một phía, nhưng chưa chặn train dùng dữ liệu đến sau test. Walk-forward (Cách 2) chỉ train trên quá khứ; Purged Walk-forward (Cách 3) bỏ thêm dòng train có nhãn tràn qua mốc test hoặc entry nằm trong 50 bar sát biên. Không cách nào loại dòng test ở bước purge.
+
 Cấu hình [`MODEL_PARAMS`](../src/citd_ml/training/train_catboost.py): `iterations=1000`, `learning_rate=0.05`, `depth=6`, `l2_leaf_reg=3.0`, `auto_class_weights="Balanced"`, `eval_metric="AUC"`, `random_seed=42`, `thread_count=1`, `allow_writing_files=False`. Không early stopping, không khai báo categorical feature. `thread_count=1` là thiết lập thực thi bổ sung sau bản bàn giao đầu; chi tiết thí nghiệm số luồng ở [`thread_count_sensitivity/README.md`](../outputs/thread_count_sensitivity/README.md).
 
 ### 3.3. Backtest bước 4
@@ -96,7 +108,7 @@ Cấu hình [`MODEL_PARAMS`](../src/citd_ml/training/train_catboost.py): `iterat
 
 Tỷ lệ giữ cố định giúp bốn nhánh có cùng số lệnh khi so tài chính. Đây là xếp hạng *offline trên toàn khúc 2–5*; code không dựng ngưỡng xác suất khả dụng tuần tự tại mỗi thời điểm. OOF của Random/Grouped có 25.008 dòng được chấm; Walk-forward/Purged để trống xác suất khúc 1 có chủ đích. AUC/F1 trong bảng so sánh được tính trên khúc 2–5 chung, theo từng fold rồi lấy mean; không lấy `metrics_summary.csv` của toàn bộ fold Random/Grouped thay cho [`metrics_chunk2_5.csv`](../outputs/step4_thread1/catboost_training/metrics_chunk2_5.csv).
 
-`R = pl_pct / 0,6` khi `pl_pct` tính bằng điểm phần trăm. Net R là tổng R; MaxDD lấy từ equity đã chốt, bắt đầu 0R; PF là tổng R dương chia trị tuyệt đối tổng R âm; win rate đếm `R > 0`. Không có mark-to-market, phí, spread hay slippage trong các số này.
+`R = pl_pct / 0,6` khi `pl_pct` tính bằng điểm phần trăm. Net R là tổng R; MaxDD tính trên equity cộng dồn **từng lệnh đã chốt**, sort theo `close_time, ticket` và bắt đầu 0R. Riêng biểu đồ gộp các lệnh cùng `close_time` thành một điểm. PF là tổng R dương chia trị tuyệt đối tổng R âm; win rate đếm `R > 0`. Không có mark-to-market, phí, spread hay slippage trong các số này.
 
 ### 3.4. Holdout và kiểm chứng
 
@@ -108,6 +120,8 @@ Tỷ lệ giữ cố định giúp bốn nhánh có cùng số lệnh khi so tà
 | [`holdout_evidence.py`](../src/citd_ml/verification/holdout_evidence.py) · `validate_evidence`; [`holdout_stage4_report.py`](../scripts/holdout_stage4_report.py) · `build_table1..4`, `write_chart`, `write_png` | Chặn báo cáo PASS nếu chứng cứ Stage 1–3, manifest canonical hoặc Stage 5 sai; lập bốn bảng và hai đường vốn từ artifact đã kiểm. | [Bảng và hình Stage 4](../outputs/holdout/stage4/), [báo cáo holdout](BAO_CAO_KET_QUA_HOLDOUT.md) |
 | [`holdout_stage5_repro_check.py`](../scripts/holdout_stage5_repro_check.py) · `main` | So xác suất, summary, top-k, bảng, HTML/PNG và manifest giữa hai lượt Stage 3–4. | [`stage5_repro_report.json`](../outputs/holdout/repro/stage5_repro_report.json) |
 | [`verify_pipeline.py`](../src/citd_ml/verification/verify_pipeline.py) · `check_repeated_runs`, `main` | Bắt hai lượt train/backtest trong bộ nhớ, so frame chưa làm tròn và byte CSV đã lưu; hash nguồn và ghi môi trường. | [`reproducibility.json`](../outputs/step4_thread1/verification/reproducibility.json) |
+
+Stage 2 [PASS](../outputs/holdout/stage2/stage2_reproducibility_report.json) vì 25.008 xác suất train của hai lượt bằng nhau từng phần tử, hash `.npy` bằng nhau và file holdout không đổi. Hai model `.cbm` khác SHA-256 vẫn được ghi nhận; hash binary không phải điều kiện PASS vì metadata tuần tự hóa có thể khác. Kết luận này chỉ cho hai lượt trên cùng máy.
 
 Stage 4 tạo bảng/hình từ Stage 3; Stage 5 so hai cây Stage 3–4; báo cáo Stage 4 cuối cùng đọc thêm PASS của Stage 5 trước khi công bố. Holdout đã được quan sát trong quá trình làm đồ án, vì vậy các script Stage 1–5 ở đây là bản đồ thực thi lịch sử, không phải quy trình chọn lại tham số.
 
@@ -125,15 +139,15 @@ Bảng dưới lấy từ [`table1_classification_metrics.csv`](../outputs/holdo
 
 Tài chính top 50% lấy từ [`table2_financial_metrics_top50.csv`](../outputs/holdout/stage4/table2_financial_metrics_top50.csv). Baseline luôn so với bộ lọc **trong cùng giai đoạn**; tổng R của khúc 2–5 và holdout không có cùng số lệnh hoặc thời kỳ.
 
-| Phạm vi / bộ lọc | Lệnh | Net R | MaxDD R | PF |
-|---|---:|---:|---:|---:|
-| Baseline khúc 2–5 | 20.007 | +3.358,25 | 236,13 | 1,2940 |
-| Random top 50% | 10.004 | +6.937,53 | 73,76 | 2,5437 |
-| Grouped top 50% | 10.004 | +4.752,04 | 99,71 | 1,9500 |
-| Walk-forward top 50% | 10.004 | +2.148,31 | 211,29 | 1,4117 |
-| Purged top 50% | 10.004 | +2.119,48 | 142,36 | 1,4074 |
-| Baseline holdout | 5.028 | +245,93 | 305,32 | 1,0992 |
-| Holdout top 50% | 2.514 | −36,55 | 263,25 | 0,9718 |
+| Phạm vi / bộ lọc | Lệnh | Net R | MaxDD R | PF | Win rate |
+|---|---:|---:|---:|---:|---:|
+| Baseline khúc 2–5 | 20.007 | +3.358,25 | 236,13 | 1,2940 | 31,71% |
+| Random top 50% | 10.004 | +6.937,53 | 73,76 | 2,5437 | 44,65% |
+| Grouped top 50% | 10.004 | +4.752,04 | 99,71 | 1,9500 | 39,26% |
+| Walk-forward top 50% | 10.004 | +2.148,31 | 211,29 | 1,4117 | 34,76% |
+| Purged top 50% | 10.004 | +2.119,48 | 142,36 | 1,4074 | 34,99% |
+| Baseline holdout | 5.028 | +245,93 | 305,32 | 1,0992 | 35,28% |
+| Holdout top 50% | 2.514 | −36,55 | 263,25 | 0,9718 | 34,81% |
 
 Sweep đầy đủ 20–80% nằm trong [bảng bốn nhánh](../outputs/holdout/stage4/table3_branch_sweep_20_80.csv) và [bảng holdout](../outputs/holdout/stage4/holdout_sweep_20_80.csv). Mức 50% đã cố định để so sánh; các mức khác trên holdout chỉ là phân tích độ nhạy sau quan sát, không phải chính sách mới được kiểm chứng.
 
