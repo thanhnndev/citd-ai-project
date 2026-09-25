@@ -1,135 +1,194 @@
-# BÁO CÁO KỸ THUẬT — HỆ THỐNG PYRAMID BTCUSD VÀ BỘ LỌC CATBOOST
+# BÁO CÁO KỸ THUẬT — PYRAMID BTCUSD / CATBOOST
 
-> **Tài liệu làm việc cho nhóm.** Bố cục, câu hỏi nghiên cứu, thuật ngữ và cách ghi số của tài liệu này theo [báo cáo khoa học của nhóm trưởng](../deliverables/Scientific_report_Nhom11.pdf). Đây là bản giải thích triển khai và bản đồ bằng chứng để các thành viên viết phần kỹ thuật; khi trích dẫn kết quả, dùng cây canonical `thread_count=1` và ghi rõ phạm vi kiểm chứng. Các bảng trong báo cáo khoa học là bản trình bày chính thức.
+Tài liệu này mô tả bản code đã chạy: dữ liệu đi qua những file nào, điều kiện nào chặn một lần chạy sai và artifact nào dùng để kiểm lại. Phần lập luận nghiên cứu nằm ở [Scientific report](../deliverables/Scientific_report_Nhom11.pdf); số liệu chi tiết nằm trong [báo cáo bước 4](BAO_CAO_KET_QUA_STEP4.md) và [báo cáo holdout](BAO_CAO_KET_QUA_HOLDOUT.md). Các số chính dưới đây lấy từ cây `outputs/step4_thread1/` với `thread_count=1`. Artifact bàn giao cũ không ghim số luồng được giữ riêng, không cộng lẫn.
 
-## TÓM TẮT
+## 1. Hệ thống thực sự làm gì
 
-Đồ án đo ảnh hưởng của **cách chia dữ liệu** lên độ tin cậy của phép kiểm định một bộ lọc giao dịch. Chiến lược pyramid trên BTCUSD M15 sinh lệnh ứng viên; CatBoost chỉ chấm xác suất một lệnh có tín hiệu tốt. Bốn cách chia giữ nguyên dữ liệu, đặc trưng và cấu hình mô hình: Random K-Fold, Grouped K-Fold, Walk-forward, Purged Walk-forward kèm embargo. Kết quả được đối chiếu với 5.028 lệnh holdout sau mốc đã chốt. Trên khúc 2–5, ROC-AUC đi từ 0,8582 (Random) xuống 0,5895 (Purged Walk-forward), còn holdout đạt 0,6046. Bộ lọc top 50% trên holdout đạt −36,55 R so với baseline +245,93 R. Kết luận kỹ thuật là Random K-Fold tạo ước lượng lạc quan trong thiết kế có họ lệnh và nhãn chồng lấn; kết quả holdout không xác nhận khả năng cải thiện lợi nhuận của bộ lọc.
+`PyramidStrategy` tạo lệnh mua BTCUSD. Mỗi tín hiệu có một lệnh gốc (`leg=0`) và ba lệnh nhồi (`leg=1..3`) cùng `origin_bar`. CatBoost không phát tín hiệu mua bán; nó chấm xác suất cho những lệnh mà chiến lược đã tạo. Bốn phép chia dữ liệu dùng chung dataset, 23 feature và cấu hình model để đo ảnh hưởng của cách đánh giá.
 
-**Từ khóa:** meta-labeling, rò rỉ nhãn, triple barrier, walk-forward, purging, embargo, CatBoost, holdout niêm phong, tái lập kết quả.
+Backtest dùng tập ứng viên cố định. Khi một lệnh bị lọc, luồng `shadow` vẫn chạy chiến lược gốc để sinh đúng các ứng viên về sau; luồng `executor` chỉ mở những lệnh được giữ. Cách này kiểm chất lượng chọn lệnh trên cùng một tập ứng viên. Nó không mô phỏng một chiến lược live mà việc bỏ lệnh gốc có thể làm thay đổi các tín hiệu kế tiếp. Logic nằm trong [`backtest_pyramid_local.py`](../src/citd_ml/backtest/backtest_pyramid_local.py).
 
-## CHƯƠNG 1. GIỚI THIỆU VÀ PHÁT BIỂU VẤN ĐỀ
+Đường đi chính của dữ liệu:
 
-### 1.1. Bối cảnh và câu hỏi nghiên cứu
+1. BTCUSD M1 → resample M15; giữ ánh xạ M1 trong từng bar để xét thứ tự chạm stop/target.
+2. Replay `PyramidStrategy` → vị thế ứng viên; gán nhãn triple barrier và tính feature tại entry → dataset.
+3. Sort dataset, chia fold, fit CatBoost từng fold → xác suất out-of-fold (OOF).
+4. Ghép OOF với tradelist baseline theo `(origin_bar, entry_bar, leg)` → chọn top-k và chạy backtest lọc.
+5. Train model cuối trên dữ liệu trước mốc; chấm holdout, replay baseline, lập bảng/hình và đối chiếu hai lượt chạy.
 
-Một tín hiệu gốc của chiến lược mở một lệnh nền và ba lệnh chồng (`leg` 0–3). Bốn lệnh dùng chung `origin_bar`, có cửa sổ quan sát nhãn gần nhau và các đặc trưng tương tự. Nếu chia từng dòng ngẫu nhiên, thành viên một họ có thể nằm cả trong train lẫn test. Mô hình khi đó hưởng lợi từ thông tin rất gần mẫu kiểm tra. Đồ án trả lời ba câu hỏi của báo cáo khoa học: (RQ1) cách chia làm thay đổi chỉ số bao nhiêu; (RQ2) điểm số có hội tụ khi kiểm soát gia đình và thời gian không; (RQ3) cách chia nào gần quan sát holdout hơn.
+## 2. Hợp đồng dữ liệu
 
-### 1.2. Phạm vi hệ thống
+Nguồn giá là `data/raw/BTCUSD_m1_2018_to_now.csv`. File M1 khoảng 209 MB không nằm trong repo; cách khôi phục và schema ở [`data/raw/README.md`](../data/raw/README.md). Không có file này vẫn đọc được kết quả đã lưu và train từ dataset đóng băng; sinh dataset hoặc replay backtest cần khôi phục đúng nguồn M1.
 
-CatBoost là **tầng meta-labeling**, không tạo tín hiệu mua/bán. Chiến lược sơ cấp sinh vũ trụ lệnh; mô hình xếp hạng các lệnh trong vũ trụ đó. Backtest dùng vũ trụ ứng viên cố định: loại một lệnh không thay đổi tín hiệu chiến lược xuất hiện về sau. Vì vậy các chỉ số đo chất lượng phép **lọc trên cùng danh sách ứng viên**, không phải hiệu năng của hệ thống giao dịch chạy lại động sau mỗi quyết định bỏ lệnh. Mã chiến lược: [`pyramid_strategy.py`](../src/citd_ml/strategy/pyramid_strategy.py); mã backtest: [`backtest_pyramid_local.py`](../src/citd_ml/backtest/backtest_pyramid_local.py).
-
-## CHƯƠNG 2. CƠ SỞ LÝ THUYẾT VÀ QUY TẮC GÁN NHÃN
-
-### 2.1. Triple barrier theo giao dịch
-
-Nhãn 1 biểu thị lệnh đạt trạng thái không lỗ theo mô phỏng trailing; nhãn 0 biểu thị lỗ hoặc hết chặn thời gian. Ngưỡng dưới là stop-loss 0,6% dưới giá vào. Ngưỡng trên là giá vào cộng `3,8 × ATR(90)` đóng băng trước entry; khi chạm mức này, trailing stop có thể dời lên hòa vốn. Chặn thời gian là 50 bar M15. Thứ tự chạm mốc được phân giải bằng nến M1 bên trong M15. Cùng một luật được áp dụng riêng cho cả bốn leg, dùng giá vào và ATR của từng leg. Sơ đồ sáu quy tắc và phân tích chọn tham số: [`thong_so_triple_barrier.png`](thong_so_triple_barrier.png), [`bao_cao_hyperparameter_triple_barrier.md`](bao_cao_hyperparameter_triple_barrier.md); mã: [`triple_barrier.py`](../src/citd_ml/labeling/triple_barrier.py).
-
-Chọn ba leg có cơ sở xác suất: trong random 5-fold, xác suất cả ba “anh em” của một lệnh đều nằm trong fold test là `(1/5)^3 = 0,8%`. Phép tính này cho thấy khả năng cùng họ xuất hiện phía train rất cao; các số đo tương quan nhãn và đặc trưng ở báo cáo tham số xác nhận tính gần trùng của các leg. Đây là cơ chế khiến Random K-Fold dễ lạc quan, không phải bằng chứng rằng mọi chênh lệch AUC đều do một nguồn rò rỉ duy nhất.
-
-### 2.2. Bốn cách chia
-
-| Cách chia trong báo cáo khoa học | Ràng buộc chính | Rủi ro được kiểm soát |
+| Tập | Ranh giới và quy mô | Vai trò |
 |---|---|---|
-| Cách 1 — Random K-Fold | Chia dòng ngẫu nhiên | Mốc tham chiếu lạc quan; có thể tách cùng họ và đảo chiều thời gian |
-| Cách 1b — Grouped K-Fold | Cùng `origin_bar` ở một phía | Giảm thông tin từ các leg cùng họ; vẫn có thể dùng tương lai để dự đoán quá khứ |
-| Cách 2 — Walk-forward | Train quá khứ, test tương lai | Tôn trọng thứ tự thời gian |
-| Cách 3 — Purged Walk-forward | Walk-forward, thêm kiểm tra chồng lấn nhãn và embargo 50 bar | Siết điều kiện gần biên train/test |
+| Train đóng băng | 25.008 lệnh, 31 cột; 6.252 họ, mỗi họ 4 leg | [`data/processed/dataset_catboost.csv`](../data/processed/dataset_catboost.csv) là đầu vào mặc định của code train |
+| Lệnh biên | 4 entry trước mốc nhưng `label_end_time` qua mốc | Không vào train hoặc holdout |
+| Holdout | 5.028 lệnh từ `2025-02-08 15:30:00`, bar M15 `199968` | Chấm bằng model cuối; không dùng để fit |
+| Toàn lịch sử tái sinh | 30.040 lệnh = 25.008 + 4 + 5.028 | Đầu vào đối chiếu ở Stage 1 |
 
-Mã chia fold: [`split_data.py`](../src/citd_ml/training/split_data.py). Trên bốn biên fold của bước 4, số dòng bị loại là **21, 3, 8, 2** (tổng 34); vì vậy tác dụng bổ sung của purge/embargo trong thiết lập này nhỏ. Phần holdout train cuối có kiểm tra purge/embargo nhưng loại **0 dòng**. Hai con số thuộc **hai giai đoạn khác nhau**, không được nhập làm một.
+Mốc holdout được chốt theo thời gian. Theo *số lệnh*, 5.028/30.040 là khoảng 16,74%; vì vậy không gọi tập này là đúng 20% số lệnh như ước lượng trong [đề cương ban đầu](tom_tat_idea_goc.md). Bốn lệnh biên và kiểm tra khóa được ghi trong [báo cáo holdout, mục 1.7](BAO_CAO_KET_QUA_HOLDOUT.md).
 
-### 2.3. Chỉ số
+Dataset có 23 cột `FEATURES`, một cột `label` và 7 cột `META`: `entry_time`, `label_end_time`, `origin_bar`, `entry_bar`, `entry_price`, `leg`, `entry_vs_base_R`. `row_id` chỉ được thêm sau khi sort để định danh dòng và phá hòa top-k. `META`, nhãn và giá tuyệt đối không đi vào ma trận `X`. Danh sách feature chính xác lấy từ [`build_features.py`](../src/citd_ml/features/build_features.py), không suy từ mọi cột CSV:
 
-ROC-AUC đo thứ hạng xác suất giữa hai lớp; F1 ở ngưỡng 0,5 đo cân bằng precision/recall tại ngưỡng đó. Với chiến lược giao dịch, báo cáo thêm net profit tính theo **R** (bội số rủi ro ban đầu), MaxDD của đường vốn, profit factor (tổng lãi / trị tuyệt đối tổng lỗ), win rate và số lệnh. AUC tốt không tự động suy ra lợi nhuận tốt: hai phép đo có đối tượng và hàm mục tiêu khác nhau.
+| Nhóm | Cột |
+|---|---|
+| Hàng rào | `breakeven_R` |
+| Biến động | `atr14_pct`, `atr_ratio_14_90`, `vol20`, `vol200`, `vol_ratio_20_200`, `range_pct` |
+| Giá và xu hướng | `dist_ema20_atr`, `dist_ema50_atr`, `dist_ema200_atr`, `ret20_atr`, `ret50_atr`, `pos_in_range50`, `dist_hh20_atr` |
+| Tín hiệu | `mom14`, `mom_diff`, `vwap_dist_atr`, `vwap_slope_atr`, `rsi14` |
+| Khối lượng và entry | `vol_ratio_volume`, `gap_open_atr` |
+| Thời điểm | `hour`, `dow` |
 
-## CHƯƠNG 3. DỮ LIỆU VÀ ĐẶC TRƯNG
+Feature thị trường của mỗi leg đọc bar M15 đã đóng (`entry_bar - 1`); `gap_open_atr` còn đọc giá mở cửa bar entry, đã có lúc vào lệnh. `leg` và `entry_vs_base_R` được lưu để truy vết gia đình lệnh nhưng không train. Lý do chọn/loại cột ở [báo cáo feature](bao_cao_feature.md).
 
-### 3.1. Nguồn và ranh giới
+Nhãn triple barrier khác kết quả tài chính. Lower là giá vào trừ 0,6%; upper là giá vào cộng `3,8 × ATR(90)` đóng băng trước entry; horizon là 50 bar M15. [`label_one_entry`](../src/citd_ml/labeling/triple_barrier.py) duyệt M1 theo thứ tự: lower chạm trước hoặc cả hai mốc chạm trong cùng nến M1 thì nhãn 0; upper chạm và không có lower chạm trong bar M15 đó thì nhãn 1; hết horizon chưa chạm thì nhãn 0. Horizon thiếu dữ liệu bị loại khi xuất dataset. Nhãn không áp dụng lệnh đóng thứ Sáu của chiến lược; sơ đồ quy tắc ở [`thong_so_triple_barrier.png`](thong_so_triple_barrier.png).
 
-Dữ liệu giá gốc là BTCUSD M1; chiến lược và đặc trưng vận hành trên M15, dùng M1 để xác định thứ tự sự kiện trong nến. File thô khoảng 209 MB không được commit; quy cách đặt file xem [`data/raw/README.md`](../data/raw/README.md). Dataset đã xử lý và kết quả đã commit, nên team có thể kiểm tra bảng kết quả và train từ dataset sẵn có; sinh lại dataset hoặc backtest cần file M1 thô.
+## 3. Code và điểm kiểm soát
 
-Mốc tách holdout là **2025-02-08 15:30:00**, bar M15 số **199.968**. Dataset trước holdout có **25.008 lệnh**, gồm **6.252 họ × 4 leg**, tỷ lệ nhãn 1 khoảng **26,2%**. Holdout có **5.028 lệnh**. Có **4 lệnh biên** vào trước mốc nhưng cửa sổ nhãn vượt qua mốc: không thuộc train hoặc holdout. Toàn lịch sử tái sinh vì vậy gồm `25.008 + 4 + 5.028 = 30.040` lệnh. Bằng chứng ranh giới và bốn khóa lệnh biên: [`BAO_CAO_KET_QUA_HOLDOUT.md`](BAO_CAO_KET_QUA_HOLDOUT.md), mục 1.7.
+Các bảng dưới tập trung vào hàm nằm trên đường chạy chính. Hàm trả DataFrame/mảng chỉ tạo giá trị trong bộ nhớ; file chỉ xuất hiện tại entrypoint hoặc hàm ghi được nêu rõ.
 
-### 3.2. Đặc trưng và metadata
+### 3.1. Từ M1 đến dataset
 
-Mô hình dùng **23 đặc trưng** đã xác định tại thời điểm vào lệnh, chia thành nhóm hình học hàng rào, chế độ biến động, xu hướng/vị trí giá, tín hiệu chiến lược và khối lượng/phiên. **Bảy cột metadata** chỉ phục vụ định danh, gán nhãn, chia fold hoặc đối chiếu, không vào ma trận feature. Đặc biệt `leg` và `entry_vs_base_R` mô tả giàn giáo pyramid, có thể tiết lộ cấu trúc họ. Danh sách và lý do chọn/loại từng cột: [`bao_cao_feature.md`](bao_cao_feature.md); định nghĩa được code sử dụng: [`build_features.py`](../src/citd_ml/features/build_features.py). Khi viết bảng đặc trưng, lấy tên cột từ mã và báo cáo này, không suy từ toàn bộ cột CSV.
-
-Ranh giới năm khúc của 25.008 dòng là `[0, 5001, 10003, 15004, 20006, 25008]`. **Khúc 1 được loại khỏi phần so sánh chung** để cả bốn nhánh có cùng phạm vi đánh giá là khúc 2–5 (**20.007 lệnh**). Không so AUC của một nhánh trên năm khúc với nhánh khác trên bốn khúc.
-
-## CHƯƠNG 4. PHƯƠNG PHÁP THỰC NGHIỆM VÀ TRIỂN KHAI
-
-### 4.1. Kiểm soát biến
-
-Giữ cố định dataset, 23 feature, nhãn, danh sách ứng viên, CatBoost và quy tắc top-k; biến so sánh chính là cách chia train/test. Cấu hình CatBoost: `iterations=1000`, `learning_rate=0.05`, `depth=6`, `l2_leaf_reg=3.0`, `auto_class_weights=Balanced`, `eval_metric=AUC`, seed 42. Bản kết quả canonical ghim `thread_count=1` để giảm sai lệch số học trên máy đã kiểm. `thread_count` là tham số kỹ thuật được thêm sau bản bàn giao ban đầu, không phải một siêu tham số chọn theo holdout.
-
-### 4.2. Luồng dữ liệu và artifact
-
-| Giai đoạn | Điểm chạy / mã chính | Đầu ra để đối chiếu |
+| File / hàm | Nhận và xử lý; điều kiện chặn | Trả hoặc ghi |
 |---|---|---|
-| Sinh và kiểm tra dataset | [`build_dataset.py`](../scripts/build_dataset.py), [`verify_dataset.py`](../scripts/verify_dataset.py) | `data/processed/dataset_catboost.csv`, tradelist, labels |
-| Chia fold và train bốn nhánh | [`train_models.py`](../scripts/train_models.py), [`train_catboost.py`](../src/citd_ml/training/train_catboost.py) | [`outputs/step4_thread1/catboost_training/`](../outputs/step4_thread1/catboost_training/) — OOF, metric từng fold |
-| Backtest và sweep 20–80% | [`run_backtest.py`](../scripts/run_backtest.py) | [`outputs/step4_thread1/backtest/`](../outputs/step4_thread1/backtest/) — vũ trụ có điểm, danh sách giữ, chỉ số |
-| Tái lập bước 4 | [`verify_pipeline.py`](../scripts/verify_pipeline.py) | [`reproducibility.json`](../outputs/step4_thread1/verification/reproducibility.json) |
-| Holdout giai đoạn 1–5 | `scripts/holdout_stage*.py` | [`outputs/holdout/`](../outputs/holdout/) và [`BAO_CAO_KET_QUA_HOLDOUT.md`](BAO_CAO_KET_QUA_HOLDOUT.md) |
+| [`pyramid_strategy.py`](../src/citd_ml/strategy/pyramid_strategy.py) · `prepare` | OHLCV M15 → Momentum(14), VWAP(142), ATR(90) | Mảng chỉ báo |
+| `PyramidStrategy.entry_signal` | Bar hiện tại, chỉ báo, `base_open`; cần đủ warm-up, không còn lệnh gốc mở, Momentum giảm và VWAP tăng trên bar đã đóng | Có/không mở họ lệnh |
+| `PyramidStrategy.open_bar` | Mở leg đến hạn, kiểm tín hiệu mới, hẹn ba leg kế tiếp; `_open` dùng giá mở bar entry và ATR của bar trước | Cập nhật `positions`/`pending`; không trả giá trị |
+| `Position.trail`; `PyramidStrategy.scan_bar`, `friday_close` | Dời stop chỉ theo hướng tăng; duyệt M1 để thoát stop/target; đóng vị thế còn lại vào thứ Sáu từ 20:40 | Cập nhật vị thế; hai hàm đóng lệnh trả sự kiện cho tradelist |
+| [`triple_barrier.py`](../src/citd_ml/labeling/triple_barrier.py) · `prepare_data` | Kiểm cột M1, parse thời gian/giá, cắt tại mốc được truyền, resample M15 và lập lát M1 | M1/M15, mảng giá M1 và biên lát `lo/hi` |
+| `calculate_barriers` | Giá vào, ATR, tham số stop/target → tính hai ngưỡng | Upper, lower |
+| `label_one_entry` | Hai ngưỡng và M1 trong tối đa 50 bar M15 → xét thứ tự chạm | Nhãn, số bar, thời điểm chạm, cờ incomplete |
+| `run_strategy_and_label` | Replay entry, gán nhãn từng leg và chạy logic thoát lệnh gốc để giữ đúng state | Bảng nhãn thô và số lệnh đã đóng trong bộ nhớ |
+| `prepare_handoff_output`; `main` | Loại horizon chưa đủ, ép schema, kiểm nhãn nhị phân rồi ghi file | [`triple_barrier_labels.csv`](../data/processed/triple_barrier_labels.csv) |
+| [`build_features.py`](../src/citd_ml/features/build_features.py) · `resolve_positions` | Replay đúng entry của chiến lược; gọi cùng hàm hàng rào/nhãn cho từng vị thế | Bảng vị thế, nhãn và khóa lệnh |
+| `build_features` | Tính 23 feature tại entry; chặn `entry_bar < 1` để không đọc nhầm bar cuối chuỗi | Bảng feature và metadata |
+| `build_features.main` | Tạo `label_end_time`, loại horizon thiếu, sort ổn định, chọn `FEATURES + label + META` | [`dataset_catboost.csv`](../data/processed/dataset_catboost.csv) theo `--output` |
 
-Xác suất đánh giá trên khúc 2–5 là **out-of-fold (OOF)**: mỗi lệnh được chấm bởi mô hình không train trên lệnh đó. Quy tắc giữ top-k là xếp `probability` giảm dần, phá hòa bằng `row_id` tăng dần, lấy `ceil(n × keep_pct / 100)`. Top 50% của 20.007 lệnh là **10.004**; top 50% của 5.028 lệnh là **2.514**. Equity cộng R tại `close_time`; các lệnh đóng cùng thời điểm được gộp trước khi cập nhật đường vốn. Cách làm và biểu đồ: [`implementation_decisions.md`](../outputs/holdout/stage4/implementation_decisions.md).
+### 3.2. Train và OOF
 
-### 4.3. Quy trình holdout
+[`pre_train.py`](../src/citd_ml/training/pre_train.py) kiểm schema trước khi train: đúng 25.008 dòng, 23 feature số hữu hạn, nhãn 0/1, thời gian nhãn không qua holdout, mỗi `origin_bar` có đủ leg 0–3. `prepare_dataset` sort ổn định theo `entry_time`, thêm `row_id`, tách `X/y/meta` và năm khúc theo chỉ số dòng: `[0, 5001, 10003, 15004, 20006, 25008]`. Code train hiện đọc file dataset đóng băng theo đường dẫn mặc định; `--output-dir` chỉ đổi nơi ghi kết quả.
 
-Giai đoạn 1 tái sinh lịch sử và tách holdout; giai đoạn 2 train mô hình cuối hai lần và đối chiếu dự đoán; giai đoạn 3 chấm điểm/backtest vũ trụ cố định; giai đoạn 4 tổng hợp bảng, biểu đồ; giai đoạn 5 so kết quả của hai lần chạy độc lập. Các lệnh lịch sử và vị trí file đầu ra nằm trong [`README_VI.md`](../README_VI.md#quy-trình-holdout-niêm-phong). Đánh giá holdout đã đóng ngày **18/09/2026**. Các bảng sweep holdout dùng để kiểm tra độ nhạy, không để chọn lại tỷ lệ 50% sau khi đã xem kết quả.
+| Hàm | Nhận và kiểm | Trả hoặc ghi |
+|---|---|---|
+| [`split_data.py`](../src/citd_ml/training/split_data.py) · `make_random_kfold` | `X`; 5-fold, shuffle, seed 0 | Fold train/test theo dòng |
+| `make_grouped_kfold` | `X/y/meta`; 5-fold, `groups=origin_bar` | Fold không tách bốn leg cùng họ |
+| `make_walk_forward` | Năm khúc liên tiếp | Bốn fold: train quá khứ, test khúc 2–5 |
+| `make_purged_walk_forward` | Walk-fold và thời gian nhãn; giữ train khi `label_end_time < test_start_time` và `entry_bar < test_start_bar - 50` | Bốn fold đã lọc train; test giữ nguyên |
+| `validate_all_folds` | Bốn bộ fold; kiểm train/test rời nhau, coverage, thứ tự thời gian và điều kiện purge | PASS hoặc lỗi trước train |
+| [`train_catboost.py`](../src/citd_ml/training/train_catboost.py) · `train_method` | Fit model mới cho từng fold; cần đủ hai lớp, xác suất hữu hạn trong `[0,1]`, không chấm trùng test | Metric fold và bảng OOF |
+| `_validate_oof_coverage` | Random/Grouped phải có xác suất cho mọi dòng; Walk-forward/Purged chỉ cho khúc 2–5 | PASS hoặc lỗi trước khi lưu |
+| `build_summary`, `save_outputs` | Kiểm số fold 5/5/4/4, tính mean metric, serialize CSV | `metrics_by_fold.csv`, `metrics_summary.csv`, bốn `oof_<method>.csv` |
 
-## CHƯƠNG 5. KẾT QUẢ THỬ NGHIỆM
+Cấu hình [`MODEL_PARAMS`](../src/citd_ml/training/train_catboost.py): `iterations=1000`, `learning_rate=0.05`, `depth=6`, `l2_leaf_reg=3.0`, `auto_class_weights="Balanced"`, `eval_metric="AUC"`, `random_seed=42`, `thread_count=1`, `allow_writing_files=False`. Không early stopping, không khai báo categorical feature. `thread_count=1` là thiết lập thực thi bổ sung sau bản bàn giao đầu; chi tiết thí nghiệm số luồng ở [`thread_count_sensitivity/README.md`](../outputs/thread_count_sensitivity/README.md).
 
-### 5.1. Phân loại trên khúc 2–5 và holdout
+### 3.3. Backtest bước 4
 
-| Cách chia | ROC-AUC | F1 @ 0,5 |
+| Hàm trong [`backtest_pyramid_local.py`](../src/citd_ml/backtest/backtest_pyramid_local.py) | Nhận và kiểm | Trả hoặc ghi |
+|---|---|---|
+| `load`, `backtest` | M1 trước holdout → M15/lát M1; replay chiến lược chưa lọc, kiểm khóa lệnh không trùng | `baseline_tradelist.csv` qua `save_outputs` |
+| `validate_against_reference` | So replay với [tradelist bàn giao](../data/processed/tradelist_pyramid_local.csv) | Chặn khi baseline lệch |
+| `load_score_tables` | Bốn OOF; kiểm 25.008 `row_id`, khóa, nhãn/metadata, `fold` và vùng thiếu xác suất khúc 1 | Bốn bảng điểm đã kiểm |
+| `build_scored_universe` | Ghép tradelist và OOF one-to-one theo `(origin_bar, entry_bar, leg)`; đối chiếu thời điểm/giá vào | `backtest_scored_universe.csv` |
+| `select_top_percent` | Trên 20.007 dòng khúc 2–5, sort xác suất giảm rồi `row_id` tăng; lấy `ceil(n × keep_pct/100)` | Tập `row_id` giữ ở từng mức 20–80% |
+| `backtest_filtered` | `shadow` duy trì tín hiệu gốc; `executor` nhận lệnh đã chọn tại thời điểm mở; đối chiếu tập thực thi với top-k | Tradelist đã lọc; mức 50% ghi `trades_top50_<method>.csv` |
+| `calculate_metrics`, `build_reports` | Sort theo `close_time, ticket`; tính R, MaxDD đã chốt, PF, win rate; kiểm đúng số lệnh | `backtest_summary_top50.csv` và `backtest_retention_sweep.csv` |
+
+Tỷ lệ giữ cố định giúp bốn nhánh có cùng số lệnh khi so tài chính. Đây là xếp hạng *offline trên toàn khúc 2–5*; code không dựng ngưỡng xác suất khả dụng tuần tự tại mỗi thời điểm. OOF của Random/Grouped có 25.008 dòng được chấm; Walk-forward/Purged để trống xác suất khúc 1 có chủ đích. AUC/F1 trong bảng so sánh được tính trên khúc 2–5 chung, theo từng fold rồi lấy mean; không lấy `metrics_summary.csv` của toàn bộ fold Random/Grouped thay cho [`metrics_chunk2_5.csv`](../outputs/step4_thread1/catboost_training/metrics_chunk2_5.csv).
+
+`R = pl_pct / 0,6` khi `pl_pct` tính bằng điểm phần trăm. Net R là tổng R; MaxDD lấy từ equity đã chốt, bắt đầu 0R; PF là tổng R dương chia trị tuyệt đối tổng R âm; win rate đếm `R > 0`. Không có mark-to-market, phí, spread hay slippage trong các số này.
+
+### 3.4. Holdout và kiểm chứng
+
+| Điểm chạy | Việc chính và điều kiện chặn | Artifact |
+|---|---|---|
+| [`holdout_stage1_split.py`](../scripts/holdout_stage1_split.py) · `main` | Tách bản tái sinh theo mốc; kiểm 25.008 khóa train cũ và 575.184 ô feature khớp. Chỉ ghi holdout khi mọi check đạt. | `stage1_validation_report.json`, `dataset_catboost_holdout.csv` |
+| [`holdout_stage2_train.py`](../scripts/holdout_stage2_train.py) · `precheck`, `run_training`, `verify` | Kiểm purge/embargo tại mốc (đều loại 0 dòng), train hai model độc lập trên 25.008 dòng; so prediction trên train và hash file holdout trước/sau. | Hai `.cbm`, hai `.npy`, `train_run*_report.json`, `stage2_reproducibility_report.json` |
+| [`holdout_stage3_backtest.py`](../scripts/holdout_stage3_backtest.py) · `replay_baseline`, `validate_holdout_baseline`, `main` | Replay toàn lịch sử để giữ state, chỉ đo từ mốc holdout; so 5.028 lệnh với tradelist tham chiếu (số thực: `atol=5e-4`), ghép xác suất one-to-one và chạy sweep. | `holdout_scored.csv`, `holdout_fixed_trade_universe_scored.csv`, bảy `holdout_trades_top*.csv`, summary/report |
+| [`holdout_evidence.py`](../src/citd_ml/verification/holdout_evidence.py) · `validate_evidence`; [`holdout_stage4_report.py`](../scripts/holdout_stage4_report.py) · `build_table1..4`, `write_chart`, `write_png` | Chặn báo cáo PASS nếu chứng cứ Stage 1–3, manifest canonical hoặc Stage 5 sai; lập bốn bảng và hai đường vốn từ artifact đã kiểm. | [Bảng và hình Stage 4](../outputs/holdout/stage4/), [báo cáo holdout](BAO_CAO_KET_QUA_HOLDOUT.md) |
+| [`holdout_stage5_repro_check.py`](../scripts/holdout_stage5_repro_check.py) · `main` | So xác suất, summary, top-k, bảng, HTML/PNG và manifest giữa hai lượt Stage 3–4. | [`stage5_repro_report.json`](../outputs/holdout/repro/stage5_repro_report.json) |
+| [`verify_pipeline.py`](../src/citd_ml/verification/verify_pipeline.py) · `check_repeated_runs`, `main` | Bắt hai lượt train/backtest trong bộ nhớ, so frame chưa làm tròn và byte CSV đã lưu; hash nguồn và ghi môi trường. | [`reproducibility.json`](../outputs/step4_thread1/verification/reproducibility.json) |
+
+Stage 4 tạo bảng/hình từ Stage 3; Stage 5 so hai cây Stage 3–4; báo cáo Stage 4 cuối cùng đọc thêm PASS của Stage 5 trước khi công bố. Holdout đã được quan sát trong quá trình làm đồ án, vì vậy các script Stage 1–5 ở đây là bản đồ thực thi lịch sử, không phải quy trình chọn lại tham số.
+
+## 4. Kết quả dùng để kiểm report
+
+Bảng dưới lấy từ [`table1_classification_metrics.csv`](../outputs/holdout/stage4/table1_classification_metrics.csv). Bốn nhánh là mean theo fold trên khúc 2–5; dòng holdout là phép đo riêng của model cuối.
+
+| Phạm vi | ROC-AUC | F1 @ 0,5 |
 |---|---:|---:|
 | Random K-Fold | 0,8582 | 0,6494 |
 | Grouped K-Fold | 0,7454 | 0,5077 |
 | Walk-forward | 0,5875 | 0,3288 |
 | Purged Walk-forward | 0,5895 | 0,3247 |
-| **Holdout** | **0,6046** | **0,4022** |
+| Holdout | 0,6046 | 0,4022 |
 
-Nguồn: [`table1_classification_metrics.csv`](../outputs/holdout/stage4/table1_classification_metrics.csv). Sai lệch AUC giữa Random và holdout xấp xỉ **+0,2536**; giữa Purged Walk-forward và holdout xấp xỉ **−0,0151**. Holdout là một phép đo riêng trên mô hình cuối, không phải một fold thứ năm của bảng OOF.
+Tài chính top 50% lấy từ [`table2_financial_metrics_top50.csv`](../outputs/holdout/stage4/table2_financial_metrics_top50.csv). Baseline luôn so với bộ lọc **trong cùng giai đoạn**; tổng R của khúc 2–5 và holdout không có cùng số lệnh hoặc thời kỳ.
 
-### 5.2. Backtest top 50%
+| Phạm vi / bộ lọc | Lệnh | Net R | MaxDD R | PF |
+|---|---:|---:|---:|---:|
+| Baseline khúc 2–5 | 20.007 | +3.358,25 | 236,13 | 1,2940 |
+| Random top 50% | 10.004 | +6.937,53 | 73,76 | 2,5437 |
+| Grouped top 50% | 10.004 | +4.752,04 | 99,71 | 1,9500 |
+| Walk-forward top 50% | 10.004 | +2.148,31 | 211,29 | 1,4117 |
+| Purged top 50% | 10.004 | +2.119,48 | 142,36 | 1,4074 |
+| Baseline holdout | 5.028 | +245,93 | 305,32 | 1,0992 |
+| Holdout top 50% | 2.514 | −36,55 | 263,25 | 0,9718 |
 
-| Phương án | Số lệnh | Net profit (R) | MaxDD (R) | Profit factor | Win rate |
-|---|---:|---:|---:|---:|---:|
-| Baseline, khúc 2–5 | 20.007 | +3.358,25 | 236,13 | 1,2940 | 31,71% |
-| Random K-Fold | 10.004 | +6.937,53 | 73,76 | 2,5437 | 44,65% |
-| Grouped K-Fold | 10.004 | +4.752,04 | 99,71 | 1,9500 | 39,26% |
-| Walk-forward | 10.004 | +2.148,31 | 211,29 | 1,4117 | 34,76% |
-| Purged Walk-forward | 10.004 | +2.119,48 | 142,36 | 1,4074 | 34,99% |
-| Baseline holdout | 5.028 | +245,93 | 305,32 | 1,0992 | 35,28% |
-| **Holdout top 50%** | **2.514** | **−36,55** | **263,25** | **0,9718** | **34,81%** |
+Sweep đầy đủ 20–80% nằm trong [bảng bốn nhánh](../outputs/holdout/stage4/table3_branch_sweep_20_80.csv) và [bảng holdout](../outputs/holdout/stage4/holdout_sweep_20_80.csv). Mức 50% đã cố định để so sánh; các mức khác trên holdout chỉ là phân tích độ nhạy sau quan sát, không phải chính sách mới được kiểm chứng.
 
-Nguồn: [`table2_financial_metrics_top50.csv`](../outputs/holdout/stage4/table2_financial_metrics_top50.csv). **Không so trực tiếp tổng R của khúc 2–5 với holdout như thể cùng thời kỳ hoặc cùng số lệnh**; so từng phương án với baseline tương ứng và dùng holdout để kiểm tra kết luận về khả năng khái quát. Bảng sweep đầy đủ của bốn nhánh và holdout: [`table3_branch_sweep_20_80.csv`](../outputs/holdout/stage4/table3_branch_sweep_20_80.csv), [`holdout_sweep_20_80.csv`](../outputs/holdout/stage4/holdout_sweep_20_80.csv). Trên holdout, top 20–50% đều âm; từ top 60% trở lên net R dương, nhưng đó là **phân tích sau quan sát**, không phải tỷ lệ được chốt lại.
+![Baseline và bốn nhánh trên khúc 2–5](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.png)
 
-### 5.3. Biểu đồ và tái lập
+*Hình 1. Equity đã chốt trên khúc 2–5; [bản HTML](../outputs/holdout/stage4/equity-curve-chunk2-5-top50.html).*
 
-Đường vốn của bốn nhánh và holdout nằm trong [`outputs/holdout/stage4/`](../outputs/holdout/stage4/) ở dạng PNG và HTML. Cả hai bắt đầu tại 0 R, chỉ nhảy khi lệnh đóng. Bản chạy lại canonical khớp từng byte **8 CSV** của artifact `thread_count=1` đã commit; đối chiếu run 1 và run 2 của holdout giai đoạn 3–4 **PASS**, mọi delta 0,0 và bốn biểu đồ giống hệt từng byte ([`stage5_repro_report.json`](../outputs/holdout/repro/stage5_repro_report.json)). Hai file model `.cbm` có thể khác SHA-256 do metadata tuần tự hóa dù mảng dự đoán trùng; không dùng hash `.cbm` một mình để kết luận sai lệch dự đoán.
+![Baseline và top 50% trên holdout](../outputs/holdout/stage4/equity-curve-holdout-top50.png)
 
-## CHƯƠNG 6. BÀN LUẬN
+*Hình 2. Equity holdout bắt đầu lại từ 0R; [bản HTML](../outputs/holdout/stage4/equity-curve-holdout-top50.html).*
 
-**RQ1.** Cách chia thay đổi mạnh điểm đánh giá: AUC Random cao hơn Purged Walk-forward **0,2687**; top 50% Random báo +6.937,53 R trong khi Purged Walk-forward báo +2.119,48 R. Chênh lệch là bằng chứng rằng phép đánh giá nhạy với thiết kế split trên tập dữ liệu này.
+Random cho AUC cao hơn rõ so với các nhánh theo thời gian. Thiết kế này đồng thời thay đổi cấu trúc gia đình, thứ tự thời gian và kích thước train; không thể quy toàn bộ chênh lệch cho một loại leakage. Purged Walk-forward chỉ loại 21, 3, 8, 2 dòng train ở bốn biên bước 4, nên gần Walk-forward trong lần chạy này. Holdout top 50% thấp hơn baseline holdout 282,48 R; AUC gần holdout hơn không đồng nghĩa bộ lọc có lợi nhuận hơn.
 
-**RQ2.** Điểm giảm rõ khi chuyển từ Random sang Grouped rồi Walk-forward; Walk-forward và Purged Walk-forward gần nhau (0,5875 và 0,5895). Purge/embargo chỉ loại 34 dòng ở bốn biên fold bước 4, nên khác biệt nhỏ là hợp lý trong cấu hình hiện tại. Không suy rộng rằng purge/embargo vô ích với dữ liệu hoặc horizon khác.
+## 5. Bằng chứng, phiên bản và giới hạn
 
-**RQ3.** Hai cách chia theo thời gian gần AUC holdout hơn Random/Grouped. Nhưng holdout top 50% **kém baseline 282,48 R**, cho thấy “ước lượng phân loại gần hơn” vẫn không bảo đảm bộ lọc sinh lợi khi triển khai. Tránh diễn giải điểm ROC-AUC 0,6046 thành bằng chứng thành công tài chính.
+| Phép kiểm | Bằng chứng hiện có |
+|---|---|
+| Dataset tái sinh | Stage 1: đủ 25.008 khóa đóng băng, 575.184/575.184 ô feature khớp; 4 lệnh biên không vào train/holdout |
+| Ranh giới model cuối | Stage 2 chạy purge và embargo, mỗi điều kiện loại 0 dòng trong 25.008 dòng train; file holdout không đổi |
+| Baseline holdout | Stage 3 đối chiếu 5.028/5.028 lệnh với tradelist tham chiếu theo validator |
+| Bước 4 lặp lại | [Manifest canonical](../outputs/step4_thread1/verification/reproducibility.json) ghi hai lượt train/backtest, so frame chưa làm tròn và CSV đã lưu: 6 CSV train + 8 CSV backtest |
+| Holdout lặp lại | [Stage 5](../outputs/holdout/repro/stage5_repro_report.json) PASS: 5.028 xác suất bằng nhau, top-k/bảng và bốn biểu đồ khớp giữa hai lượt trên cùng máy |
 
-Thí nghiệm thay riêng `thread_count` cho thấy hai lần train `tc=1` trên máy kiểm giống dự đoán từng bit; train `tc=2` và mặc định thay đổi dự đoán và net R holdout top 50% (lần lượt **−12,26 R** và **+30,79 R**, so với **−36,55 R** của `tc=1`). Cùng model đã fit, thay số luồng khi **inference** không thay dự đoán. Đây là quan sát trên một máy, một build, một dataset và một seed; không quy mọi sai lệch liên máy cho số luồng. Xem [`outputs/thread_count_sensitivity/README.md`](../outputs/thread_count_sensitivity/README.md).
+Artifact được tạo trên Linux, Python 3.12.14, CatBoost 1.2.10, scikit-learn 1.9.0, pandas 3.0.5, NumPy 2.5.2, Plotly 7.0.0 và Matplotlib 3.11.2; phiên bản đầy đủ nằm trong hai manifest trên. Byte-identical ở đây có phạm vi **cùng máy/cùng mã**. [Thí nghiệm `thread_count`](../outputs/thread_count_sensitivity/README.md) cho thấy đổi số luồng lúc train có thể đổi xác suất và top-k; nó không chứng minh mọi khác biệt liên máy đều do số luồng. Số của bản bàn giao chưa ghim luồng được lưu làm [khối tham chiếu](../outputs/step4_thread1/comparison_report.json).
 
-## CHƯƠNG 7. HẠN CHẾ VÀ HƯỚNG PHÁT TRIỂN
+[Sổ lịch sử holdout](../outputs/verification/holdout_run_history.md) truy xuất được ba phiên bản kết quả trong Git; nó không chứng minh tổng số lần chạy. Phiên bản holdout canonical đã xuất hiện trong commit `7748828` ngày 12/09/2026. Manifest bước 4 và Stage 5 ghi lần kiểm chứng ngày 15/09/2026; [hướng dẫn bàn giao](../deliverables/Huong_dan_su_dung.md) ghi holdout đóng từ 18/09/2026. Vì đã được xem nhiều lần, holdout hiện là đối chiếu hồi cứu, không còn đáp ứng giả định “chỉ mở một lần” của [đề cương](tom_tat_idea_goc.md).
 
-1. **Vũ trụ lệnh cố định:** backtest không mô phỏng lại tương tác động của chiến lược sau khi bỏ lệnh; một chiến lược live có thể sinh chuỗi lệnh khác.
-2. **Một thị trường và một cấu hình:** BTCUSD M15, một họ lệnh bốn leg, một bộ feature và CatBoost. Kết luận định lượng không đại diện cho mọi tài sản hoặc thời kỳ.
-3. **Lịch sử mở holdout:** ba phiên bản kết quả có thể truy xuất từ Git, nhưng sổ không chứng minh tổng số lần thực thi hoặc rằng mọi quyết định trước đó hoàn toàn độc lập với việc xem holdout. Các lần kiểm chứng và thí nghiệm số luồng đã truy cập holdout thêm. Xem [`holdout_run_history.md`](../outputs/verification/holdout_run_history.md).
-4. **Tái lập liên máy:** bằng chứng byte-identical áp dụng cho các lượt kiểm trên máy tạo artifact; tương đương liên máy chưa được chứng minh. Các artifact bàn giao trước khi ghim `thread_count` được giữ như **khối tham chiếu**, khác một số giá trị so với canonical.
+Các kết quả còn bị giới hạn bởi một tài sản, một chiến lược long-only, một giai đoạn, top-k xếp hạng toàn đoạn, train size khác nhau giữa K-Fold và expanding window, chưa có phí/spread/slippage và chưa có khoảng tin cậy cho metric. Muốn đánh giá chính sách giao dịch live cần backtest động và một giai đoạn chưa từng dùng để chọn quyết định.
 
-Hướng phát triển phù hợp là backtest chiến lược động sau lọc, kiểm định thêm giai đoạn/tài sản mới, dùng nhiều đường kiểm định thời gian và đánh giá độ bền trên nhiều môi trường. Những thử nghiệm đó cần một tập dữ liệu mới để tránh tiếp tục tối ưu theo holdout đã xem.
+## 6. Chạy lại và bàn giao
 
-## CHƯƠNG 8. KẾT LUẬN VÀ HƯỚNG DẪN VIẾT BÁO CÁO NHÓM
+Artifact chính để lần theo một kết quả:
 
-Kết luận đã được dữ liệu hiện có hỗ trợ: cách chia dữ liệu là biến phương pháp luận ảnh hưởng lớn đến điểm kiểm định của bộ lọc CatBoost trên tập lệnh pyramid có nhãn chồng lấn; đánh giá theo thời gian gần AUC holdout hơn đánh giá ngẫu nhiên; bộ lọc top 50% không cải thiện kết quả tài chính trên holdout. Phạm vi kết luận là **độ tin cậy của đánh giá**, không phải một cam kết lợi nhuận.
+| Cần kiểm | File/thư mục |
+|---|---|
+| Dataset train và tradelist gốc | [`data/processed/`](../data/processed/) |
+| Fold metric và xác suất OOF | [`outputs/step4_thread1/catboost_training/`](../outputs/step4_thread1/catboost_training/) |
+| Vũ trụ lệnh, top 50%, sweep bước 4 | [`outputs/step4_thread1/backtest/`](../outputs/step4_thread1/backtest/) |
+| Tách holdout, model cuối, backtest holdout | [`outputs/holdout/`](../outputs/holdout/) (Stage 1–3) |
+| Bảng và equity dùng trong báo cáo | [`outputs/holdout/stage4/`](../outputs/holdout/stage4/) |
+| Manifest kiểm chứng | [bước 4](../outputs/step4_thread1/verification/reproducibility.json), [holdout](../outputs/holdout/repro/stage5_repro_report.json) |
 
-Để thống nhất với báo cáo nhóm trưởng, team nên dùng tên chương 1–8 và cách gọi “Cách 1 / 1b / 2 / 3”, phân biệt rõ **khúc 2–5 OOF**, **holdout** và **khối tham chiếu bàn giao**. Mọi bảng kết quả chính lấy từ `outputs/holdout/stage4/` và cây `outputs/step4_thread1/`; ghi số theo quy ước báo cáo: AUC/F1/PF bốn chữ số, R/MaxDD hai chữ số, số lệnh nguyên. Khi diễn giải, dẫn cả nguồn artifact và giới hạn tương ứng. Với mô tả chi tiết phương pháp, đối chiếu [README tiếng Việt](../README_VI.md), [báo cáo bước 4](BAO_CAO_KET_QUA_STEP4.md), [báo cáo holdout](BAO_CAO_KET_QUA_HOLDOUT.md) và [báo cáo khoa học](../deliverables/Scientific_report_Nhom11.pdf) trước khi chốt câu chữ.
+Các lệnh sau kiểm lại **bước 4**, ghi ra thư mục mới. Chọn tên thư mục chưa tồn tại cho mỗi lượt; ví dụ `outputs/recheck_step4_run01/`. `verify_dataset.py` và train đọc dataset đóng băng. Từ backtest trở đi phải có file M1 thô đúng đường dẫn trong [README dữ liệu](../data/raw/README.md).
+
+```bash
+uv run python scripts/verify_dataset.py
+uv run python scripts/train_models.py --output-dir outputs/recheck_step4_run01/train
+uv run python scripts/run_backtest.py --oof-dir outputs/recheck_step4_run01/train --output-dir outputs/recheck_step4_run01/backtest
+uv run python scripts/verify_pipeline.py --train-dir outputs/recheck_step4_run01/train --backtest-dir outputs/recheck_step4_run01/backtest --manifest outputs/recheck_step4_run01/verification/reproducibility.json
+```
+
+Nếu cần tái sinh dataset từ M1, ghi ra một file khác sau khi thư mục trên đã được tạo; đối chiếu file đó với dataset đóng băng trước khi diễn giải khác biệt:
+
+```bash
+uv run python scripts/build_dataset.py --output outputs/recheck_step4_run01/dataset_regenerated.csv
+```
+
+`train_models.py` hiện vẫn đọc `data/processed/dataset_catboost.csv`, không tự lấy file `dataset_regenerated.csv`. Vì vậy lệnh trên là bước kiểm **tái sinh dataset**, không biến chuỗi lệnh thành một lần train end-to-end trên dataset mới. Các script holdout Stage 1–5 chỉ được nêu để truy vết lần chạy lịch sử; không dùng lại holdout để chọn feature, tham số hay tỷ lệ giữ.
